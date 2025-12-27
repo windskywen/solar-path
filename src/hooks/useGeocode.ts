@@ -13,10 +13,10 @@ import { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { LocationPoint } from '@/types/solar';
 
-// Debounce delay in ms
-const DEBOUNCE_DELAY = 400;
+// Debounce delay in ms (increased to reduce API calls while typing)
+const DEBOUNCE_DELAY = 800;
 
-// Minimum query length
+// Minimum query length (increased for CJK characters which are more compact)
 const MIN_QUERY_LENGTH = 2;
 
 // Types matching API response

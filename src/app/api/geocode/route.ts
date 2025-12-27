@@ -18,8 +18,13 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const MAX_CACHE_SIZE = 1000;
 
 // Rate limiting configuration
+// Nominatim allows ~1 request/second, so we allow 150 requests per 5 minutes (more generous)
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
-const MAX_REQUESTS_PER_WINDOW = 60;
+const MAX_REQUESTS_PER_WINDOW = 150;
+
+// Global rate limiter to respect Nominatim's 1 req/sec limit
+let lastNominatimRequest = 0;
+const MIN_REQUEST_INTERVAL_MS = 1100; // Slightly over 1 second to be safe
 
 // Types
 interface NominatimResult {
@@ -138,10 +143,11 @@ function checkRateLimit(clientIp: string): number {
 }
 
 /**
- * Create cache key from query and limit
+ * Create cache key from query, limit, and language
  */
-function createCacheKey(query: string, limit: number): string {
-  return `${query.toLowerCase().trim()}:${limit}`;
+function createCacheKey(query: string, limit: number, lang?: string): string {
+  const langKey = lang ? lang.split(',')[0].trim() : 'default';
+  return `${query.toLowerCase().trim()}:${limit}:${langKey}`;
 }
 
 /**
@@ -160,20 +166,59 @@ function convertResult(result: NominatimResult): GeocodeResult {
 }
 
 /**
- * Fetch from Nominatim API
+ * Remove CJK house numbers from address for fallback search
+ * Taiwan addresses often have house numbers like "20號" that aren't in OSM
+ * Pattern matches: 數字+號, 數字+巷, 數字+弄, 數字+樓, 之數字
  */
-async function fetchFromNominatim(query: string, limit: number): Promise<GeocodeResult[]> {
+function removeCjkHouseNumber(query: string): string {
+  // Remove patterns like: 20號, 5巷, 3弄, 2樓, 之1, etc.
+  return query
+    .replace(/\d+號/g, '') // Remove house numbers (20號)
+    .replace(/\d+巷/g, '') // Remove lane numbers (5巷)
+    .replace(/\d+弄/g, '') // Remove alley numbers (3弄)
+    .replace(/\d+樓/g, '') // Remove floor numbers (2樓)
+    .replace(/之\d+/g, '') // Remove sub-numbers (之1)
+    .replace(/[,-]\s*\d+/g, '') // Remove Western-style numbers after comma/dash
+    .replace(/\s+/g, '') // Clean up extra spaces
+    .trim();
+}
+
+/**
+ * Fetch from Nominatim API
+ * Supports international queries including CJK (Chinese, Japanese, Korean) characters
+ * Respects Nominatim's 1 request/second rate limit
+ */
+async function fetchFromNominatim(
+  query: string,
+  limit: number,
+  acceptLanguage?: string
+): Promise<GeocodeResult[]> {
+  // Throttle requests to respect Nominatim's rate limit (1 req/sec)
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastNominatimRequest;
+  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL_MS) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, MIN_REQUEST_INTERVAL_MS - timeSinceLastRequest)
+    );
+  }
+  lastNominatimRequest = Date.now();
+
   const params = new URLSearchParams({
     q: query,
     format: 'json',
     limit: limit.toString(),
-    addressdetails: '0',
+    addressdetails: '1', // Include address details for better matching
   });
+
+  // Build Accept-Language header
+  // Include zh-TW (Traditional Chinese) and zh-CN (Simplified) for CJK support
+  const languages = acceptLanguage ? `${acceptLanguage},zh-TW,zh-CN,zh,en` : 'zh-TW,zh-CN,zh,en,*';
 
   const response = await fetch(`${NOMINATIM_BASE_URL}?${params}`, {
     headers: {
       'User-Agent': USER_AGENT,
       Accept: 'application/json',
+      'Accept-Language': languages,
     },
   });
 
@@ -183,6 +228,28 @@ async function fetchFromNominatim(query: string, limit: number): Promise<Geocode
 
   const data: NominatimResult[] = await response.json();
   return data.map(convertResult);
+}
+
+/**
+ * Fetch with fallback: if no results, try removing house numbers from CJK addresses
+ */
+async function fetchWithFallback(
+  query: string,
+  limit: number,
+  acceptLanguage?: string
+): Promise<GeocodeResult[]> {
+  // First attempt: exact query
+  let results = await fetchFromNominatim(query, limit, acceptLanguage);
+
+  // If no results and query contains CJK characters, try removing house numbers
+  if (results.length === 0) {
+    const simplifiedQuery = removeCjkHouseNumber(query);
+    if (simplifiedQuery && simplifiedQuery !== query && simplifiedQuery.length >= 2) {
+      results = await fetchFromNominatim(simplifiedQuery, limit, acceptLanguage);
+    }
+  }
+
+  return results;
 }
 
 /**
@@ -242,16 +309,18 @@ export async function GET(
   }
 
   // Check cache
-  const cacheKey = createCacheKey(query, limit);
+  const acceptLanguage = request.headers.get('accept-language') || undefined;
+  const cacheKey = createCacheKey(query, limit, acceptLanguage);
   const cached = geocodeCache.get(cacheKey);
 
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return NextResponse.json({ results: cached.results }, { headers: { 'X-Cache': 'HIT' } });
   }
 
-  // Fetch from Nominatim
+  // Fetch from Nominatim (with fallback for CJK addresses)
   try {
-    const results = await fetchFromNominatim(query, limit);
+    // Pass client's Accept-Language for better localization
+    const results = await fetchWithFallback(query, limit, acceptLanguage);
 
     // Cache the results
     geocodeCache.set(cacheKey, {
