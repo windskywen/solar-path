@@ -5,6 +5,7 @@
  */
 
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { devtools } from 'zustand/middleware';
 import type { SolarStore, LocationPoint } from '@/types/solar';
 import { getTodayISO } from '@/lib/utils/timezone';
@@ -94,12 +95,14 @@ export const useError = () => useSolarStore((state) => state.error);
  * Selector hooks for actions
  */
 export const useSolarActions = () =>
-  useSolarStore((state) => ({
-    setLocation: state.setLocation,
-    setDateISO: state.setDateISO,
-    setTimezone: state.setTimezone,
-    setSelectedHour: state.setSelectedHour,
-    setIsLoadingLocation: state.setIsLoadingLocation,
-    setError: state.setError,
-    reset: state.reset,
-  }));
+  useSolarStore(
+    useShallow((state) => ({
+      setLocation: state.setLocation,
+      setDateISO: state.setDateISO,
+      setTimezone: state.setTimezone,
+      setSelectedHour: state.setSelectedHour,
+      setIsLoadingLocation: state.setIsLoadingLocation,
+      setError: state.setError,
+      reset: state.reset,
+    }))
+  );

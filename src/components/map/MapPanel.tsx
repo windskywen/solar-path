@@ -37,11 +37,11 @@ const MAP_STYLE = {
   ],
 };
 
-// Default view (Taipei)
+// Default view (Taipei) - zoom 15 for ~500m scale
 const DEFAULT_VIEW: ViewState = {
   longitude: 121.5654,
   latitude: 25.033,
-  zoom: 10,
+  zoom: 15,
   bearing: 0,
   pitch: 0,
   padding: { top: 0, bottom: 0, left: 0, right: 0 },
@@ -74,13 +74,12 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
   }));
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
-  // Update view when location changes (fly to new location)
+  // Update view when location changes (jump to new location instantly)
   useEffect(() => {
     if (location && mapRef.current) {
-      mapRef.current.flyTo({
+      mapRef.current.jumpTo({
         center: [location.lng, location.lat],
         zoom: viewState.zoom,
-        duration: 1000,
       });
     }
   }, [location?.lat, location?.lng, viewState.zoom]);
