@@ -133,12 +133,7 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
@@ -159,9 +154,7 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
         )}
 
         {dateIsToday && (
-          <span className="text-sm text-green-600 dark:text-green-400 font-medium">
-            ✓ Today
-          </span>
+          <span className="text-sm text-green-600 dark:text-green-400 font-medium">✓ Today</span>
         )}
       </div>
 

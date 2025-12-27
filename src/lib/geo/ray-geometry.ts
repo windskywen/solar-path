@@ -148,12 +148,7 @@ export function createRayFeature(
   rayLengthKm: number
 ): RayFeature {
   // Calculate endpoint using azimuth
-  const endpoint = destinationPoint(
-    center.lat,
-    center.lng,
-    position.azimuthDeg,
-    rayLengthKm
-  );
+  const endpoint = destinationPoint(center.lat, center.lng, position.azimuthDeg, rayLengthKm);
 
   return {
     type: 'Feature',
@@ -187,9 +182,7 @@ export function createRayCollection(
   positions: HourlySolarPosition[],
   rayLengthKm: number = 100
 ): RayFeatureCollection {
-  const features = positions.map((position) =>
-    createRayFeature(center, position, rayLengthKm)
-  );
+  const features = positions.map((position) => createRayFeature(center, position, rayLengthKm));
 
   return {
     type: 'FeatureCollection',
@@ -220,14 +213,10 @@ export function createAdaptiveRayCollection(
  * @param collection - Full ray collection
  * @returns Collection with only above-horizon rays
  */
-export function filterAboveHorizon(
-  collection: RayFeatureCollection
-): RayFeatureCollection {
+export function filterAboveHorizon(collection: RayFeatureCollection): RayFeatureCollection {
   return {
     ...collection,
-    features: collection.features.filter(
-      (f) => f.properties.altitudeDeg > 0
-    ),
+    features: collection.features.filter((f) => f.properties.altitudeDeg > 0),
   };
 }
 

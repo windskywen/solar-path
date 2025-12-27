@@ -146,13 +146,7 @@ describe('Reference Value Validation', () => {
   it('validates summer solstice noon in NYC against reference', () => {
     // Known values for NYC on June 21, 2024 at solar noon (~12:57 EDT)
     // Sun should be roughly South (~180°) at high altitude (~73°)
-    const position = computePositionForHour(
-      40.7128,
-      -74.006,
-      '2024-06-21',
-      13,
-      'America/New_York'
-    );
+    const position = computePositionForHour(40.7128, -74.006, '2024-06-21', 13, 'America/New_York');
 
     // Azimuth should be close to South (180° ± 20°)
     expect(position.azimuthDeg).toBeGreaterThan(160);
@@ -166,13 +160,7 @@ describe('Reference Value Validation', () => {
   it('validates winter solstice noon in NYC against reference', () => {
     // Known values for NYC on Dec 21, 2024 at solar noon
     // Sun should be South at lower altitude (~26°)
-    const position = computePositionForHour(
-      40.7128,
-      -74.006,
-      '2024-12-21',
-      12,
-      'America/New_York'
-    );
+    const position = computePositionForHour(40.7128, -74.006, '2024-12-21', 12, 'America/New_York');
 
     // Azimuth should be close to South (180° ± 20°)
     expect(position.azimuthDeg).toBeGreaterThan(160);

@@ -70,7 +70,13 @@ function formatHour(hour: number): string {
 /**
  * Custom tooltip for altitude chart
  */
-function AltitudeTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: ChartDataPoint }> }) {
+function AltitudeTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: ChartDataPoint }>;
+}) {
   if (!active || !payload || payload.length === 0) return null;
 
   const data = payload[0].payload;
@@ -137,7 +143,10 @@ export function AltitudeChart({
 
   if (positions.length === 0) {
     return (
-      <div className={`flex items-center justify-center text-slate-400 ${className}`} style={{ height }}>
+      <div
+        className={`flex items-center justify-center text-slate-400 ${className}`}
+        style={{ height }}
+      >
         No data available
       </div>
     );

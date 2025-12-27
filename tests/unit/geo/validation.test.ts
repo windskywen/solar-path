@@ -148,7 +148,7 @@ describe('hasValidPrecision', () => {
   it('accepts up to 6 decimal places', () => {
     expect(hasValidPrecision(40.7)).toBe(true);
     expect(hasValidPrecision(40.71)).toBe(true);
-    expect(hasValidPrecision(40.712800)).toBe(true);
+    expect(hasValidPrecision(40.7128)).toBe(true);
     expect(hasValidPrecision(40.123456)).toBe(true);
   });
 

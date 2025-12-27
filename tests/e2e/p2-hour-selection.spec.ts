@@ -30,7 +30,9 @@ test.describe('User Story 4: Interactive Hour Selection', () => {
     });
   });
 
-  test('should display MetricsPanel section with no selection state initially', async ({ page }) => {
+  test('should display MetricsPanel section with no selection state initially', async ({
+    page,
+  }) => {
     // Check the Selected Hour section exists
     const metricsSection = page.getByRole('region', { name: /selected hour/i });
     await expect(metricsSection).toBeVisible();
@@ -166,7 +168,24 @@ test.describe('User Story 4: Interactive Hour Selection', () => {
     await tableRows.nth(12).click();
 
     // Check for cardinal direction abbreviations (N, NE, E, SE, S, SW, W, NW, etc.)
-    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'NNE', 'ENE', 'ESE', 'SSE', 'SSW', 'WSW', 'WNW', 'NNW'];
+    const directions = [
+      'N',
+      'NE',
+      'E',
+      'SE',
+      'S',
+      'SW',
+      'W',
+      'NW',
+      'NNE',
+      'ENE',
+      'ESE',
+      'SSE',
+      'SSW',
+      'WSW',
+      'WNW',
+      'NNW',
+    ];
     const directionVisible = await Promise.any(
       directions.map((dir) =>
         page

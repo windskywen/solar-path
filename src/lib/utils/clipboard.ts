@@ -104,10 +104,7 @@ export interface CopyResult {
  * @param label - Description for feedback message
  * @returns Result with success status and message
  */
-export async function copyWithFeedback(
-  text: string,
-  label: string
-): Promise<CopyResult> {
+export async function copyWithFeedback(text: string, label: string): Promise<CopyResult> {
   try {
     await copyToClipboard(text);
     return {

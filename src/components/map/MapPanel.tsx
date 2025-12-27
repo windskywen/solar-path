@@ -63,7 +63,7 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
   const mapRef = useRef<MapRef>(null);
   const location = useLocation();
   const { setLocation } = useSolarActions();
-  
+
   // Initialize view state with location if available
   const [viewState, setViewState] = useState<ViewState>(() => ({
     ...DEFAULT_VIEW,
@@ -151,11 +151,7 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
 
         {/* Location marker */}
         {location && (
-          <Marker
-            longitude={location.lng}
-            latitude={location.lat}
-            anchor="center"
-          >
+          <Marker longitude={location.lng} latitude={location.lat} anchor="center">
             <div
               className="w-4 h-4 bg-blue-500 border-2 border-white rounded-full shadow-lg"
               title={location.name || `${location.lat}, ${location.lng}`}

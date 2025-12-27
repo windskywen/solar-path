@@ -57,7 +57,7 @@ export function SolarRaysLayer({
 }: SolarRaysLayerProps) {
   // Note: onRayClick is available for future interactive ray clicking feature
   void _onRayClick;
-  
+
   // Generate GeoJSON collection for all rays
   const rayCollection = useMemo<RayFeatureCollection>(() => {
     const collection = createRayCollection(location, positions, rayLengthKm);
@@ -200,13 +200,8 @@ export function SolarRaysLegend({ className = '' }: { className?: string }) {
       <div className="space-y-1">
         {items.map((item) => (
           <div key={item.label} className="flex items-center gap-2">
-            <div
-              className="w-4 h-1 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
-            <span className="text-xs text-slate-600 dark:text-slate-400">
-              {item.label}
-            </span>
+            <div className="w-4 h-1 rounded-full" style={{ backgroundColor: item.color }} />
+            <span className="text-xs text-slate-600 dark:text-slate-400">{item.label}</span>
           </div>
         ))}
       </div>

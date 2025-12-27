@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Solar Path Tracker',
   description:
-    'Visualize the sun\'s path across the sky for any location and date. See sunrise, sunset, solar altitude, and azimuth.',
+    "Visualize the sun's path across the sky for any location and date. See sunrise, sunset, solar altitude, and azimuth.",
   keywords: [
     'solar path',
     'sun position',
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'Solar Path Tracker' }],
   openGraph: {
     title: 'Solar Path Tracker',
-    description: 'Visualize the sun\'s path across the sky for any location and date.',
+    description: "Visualize the sun's path across the sky for any location and date.",
     type: 'website',
   },
 };
@@ -49,9 +49,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}>
         <Providers>{children}</Providers>
       </body>
     </html>

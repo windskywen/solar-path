@@ -203,7 +203,11 @@ export function ManualCoordinates({
           className={`
             w-full px-3 py-2 text-sm rounded-lg
             bg-white dark:bg-slate-800
-            border ${errors.lat && touched.lat ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'}
+            border ${
+              errors.lat && touched.lat
+                ? 'border-red-500'
+                : 'border-slate-300 dark:border-slate-600'
+            }
             focus:outline-none focus:ring-2 focus:ring-blue-500
             placeholder:text-slate-400
           `}
@@ -215,9 +219,7 @@ export function ManualCoordinates({
             {errors.lat}
           </p>
         )}
-        <p className="mt-1 text-xs text-slate-400">
-          Range: -90 to 90 (positive = North)
-        </p>
+        <p className="mt-1 text-xs text-slate-400">Range: -90 to 90 (positive = North)</p>
       </div>
 
       {/* Longitude input */}
@@ -239,7 +241,11 @@ export function ManualCoordinates({
           className={`
             w-full px-3 py-2 text-sm rounded-lg
             bg-white dark:bg-slate-800
-            border ${errors.lng && touched.lng ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'}
+            border ${
+              errors.lng && touched.lng
+                ? 'border-red-500'
+                : 'border-slate-300 dark:border-slate-600'
+            }
             focus:outline-none focus:ring-2 focus:ring-blue-500
             placeholder:text-slate-400
           `}
@@ -251,9 +257,7 @@ export function ManualCoordinates({
             {errors.lng}
           </p>
         )}
-        <p className="mt-1 text-xs text-slate-400">
-          Range: -180 to 180 (positive = East)
-        </p>
+        <p className="mt-1 text-xs text-slate-400">Range: -180 to 180 (positive = East)</p>
       </div>
 
       {/* Submit button */}

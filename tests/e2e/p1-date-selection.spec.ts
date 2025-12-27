@@ -98,21 +98,24 @@ test.describe('User Story 3: Date Selection', () => {
     const fallEquinox = page.getByRole('button', { name: /Fall Equinox|Autumn/i });
 
     // At least some of these should be visible
-    const buttons = await page.getByRole('button').filter({ 
-      hasText: /Solstice|Equinox/i 
-    }).count();
+    const buttons = await page
+      .getByRole('button')
+      .filter({
+        hasText: /Solstice|Equinox/i,
+      })
+      .count();
     expect(buttons).toBeGreaterThanOrEqual(2);
   });
 
   test('clicking winter solstice updates date', async ({ page }) => {
     const dateInput = page.locator('input[type="date"]');
-    
+
     // Click winter solstice button if visible
     const winterButton = page.getByRole('button', { name: /Winter Solstice/i }).first();
-    
+
     if (await winterButton.isVisible()) {
       await winterButton.click();
-      
+
       // Date should be December 21
       const value = await dateInput.inputValue();
       expect(value).toMatch(/12-21/);
@@ -145,8 +148,11 @@ test.describe('User Story 3: Date Selection', () => {
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('Stockholm');
     await page.waitForTimeout(600);
-    
-    const result = page.getByRole('button').filter({ hasText: /Stockholm/i }).first();
+
+    const result = page
+      .getByRole('button')
+      .filter({ hasText: /Stockholm/i })
+      .first();
     if (await result.isVisible()) {
       await result.click();
       await page.waitForTimeout(1500); // Wait for fly-to animation
@@ -170,8 +176,11 @@ test.describe('User Story 3: Date Selection', () => {
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('Stockholm Sweden');
     await page.waitForTimeout(600);
-    
-    const result = page.getByRole('button').filter({ hasText: /Stockholm/i }).first();
+
+    const result = page
+      .getByRole('button')
+      .filter({ hasText: /Stockholm/i })
+      .first();
     if (await result.isVisible()) {
       await result.click();
     }
@@ -193,8 +202,11 @@ test.describe('User Story 3: Date Selection', () => {
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('Stockholm Sweden');
     await page.waitForTimeout(600);
-    
-    const result = page.getByRole('button').filter({ hasText: /Stockholm/i }).first();
+
+    const result = page
+      .getByRole('button')
+      .filter({ hasText: /Stockholm/i })
+      .first();
     if (await result.isVisible()) {
       await result.click();
     }
@@ -216,7 +228,7 @@ test.describe('User Story 3: Date Selection', () => {
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('Tromso Norway');
     await page.waitForTimeout(800);
-    
+
     const result = page.getByRole('button').filter({ hasText: /Troms/i }).first();
     if (await result.isVisible()) {
       await result.click();
@@ -236,14 +248,14 @@ test.describe('User Story 3: Date Selection', () => {
 
   test('date formatted display updates', async ({ page }) => {
     const dateInput = page.locator('input[type="date"]');
-    
+
     // Set to Christmas
     await dateInput.fill('2024-12-25');
 
     // Should show formatted date with day name
-    await expect(page.getByText(/Wed, Dec 25, 2024/i).or(
-      page.getByText(/December 25/i)
-    )).toBeVisible({ timeout: 3000 });
+    await expect(
+      page.getByText(/Wed, Dec 25, 2024/i).or(page.getByText(/December 25/i))
+    ).toBeVisible({ timeout: 3000 });
   });
 
   test('can navigate through multiple days rapidly', async ({ page }) => {
@@ -277,7 +289,7 @@ test.describe('Date Selection with Different Locations', () => {
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('Quito Ecuador');
     await page.waitForTimeout(600);
-    
+
     const result = page.getByRole('button').filter({ hasText: /Quito/i }).first();
     if (await result.isVisible()) {
       await result.click();

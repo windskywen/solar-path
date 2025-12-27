@@ -41,23 +41,17 @@ export const useSolarStore = create<SolarStore>()(
        * Set the current location
        */
       setLocation: (location: LocationPoint) =>
-        set(
-          { location, error: null, isLoadingLocation: false },
-          undefined,
-          'setLocation'
-        ),
+        set({ location, error: null, isLoadingLocation: false }, undefined, 'setLocation'),
 
       /**
        * Set the selected date
        */
-      setDateISO: (dateISO: string) =>
-        set({ dateISO }, undefined, 'setDateISO'),
+      setDateISO: (dateISO: string) => set({ dateISO }, undefined, 'setDateISO'),
 
       /**
        * Set the timezone
        */
-      setTimezone: (timezone: string) =>
-        set({ timezone }, undefined, 'setTimezone'),
+      setTimezone: (timezone: string) => set({ timezone }, undefined, 'setTimezone'),
 
       /**
        * Set the selected hour (0-23) or null to deselect
@@ -80,12 +74,7 @@ export const useSolarStore = create<SolarStore>()(
       /**
        * Reset store to initial state
        */
-      reset: () =>
-        set(
-          { ...initialState, dateISO: getTodayISO('browser') },
-          undefined,
-          'reset'
-        ),
+      reset: () => set({ ...initialState, dateISO: getTodayISO('browser') }, undefined, 'reset'),
     }),
     { name: 'SolarStore' }
   )

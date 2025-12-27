@@ -56,9 +56,9 @@ test.describe('User Story 1: GPS Location', () => {
     await expect(page.getByText(/Solar Path Tracker/i)).toBeVisible();
 
     // Should have a location displayed (from IP geo or default)
-    const locationDisplay = page.locator('[data-testid="location-display"]').or(
-      page.getByText(/Selected Location|GPS Location|Taipei/i)
-    );
+    const locationDisplay = page
+      .locator('[data-testid="location-display"]')
+      .or(page.getByText(/Selected Location|GPS Location|Taipei/i));
     await expect(locationDisplay).toBeVisible({ timeout: 10000 });
   });
 
@@ -81,8 +81,8 @@ test.describe('User Story 1: GPS Location', () => {
     await expect(async () => {
       const pageContent = await page.textContent('body');
       // Check for San Francisco coordinates (rounded)
-      const hasNewCoords = 
-        pageContent?.includes('37.77') || 
+      const hasNewCoords =
+        pageContent?.includes('37.77') ||
         pageContent?.includes('-122.41') ||
         pageContent?.includes('GPS Location');
       expect(hasNewCoords).toBeTruthy();
@@ -101,9 +101,7 @@ test.describe('User Story 1: GPS Location', () => {
     // This may be very brief, so we use a soft assertion
     try {
       await expect(
-        page.getByText(/Locating|Getting location/i).or(
-          page.locator('[data-testid="gps-loading"]')
-        )
+        page.getByText(/Locating|Getting location/i).or(page.locator('[data-testid="gps-loading"]'))
       ).toBeVisible({ timeout: 1000 });
     } catch {
       // Loading state may be too fast to catch - that's OK
@@ -116,10 +114,10 @@ test.describe('User Story 1: GPS Location', () => {
 
     // After map loads, there should be a marker or location indicator
     // The marker could be a custom div or a maplibre marker
-    const marker = page.locator('.maplibregl-marker').or(
-      page.locator('[data-testid="location-marker"]')
-    );
-    
+    const marker = page
+      .locator('.maplibregl-marker')
+      .or(page.locator('[data-testid="location-marker"]'));
+
     // Wait for marker to appear (may take time for map to load)
     await expect(marker).toBeVisible({ timeout: 15000 });
   });
@@ -134,7 +132,7 @@ test.describe('User Story 1: GPS Location', () => {
     // Click on map (center of map container)
     const mapContainer = page.locator('.maplibregl-map');
     const mapBox = await mapContainer.boundingBox();
-    
+
     if (mapBox) {
       // Click slightly off-center to ensure a different location
       await page.mouse.click(mapBox.x + mapBox.width * 0.3, mapBox.y + mapBox.height * 0.3);
@@ -144,11 +142,10 @@ test.describe('User Story 1: GPS Location', () => {
 
       // Location display should have updated
       const newContent = await page.textContent('body');
-      
+
       // Either coordinates changed or "Selected Location" appears
       expect(
-        newContent?.includes('Selected Location') || 
-        newContent !== initialContent
+        newContent?.includes('Selected Location') || newContent !== initialContent
       ).toBeTruthy();
     }
   });
@@ -190,9 +187,7 @@ test.describe('User Story 1: GPS Location', () => {
     await page.waitForLoadState('networkidle');
 
     // Look for the data table or hourly data display
-    const tableOrList = page.locator('table').or(
-      page.getByText(/Hourly|Hour|Time/i)
-    );
+    const tableOrList = page.locator('table').or(page.getByText(/Hourly|Hour|Time/i));
     await expect(tableOrList).toBeVisible({ timeout: 10000 });
 
     // Should show altitude and azimuth values
@@ -203,11 +198,10 @@ test.describe('User Story 1: GPS Location', () => {
 
   test('date picker allows selecting a different date', async ({ page }) => {
     // Wait for date picker to be visible
-    const datePicker = page.getByRole('button', { name: /date|today|select date/i }).or(
-      page.locator('[data-testid="date-picker"]')
-    ).or(
-      page.locator('input[type="date"]')
-    );
+    const datePicker = page
+      .getByRole('button', { name: /date|today|select date/i })
+      .or(page.locator('[data-testid="date-picker"]'))
+      .or(page.locator('input[type="date"]'));
 
     await expect(datePicker).toBeVisible({ timeout: 10000 });
     await expect(datePicker).toBeEnabled();
@@ -222,9 +216,9 @@ test.describe('User Story 1: GPS Location', () => {
     await gpsButton.click();
 
     // Should show error message about location access
-    await expect(
-      page.getByText(/denied|permission|unable|failed/i)
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/denied|permission|unable|failed/i)).toBeVisible({
+      timeout: 10000,
+    });
   });
 });
 
@@ -251,7 +245,7 @@ test.describe('Responsive Layout', () => {
 
     // Both map and sidebar should be visible
     await expect(page.locator('.maplibregl-map')).toBeVisible({ timeout: 15000 });
-    
+
     // Sidebar content should be visible
     const sunEvents = page.getByText(/Sunrise/i);
     await expect(sunEvents).toBeVisible({ timeout: 10000 });

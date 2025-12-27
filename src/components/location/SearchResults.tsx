@@ -138,9 +138,7 @@ function NoResults({ query }: { query: string }) {
       <p className="text-sm text-slate-500 dark:text-slate-400">
         No results found for &ldquo;{query}&rdquo;
       </p>
-      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-        Try a different search term
-      </p>
+      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Try a different search term</p>
     </div>
   );
 }

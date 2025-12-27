@@ -46,7 +46,10 @@ export function LocationInput({ className = '' }: LocationInputProps) {
   // Close search results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
         setIsSearchOpen(false);
       }
     };
@@ -188,12 +191,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
           </>
         ) : (
           <>
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -300,7 +298,10 @@ export function LocationInput({ className = '' }: LocationInputProps) {
 
       {/* Current Location Display */}
       {location && (
-        <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg" data-testid="location-display">
+        <div
+          className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+          data-testid="location-display"
+        >
           <div className="flex items-start gap-2">
             <div className="w-2 h-2 mt-1.5 bg-blue-500 rounded-full flex-shrink-0" />
             <div className="flex-1 min-w-0">

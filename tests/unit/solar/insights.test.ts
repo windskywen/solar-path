@@ -11,10 +11,7 @@ import type { HourlySolarPosition, SunEvents, DaylightState } from '@/types/sola
 /**
  * Helper to create mock hourly positions
  */
-function createHourlyPositions(
-  altitudes: number[],
-  defaultAzimuth = 180
-): HourlySolarPosition[] {
+function createHourlyPositions(altitudes: number[], defaultAzimuth = 180): HourlySolarPosition[] {
   return altitudes.map((altitudeDeg, hour) => {
     let daylightState: DaylightState = 'day';
     if (altitudeDeg < -6) daylightState = 'night';
@@ -48,7 +45,9 @@ describe('generateInsights', () => {
     it('detects midnight sun when all positions are above horizon', () => {
       // All 24 hours above horizon (typical polar day) - minimum is 5
       const hourly = createHourlyPositions(
-        Array(24).fill(0).map((_, i) => 10 + Math.sin((i / 24) * Math.PI * 2) * 5)
+        Array(24)
+          .fill(0)
+          .map((_, i) => 10 + Math.sin((i / 24) * Math.PI * 2) * 5)
       );
       const events = createSunEvents({
         sunriseISO: null,
@@ -59,9 +58,7 @@ describe('generateInsights', () => {
 
       const insights = generateInsights(70, hourly, events);
 
-      expect(insights.messages).toContain(
-        'Midnight sun: the Sun stays above the horizon all day.'
-      );
+      expect(insights.messages).toContain('Midnight sun: the Sun stays above the horizon all day.');
     });
 
     it('does not detect polar day if any hour is below horizon', () => {
@@ -82,7 +79,9 @@ describe('generateInsights', () => {
     it('detects polar night when all positions are below horizon', () => {
       // All 24 hours below horizon
       const hourly = createHourlyPositions(
-        Array(24).fill(0).map((_, i) => -5 - Math.abs(Math.sin((i / 24) * Math.PI * 2) * 10))
+        Array(24)
+          .fill(0)
+          .map((_, i) => -5 - Math.abs(Math.sin((i / 24) * Math.PI * 2) * 10))
       );
       const events = createSunEvents({
         sunriseISO: null,
@@ -93,9 +92,7 @@ describe('generateInsights', () => {
 
       const insights = generateInsights(70, hourly, events);
 
-      expect(insights.messages).toContain(
-        'Polar night: the Sun stays below the horizon all day.'
-      );
+      expect(insights.messages).toContain('Polar night: the Sun stays below the horizon all day.');
     });
 
     it('does not detect polar night if any hour is above horizon', () => {
@@ -116,8 +113,8 @@ describe('generateInsights', () => {
     it('detects high latitude winter conditions', () => {
       // Short day at high latitude
       const altitudes = [
-        -15, -12, -10, -8, -5, -2, 2, 6, 10, 12, 12, 10, 8, 6, 2, -2, -5, -8, -10,
-        -12, -15, -18, -18, -16,
+        -15, -12, -10, -8, -5, -2, 2, 6, 10, 12, 12, 10, 8, 6, 2, -2, -5, -8, -10, -12, -15, -18,
+        -18, -16,
       ];
       const hourly = createHourlyPositions(altitudes);
       const events = createSunEvents({
@@ -136,8 +133,8 @@ describe('generateInsights', () => {
 
     it('does not trigger at lower latitudes', () => {
       const altitudes = [
-        -10, -8, -5, -2, 2, 8, 15, 22, 28, 32, 34, 34, 32, 28, 22, 15, 8, 2, -2,
-        -5, -8, -10, -12, -12,
+        -10, -8, -5, -2, 2, 8, 15, 22, 28, 32, 34, 34, 32, 28, 22, 15, 8, 2, -2, -5, -8, -10, -12,
+        -12,
       ];
       const hourly = createHourlyPositions(altitudes);
       const events = createSunEvents({
@@ -164,9 +161,7 @@ describe('generateInsights', () => {
       const insights = generateInsights(70, hourly, events);
 
       // Should get polar night message, not winter message
-      expect(insights.messages).toContain(
-        'Polar night: the Sun stays below the horizon all day.'
-      );
+      expect(insights.messages).toContain('Polar night: the Sun stays below the horizon all day.');
       expect(insights.messages).not.toContain(
         'Short daylight window and low solar elevation typical of high-latitude winter.'
       );
@@ -176,7 +171,9 @@ describe('generateInsights', () => {
   describe('Rule 4: Near equator', () => {
     it('detects near-equatorial location', () => {
       const hourly = createHourlyPositions(
-        Array(24).fill(0).map((_, i) => -15 + Math.sin(((i - 6) / 24) * Math.PI * 2) * 90)
+        Array(24)
+          .fill(0)
+          .map((_, i) => -15 + Math.sin(((i - 6) / 24) * Math.PI * 2) * 90)
       );
       const events = createSunEvents({ dayLengthHours: 12 });
 
@@ -214,8 +211,7 @@ describe('generateInsights', () => {
     it('detects long summer day at mid-latitude', () => {
       // Long day (>15h) at lat >= 45
       const altitudes = [
-        -2, 2, 8, 15, 22, 30, 38, 45, 52, 58, 62, 64, 62, 58, 52, 45, 38, 30, 22,
-        15, 8, 2, -2, -5,
+        -2, 2, 8, 15, 22, 30, 38, 45, 52, 58, 62, 64, 62, 58, 52, 45, 38, 30, 22, 15, 8, 2, -2, -5,
       ];
       const hourly = createHourlyPositions(altitudes);
       const events = createSunEvents({
@@ -267,9 +263,7 @@ describe('generateInsights', () => {
       const insights = generateInsights(70, hourly, events);
 
       // Should get midnight sun message, not summer message
-      expect(insights.messages).toContain(
-        'Midnight sun: the Sun stays above the horizon all day.'
-      );
+      expect(insights.messages).toContain('Midnight sun: the Sun stays above the horizon all day.');
       expect(insights.messages).not.toContain(
         'Extended daylight typical of mid-to-high latitude summer.'
       );
@@ -280,8 +274,8 @@ describe('generateInsights', () => {
     it('notes low peak altitude', () => {
       // Peak altitude around 25 degrees
       const altitudes = [
-        -15, -10, -5, 0, 5, 10, 15, 20, 23, 25, 25, 24, 22, 18, 14, 10, 5, 0, -5,
-        -10, -12, -14, -15, -15,
+        -15, -10, -5, 0, 5, 10, 15, 20, 23, 25, 25, 24, 22, 18, 14, 10, 5, 0, -5, -10, -12, -14,
+        -15, -15,
       ];
       const hourly = createHourlyPositions(altitudes);
       const events = createSunEvents();
@@ -296,8 +290,8 @@ describe('generateInsights', () => {
     it('notes very high peak altitude', () => {
       // Peak altitude around 85 degrees (near equator at equinox)
       const altitudes = [
-        -20, -10, 0, 15, 30, 45, 60, 72, 80, 84, 85, 84, 80, 72, 60, 45, 30, 15,
-        0, -10, -15, -18, -20, -20,
+        -20, -10, 0, 15, 30, 45, 60, 72, 80, 84, 85, 84, 80, 72, 60, 45, 30, 15, 0, -10, -15, -18,
+        -20, -20,
       ];
       const hourly = createHourlyPositions(altitudes);
       const events = createSunEvents();
@@ -314,8 +308,8 @@ describe('generateInsights', () => {
     it('counts golden hour conditions', () => {
       // Create positions with several golden hours (0-10 degrees)
       const altitudes = [
-        -15, -10, -5, 2, 5, 8, 15, 25, 35, 45, 50, 52, 50, 45, 35, 25, 15, 8, 5,
-        2, -5, -10, -12, -15,
+        -15, -10, -5, 2, 5, 8, 15, 25, 35, 45, 50, 52, 50, 45, 35, 25, 15, 8, 5, 2, -5, -10, -12,
+        -15,
       ];
       const hourly = createHourlyPositions(altitudes);
       const events = createSunEvents();
@@ -351,8 +345,7 @@ describe('generateInsights', () => {
     it('handles southern latitudes correctly', () => {
       // Long summer day at southern latitude (not polar day - has sunrise/sunset)
       const altitudes = [
-        -2, 2, 8, 15, 22, 30, 38, 45, 52, 58, 62, 64, 62, 58, 52, 45, 38, 30, 22,
-        15, 8, 2, -2, -5,
+        -2, 2, 8, 15, 22, 30, 38, 45, 52, 58, 62, 64, 62, 58, 52, 45, 38, 30, 22, 15, 8, 2, -2, -5,
       ];
       const hourly = createHourlyPositions(altitudes);
       const events = createSunEvents({
@@ -403,8 +396,8 @@ describe('generateInsights', () => {
     it('can generate multiple insights for same conditions', () => {
       // High latitude, short day, low peak
       const altitudes = [
-        -15, -12, -10, -8, -5, -2, 2, 5, 8, 10, 10, 8, 5, 2, -2, -5, -8, -10,
-        -12, -15, -16, -17, -17, -16,
+        -15, -12, -10, -8, -5, -2, 2, 5, 8, 10, 10, 8, 5, 2, -2, -5, -8, -10, -12, -15, -16, -17,
+        -17, -16,
       ];
       const hourly = createHourlyPositions(altitudes);
       const events = createSunEvents({
@@ -436,8 +429,8 @@ describe('getSummaryInsight', () => {
   it('returns default message when no insights', () => {
     // Normal conditions at mid-latitude
     const altitudes = [
-      -10, -5, 0, 10, 20, 30, 40, 48, 55, 60, 62, 62, 60, 55, 48, 40, 30, 20, 10,
-      0, -5, -8, -10, -10,
+      -10, -5, 0, 10, 20, 30, 40, 48, 55, 60, 62, 62, 60, 55, 48, 40, 30, 20, 10, 0, -5, -8, -10,
+      -10,
     ];
     const hourly = createHourlyPositions(altitudes);
     const events = createSunEvents({ dayLengthHours: 14 });

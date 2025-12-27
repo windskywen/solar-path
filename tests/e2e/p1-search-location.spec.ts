@@ -37,9 +37,9 @@ test.describe('User Story 2: Search Location', () => {
     await searchInput.fill('Tokyo');
 
     // Wait for debounce (400ms) + API response
-    await expect(
-      page.getByText(/Tokyo/i).locator(':visible').first()
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Tokyo/i).locator(':visible').first()).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   test('search results include OSM verification link', async ({ page }) => {
@@ -50,10 +50,8 @@ test.describe('User Story 2: Search Location', () => {
     await page.waitForTimeout(600); // Debounce + API
 
     // Look for OSM link in results
-    const osmLink = page.getByText('OSM ↗').or(
-      page.locator('a[href*="openstreetmap.org"]')
-    );
-    
+    const osmLink = page.getByText('OSM ↗').or(page.locator('a[href*="openstreetmap.org"]'));
+
     await expect(osmLink.first()).toBeVisible({ timeout: 5000 });
   });
 
@@ -69,9 +67,9 @@ test.describe('User Story 2: Search Location', () => {
     await result.click();
 
     // Location display should update
-    await expect(
-      page.locator('[data-testid="location-display"]').getByText(/Paris/i)
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('[data-testid="location-display"]').getByText(/Paris/i)).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   test('selecting location shows OSM verification link in display', async ({ page }) => {
@@ -80,13 +78,14 @@ test.describe('User Story 2: Search Location', () => {
 
     // Wait for and click result
     await page.waitForTimeout(600);
-    const result = page.getByRole('button').filter({ hasText: /London/i }).first();
+    const result = page
+      .getByRole('button')
+      .filter({ hasText: /London/i })
+      .first();
     await result.click();
 
     // Should see verification link
-    await expect(
-      page.getByText(/Verify on OpenStreetMap/i)
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Verify on OpenStreetMap/i)).toBeVisible({ timeout: 5000 });
   });
 
   test('map recenters when location is selected from search', async ({ page }) => {
@@ -105,9 +104,7 @@ test.describe('User Story 2: Search Location', () => {
     await page.waitForTimeout(2000); // Animation time
 
     // Verify Tokyo location is shown
-    await expect(
-      page.locator('[data-testid="location-display"]')
-    ).toContainText('Tokyo');
+    await expect(page.locator('[data-testid="location-display"]')).toContainText('Tokyo');
   });
 
   test('search results disappear when clicking outside', async ({ page }) => {
@@ -116,15 +113,20 @@ test.describe('User Story 2: Search Location', () => {
 
     // Wait for results
     await page.waitForTimeout(600);
-    await expect(page.getByRole('button').filter({ hasText: /Berlin/i }).first()).toBeVisible();
+    await expect(
+      page
+        .getByRole('button')
+        .filter({ hasText: /Berlin/i })
+        .first()
+    ).toBeVisible();
 
     // Click outside the search
     await page.locator('.maplibregl-map').click();
 
     // Results should disappear
-    await expect(
-      page.getByRole('listbox', { name: /Search results/i })
-    ).not.toBeVisible({ timeout: 3000 });
+    await expect(page.getByRole('listbox', { name: /Search results/i })).not.toBeVisible({
+      timeout: 3000,
+    });
   });
 
   test('pressing Escape closes search results', async ({ page }) => {
@@ -144,7 +146,7 @@ test.describe('User Story 2: Search Location', () => {
 
   test('search works for coordinates', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/Search location/i);
-    
+
     // Search for a coordinate
     await searchInput.fill('35.6762, 139.6503');
 
@@ -158,7 +160,7 @@ test.describe('User Story 2: Search Location', () => {
 
   test('search handles special characters', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/Search location/i);
-    
+
     // Search with special characters
     await searchInput.fill('São Paulo');
 
@@ -167,26 +169,27 @@ test.describe('User Story 2: Search Location', () => {
 
     // Should find São Paulo
     await expect(
-      page.getByRole('button').filter({ hasText: /São Paulo|Sao Paulo/i }).first()
+      page
+        .getByRole('button')
+        .filter({ hasText: /São Paulo|Sao Paulo/i })
+        .first()
     ).toBeVisible({ timeout: 5000 });
   });
 
   test('short queries do not trigger search', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/Search location/i);
-    
+
     // Type single character
     await searchInput.fill('T');
     await page.waitForTimeout(600);
 
     // No results should appear (min 2 chars)
-    await expect(
-      page.getByRole('listbox', { name: /Search results/i })
-    ).not.toBeVisible();
+    await expect(page.getByRole('listbox', { name: /Search results/i })).not.toBeVisible();
   });
 
   test('no results message shown for unknown location', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/Search location/i);
-    
+
     // Search for gibberish
     await searchInput.fill('xyznotarealplace12345');
 
@@ -194,30 +197,29 @@ test.describe('User Story 2: Search Location', () => {
     await page.waitForTimeout(1000);
 
     // Should show no results message
-    await expect(
-      page.getByText(/No results found/i)
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/No results found/i)).toBeVisible({ timeout: 5000 });
   });
 
   test('loading indicator shows while searching', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/Search location/i);
-    
+
     // Type to trigger search
     await searchInput.fill('New York');
 
     // Should briefly show loading state
     // Note: This may be too fast to catch reliably
     try {
-      await expect(
-        page.locator('.animate-spin').first()
-      ).toBeVisible({ timeout: 1000 });
+      await expect(page.locator('.animate-spin').first()).toBeVisible({ timeout: 1000 });
     } catch {
       // Loading may be too fast - acceptable
     }
 
     // Eventually results should appear
     await expect(
-      page.getByRole('button').filter({ hasText: /New York/i }).first()
+      page
+        .getByRole('button')
+        .filter({ hasText: /New York/i })
+        .first()
     ).toBeVisible({ timeout: 5000 });
   });
 
@@ -230,7 +232,10 @@ test.describe('User Story 2: Search Location', () => {
     await searchInput.fill('Sydney Australia');
 
     await page.waitForTimeout(600);
-    const result = page.getByRole('button').filter({ hasText: /Sydney/i }).first();
+    const result = page
+      .getByRole('button')
+      .filter({ hasText: /Sydney/i })
+      .first();
     await result.click();
 
     // Wait for data to update

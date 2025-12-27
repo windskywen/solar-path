@@ -65,9 +65,7 @@ export function generateInsights(
 
   // Rule 3: High latitude winter
   if (absLat >= 55 && dayLengthHours < 8 && !isPolarNight(hourly)) {
-    messages.push(
-      'Short daylight window and low solar elevation typical of high-latitude winter.'
-    );
+    messages.push('Short daylight window and low solar elevation typical of high-latitude winter.');
   }
 
   // Rule 4: Near equator
@@ -87,14 +85,18 @@ export function generateInsights(
   // Low peak altitude warning
   if (peakAltitude < 30 && peakAltitude > 0) {
     messages.push(
-      `Low maximum solar altitude (${peakAltitude.toFixed(1)}°) — expect longer shadows and reduced solar intensity.`
+      `Low maximum solar altitude (${peakAltitude.toFixed(
+        1
+      )}°) — expect longer shadows and reduced solar intensity.`
     );
   }
 
   // High peak altitude note
   if (peakAltitude > 80) {
     messages.push(
-      `Very high maximum solar altitude (${peakAltitude.toFixed(1)}°) — sun will be nearly overhead at midday.`
+      `Very high maximum solar altitude (${peakAltitude.toFixed(
+        1
+      )}°) — sun will be nearly overhead at midday.`
     );
   }
 
@@ -102,7 +104,9 @@ export function generateInsights(
   const goldenHours = hourly.filter((h) => h.daylightState === 'golden').length;
   if (goldenHours > 0 && !isPolarDay(hourly) && !isPolarNight(hourly)) {
     messages.push(
-      `Approximately ${goldenHours} hour${goldenHours > 1 ? 's' : ''} of golden hour conditions today.`
+      `Approximately ${goldenHours} hour${
+        goldenHours > 1 ? 's' : ''
+      } of golden hour conditions today.`
     );
   }
 

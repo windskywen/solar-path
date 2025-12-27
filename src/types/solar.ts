@@ -124,7 +124,11 @@ export interface IpGeoResponse {
 // Error Types
 // ============================================================================
 
-export type GeocodeErrorCode = 'INVALID_QUERY' | 'INVALID_LIMIT' | 'RATE_LIMITED' | 'UPSTREAM_ERROR';
+export type GeocodeErrorCode =
+  | 'INVALID_QUERY'
+  | 'INVALID_LIMIT'
+  | 'RATE_LIMITED'
+  | 'UPSTREAM_ERROR';
 export type IpGeoErrorCode = 'IP_GEO_UNAVAILABLE';
 
 export interface ApiError {

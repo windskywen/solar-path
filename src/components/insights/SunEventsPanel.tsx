@@ -65,10 +65,7 @@ function getDayLengthLabel(events: SunEvents): string | null {
 /**
  * SunEventsPanel displays sunrise, sunset, and day length
  */
-export function SunEventsPanel({
-  events,
-  className = '',
-}: SunEventsPanelProps) {
+export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) {
   // Loading/empty state
   if (!events) {
     return (
@@ -95,7 +92,11 @@ export function SunEventsPanel({
         <div
           className={`
             rounded-lg p-3 text-center
-            ${isPolarDay ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200' : ''}
+            ${
+              isPolarDay
+                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200'
+                : ''
+            }
             ${isPolarNight ? 'bg-slate-800 dark:bg-slate-900 text-slate-200' : ''}
           `}
         >
@@ -192,15 +193,11 @@ export function SunEventsPanelCompact({
     <div className={`flex items-center gap-4 text-sm ${className}`}>
       <span className="flex items-center gap-1">
         <span>🌅</span>
-        <span className="font-medium tabular-nums">
-          {sunriseTime || '—'}
-        </span>
+        <span className="font-medium tabular-nums">{sunriseTime || '—'}</span>
       </span>
       <span className="flex items-center gap-1">
         <span>🌇</span>
-        <span className="font-medium tabular-nums">
-          {sunsetTime || '—'}
-        </span>
+        <span className="font-medium tabular-nums">{sunsetTime || '—'}</span>
       </span>
       <span className="flex items-center gap-1">
         <span>⏱️</span>

@@ -1,6 +1,6 @@
 /**
  * Data Components
- * 
+ *
  * Components for displaying solar data in various formats.
  */
 

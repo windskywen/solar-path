@@ -148,9 +148,9 @@ function createCacheKey(query: string, limit: number): string {
  * Convert Nominatim result to our format
  */
 function convertResult(result: NominatimResult): GeocodeResult {
-  const osmType = result.osm_type === 'node' ? 'node' :
-                  result.osm_type === 'way' ? 'way' : 'relation';
-  
+  const osmType =
+    result.osm_type === 'node' ? 'node' : result.osm_type === 'way' ? 'way' : 'relation';
+
   return {
     displayName: result.display_name,
     lat: parseFloat(result.lat),
@@ -173,7 +173,7 @@ async function fetchFromNominatim(query: string, limit: number): Promise<Geocode
   const response = await fetch(`${NOMINATIM_BASE_URL}?${params}`, {
     headers: {
       'User-Agent': USER_AGENT,
-      'Accept': 'application/json',
+      Accept: 'application/json',
     },
   });
 
@@ -192,7 +192,9 @@ async function fetchFromNominatim(query: string, limit: number): Promise<Geocode
  * - q: Search query (required)
  * - limit: Max results 1-10 (default: 5)
  */
-export async function GET(request: NextRequest): Promise<NextResponse<GeocodeResponse | GeocodeErrorResponse>> {
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<GeocodeResponse | GeocodeErrorResponse>> {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get('q');
   const limitStr = searchParams.get('limit');
@@ -230,7 +232,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<GeocodeRes
   const retryAfter = checkRateLimit(clientIp);
   if (retryAfter > 0) {
     return NextResponse.json(
-      { error: 'Rate limit exceeded. Please try again later.', code: 'RATE_LIMITED' as const, retryAfter },
+      {
+        error: 'Rate limit exceeded. Please try again later.',
+        code: 'RATE_LIMITED' as const,
+        retryAfter,
+      },
       { status: 429, headers: { 'Retry-After': retryAfter.toString() } }
     );
   }
@@ -238,12 +244,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<GeocodeRes
   // Check cache
   const cacheKey = createCacheKey(query, limit);
   const cached = geocodeCache.get(cacheKey);
-  
+
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return NextResponse.json(
-      { results: cached.results },
-      { headers: { 'X-Cache': 'HIT' } }
-    );
+    return NextResponse.json({ results: cached.results }, { headers: { 'X-Cache': 'HIT' } });
   }
 
   // Fetch from Nominatim
@@ -256,10 +259,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<GeocodeRes
       timestamp: Date.now(),
     });
 
-    return NextResponse.json(
-      { results },
-      { headers: { 'X-Cache': 'MISS' } }
-    );
+    return NextResponse.json({ results }, { headers: { 'X-Cache': 'MISS' } });
   } catch (error) {
     console.error('Geocode API error:', error);
     return NextResponse.json(

@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  formatDayLength,
-  computeSunEvents,
-  isPolarDay,
-  isPolarNight,
-} from '@/lib/solar/events';
+import { formatDayLength, computeSunEvents, isPolarDay, isPolarNight } from '@/lib/solar/events';
 
 describe('formatDayLength', () => {
   it('formats whole hours', () => {

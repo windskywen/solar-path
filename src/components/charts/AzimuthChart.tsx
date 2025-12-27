@@ -67,7 +67,13 @@ function formatHour(hour: number): string {
 /**
  * Custom tooltip for azimuth chart
  */
-function AzimuthTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: ChartDataPoint }> }) {
+function AzimuthTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: ChartDataPoint }>;
+}) {
   if (!active || !payload || payload.length === 0) return null;
 
   const data = payload[0].payload;
@@ -78,9 +84,7 @@ function AzimuthTooltip({ active, payload }: { active?: boolean; payload?: Array
       <p className="text-sm text-slate-600 dark:text-slate-400">
         Azimuth: <span className="font-mono">{data.azimuth.toFixed(1)}°</span>
       </p>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-        Direction: {data.cardinal}
-      </p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Direction: {data.cardinal}</p>
     </div>
   );
 }
@@ -129,7 +133,10 @@ export function AzimuthChart({
 
   if (positions.length === 0) {
     return (
-      <div className={`flex items-center justify-center text-slate-400 ${className}`} style={{ height }}>
+      <div
+        className={`flex items-center justify-center text-slate-400 ${className}`}
+        style={{ height }}
+      >
         No data available
       </div>
     );

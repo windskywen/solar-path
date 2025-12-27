@@ -342,9 +342,7 @@ describe('createAdaptiveRayCollection', () => {
       for (const f of c.features) {
         const [startLng, startLat] = f.geometry.coordinates[0];
         const [endLng, endLat] = f.geometry.coordinates[1];
-        const dist = Math.sqrt(
-          Math.pow(endLat - startLat, 2) + Math.pow(endLng - startLng, 2)
-        );
+        const dist = Math.sqrt(Math.pow(endLat - startLat, 2) + Math.pow(endLng - startLng, 2));
         maxDist = Math.max(maxDist, dist);
       }
       return maxDist;

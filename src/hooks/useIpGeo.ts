@@ -91,12 +91,7 @@ export interface UseIpGeoResult {
  * ```
  */
 export function useIpGeo(): UseIpGeoResult {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['ip-geo'],
     queryFn: fetchIpGeo,
     // Only fetch once on mount

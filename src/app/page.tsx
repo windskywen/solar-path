@@ -77,20 +77,21 @@ export default function HomePage() {
   const selectedPosition = useSolarPositionForHour(selectedHour);
 
   // Generate insights
-  const insights = location && solarData
-    ? generateInsights(location.lat, solarData.hourly, solarData.events)
-    : null;
+  const insights =
+    location && solarData
+      ? generateInsights(location.lat, solarData.hourly, solarData.events)
+      : null;
 
   return (
     <div className="h-full flex flex-col">
       {/* Skip Links for keyboard navigation */}
-      <SkipLinks 
+      <SkipLinks
         links={[
           { targetId: 'main-content', label: 'Skip to main content' },
           { targetId: 'solar-data', label: 'Skip to solar data panel' },
         ]}
       />
-      
+
       {/* Header */}
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
@@ -104,7 +105,11 @@ export default function HomePage() {
       </header>
 
       {/* Main content - dual pane layout */}
-      <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col lg:flex-row overflow-hidden focus:outline-none">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex-1 flex flex-col lg:flex-row overflow-hidden focus:outline-none"
+      >
         {/* Left pane: Map */}
         <section
           className="lg:w-3/5 h-[50vh] lg:h-full relative bg-slate-100 dark:bg-slate-800"
@@ -162,11 +167,7 @@ export default function HomePage() {
                       Advanced: Timezone
                     </summary>
                     <div className="mt-3 pl-4">
-                      <TimezoneSelector
-                        value={timezone}
-                        onChange={setTimezone}
-                        dateISO={dateISO}
-                      />
+                      <TimezoneSelector value={timezone} onChange={setTimezone} dateISO={dateISO} />
                     </div>
                   </details>
                 </div>
