@@ -1,0 +1,150 @@
+'use client';
+
+/**
+ * InsightsPanel Component
+ * 
+ * Displays rule-based solar insights with icons and styling.
+ * Shows contextual information about solar conditions based on location,
+ * date, and computed solar data.
+ */
+
+import React from 'react';
+import type { SolarInsights } from '@/types/solar';
+
+/**
+ * Map insight content to appropriate icons
+ */
+function getInsightIcon(message: string): string {
+  const lowerMessage = message.toLowerCase();
+  
+  if (lowerMessage.includes('midnight sun') || lowerMessage.includes('polar day')) {
+    return '☀️';
+  }
+  if (lowerMessage.includes('polar night')) {
+    return '🌙';
+  }
+  if (lowerMessage.includes('winter') || lowerMessage.includes('short daylight')) {
+    return '❄️';
+  }
+  if (lowerMessage.includes('summer') || lowerMessage.includes('extended daylight')) {
+    return '🌞';
+  }
+  if (lowerMessage.includes('equator')) {
+    return '🌍';
+  }
+  if (lowerMessage.includes('golden hour')) {
+    return '🌅';
+  }
+  if (lowerMessage.includes('shadow') || lowerMessage.includes('low maximum solar')) {
+    return '📐';
+  }
+  if (lowerMessage.includes('overhead') || lowerMessage.includes('high maximum solar')) {
+    return '☀️';
+  }
+  
+  // Default insight icon
+  return '💡';
+}
+
+/**
+ * Get severity/type class for insight styling
+ */
+function getInsightVariant(message: string): 'info' | 'warning' | 'highlight' {
+  const lowerMessage = message.toLowerCase();
+  
+  if (lowerMessage.includes('polar night') || lowerMessage.includes('short daylight')) {
+    return 'warning';
+  }
+  if (lowerMessage.includes('midnight sun') || lowerMessage.includes('nearly overhead')) {
+    return 'highlight';
+  }
+  
+  return 'info';
+}
+
+interface InsightsPanelProps {
+  /** Solar insights object containing messages array */
+  insights: SolarInsights | null;
+  /** Optional class name for additional styling */
+  className?: string;
+  /** Whether to show a compact version (fewer details) */
+  compact?: boolean;
+}
+
+export function InsightsPanel({ insights, className = '', compact = false }: InsightsPanelProps) {
+  const hasInsights = insights && insights.messages.length > 0;
+  
+  const variantStyles = {
+    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
+    warning: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
+    highlight: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800',
+  };
+  
+  return (
+    <section 
+      aria-labelledby="insights-heading"
+      className={className}
+    >
+      <h2
+        id="insights-heading"
+        className="text-lg font-medium text-slate-900 dark:text-white mb-3"
+      >
+        Insights
+      </h2>
+      
+      <div 
+        className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4"
+        role="region"
+        aria-label="Solar insights"
+      >
+        {hasInsights ? (
+          <ul className="space-y-2" role="list">
+            {insights.messages.map((message, index) => {
+              const icon = getInsightIcon(message);
+              const variant = getInsightVariant(message);
+              
+              if (compact && index > 1) {
+                // In compact mode, show max 2 insights
+                return null;
+              }
+              
+              return (
+                <li 
+                  key={index}
+                  className={`
+                    flex items-start gap-2 text-sm 
+                    ${compact ? '' : `p-2 rounded border ${variantStyles[variant]}`}
+                    text-slate-700 dark:text-slate-300
+                  `}
+                >
+                  <span 
+                    className="flex-shrink-0 text-base" 
+                    role="img" 
+                    aria-hidden="true"
+                  >
+                    {icon}
+                  </span>
+                  <span>{message}</span>
+                </li>
+              );
+            })}
+            
+            {compact && insights.messages.length > 2 && (
+              <li className="text-xs text-slate-500 dark:text-slate-400 pl-6">
+                +{insights.messages.length - 2} more insight{insights.messages.length > 3 ? 's' : ''}
+              </li>
+            )}
+          </ul>
+        ) : (
+          <p 
+            className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2"
+            role="status"
+          >
+            <span role="img" aria-hidden="true">✓</span>
+            <span>Normal daylight conditions for this location and date.</span>
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
