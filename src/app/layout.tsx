@@ -48,7 +48,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
+    // suppressHydrationWarning: Browser extensions (password managers, etc.) inject
+    // attributes like fdprocessedid that cause harmless hydration mismatches
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}>
         <Providers>{children}</Providers>
       </body>
