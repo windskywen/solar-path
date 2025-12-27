@@ -179,6 +179,9 @@ As a user, I want to see contextual insights about the solar conditions so I can
 - **FR-005**: System MUST support browser geolocation to fetch user's current coordinates.
 - **FR-006**: System MUST allow date selection for any valid Gregorian calendar date.
 - **FR-007**: System MUST default to today's date in the user's local timezone.
+- **FR-007a**: On initial load, system MUST attempt IP-based geolocation to display a default location.
+- **FR-007b**: If IP geolocation is unavailable, system MUST prompt user for browser geolocation permission.
+- **FR-007c**: If browser geolocation is denied or unavailable, system MUST default to Taipei (25.0330°N, 121.5654°E) as the fallback location.
 
 **Solar Computation**
 - **FR-008**: System MUST compute hourly sun position (azimuth 0-360° and altitude) for hours 00:00 through 23:00.
@@ -188,6 +191,7 @@ As a user, I want to see contextual insights about the solar conditions so I can
 
 **Map Visualization**
 - **FR-012**: System MUST display an interactive map with 24 radial rays from the selected coordinate, each representing an hour's azimuth.
+- **FR-012a**: Solar rays MUST extend from the selected coordinate to the edge of the visible map viewport.
 - **FR-013**: System MUST color-code rays based on altitude bands (night, golden hour, daylight).
 - **FR-014**: System MUST allow ray selection by clicking, which updates all synchronized views.
 - **FR-015**: System MUST preserve map center and zoom during data updates, ray selection, and table selection.
@@ -197,7 +201,7 @@ As a user, I want to see contextual insights about the solar conditions so I can
 - **FR-017**: System MUST display an altitude area chart showing the solar arc.
 - **FR-018**: System MUST display an azimuth line chart showing bearing trend.
 - **FR-019**: System MUST synchronize selection state across map rays, table rows, and charts.
-- **FR-020**: System MUST provide one-click copy functionality for hourly datapoints (lat, lng, datetime, azimuth, altitude).
+- **FR-020**: System MUST provide one-click copy functionality for individual field values (latitude, longitude, datetime, azimuth, altitude) allowing users to copy each value separately.
 - **FR-021**: System MUST display a metrics panel showing selected hour's time, azimuth, altitude, and daylight state.
 
 **Service Protection**
@@ -237,3 +241,14 @@ As a user, I want to see contextual insights about the solar conditions so I can
 - Free geocoding services (primarily OpenStreetMap Nominatim) will be available with reasonable rate limits.
 - Client-side solar computation will provide accuracy sufficient for practical use cases (architectural planning, photography, etc.).
 - Users understand basic concepts like compass directions (North/East/South/West) and time of day.
+- Application is desktop-first responsive: optimized for desktop use but functional on mobile devices.
+
+## Clarifications
+
+### Session 2025-12-28
+
+- Q: What should users see on first load before any location is selected? → A: Use IP-based geolocation as default; if unavailable, prompt for browser geolocation; if denied, default to Taipei.
+- Q: How long should the solar rays extend on the map? → A: Extend to map edge/viewport boundary.
+- Q: What format should copied solar data use? → A: Copy individual field values (lat, lng, azimuth, altitude, etc.) separately, not combined.
+- Q: Should golden hour threshold be configurable? → A: Fixed at 0°–6° (standard golden hour definition).
+- Q: Desktop or mobile priority? → A: Desktop-first responsive (works on mobile but optimized for desktop).
