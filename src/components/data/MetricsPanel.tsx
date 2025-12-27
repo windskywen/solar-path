@@ -144,7 +144,9 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
   // No selection state
   if (!position) {
     return (
-      <div className={`h-full flex flex-col items-center justify-center p-6 text-center ${className}`}>
+      <div
+        className={`h-full flex flex-col items-center justify-center p-6 text-center ${className}`}
+      >
         <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-3">
           <span className="text-2xl grayscale opacity-50">☀️</span>
         </div>
@@ -161,7 +163,9 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
   return (
     <div className={`h-full flex flex-col ${className}`}>
       {/* Header with time and state */}
-      <div className={`flex items-center justify-between p-3 rounded-lg mb-4 ${stateStyle.bg} border ${stateStyle.border}`}>
+      <div
+        className={`flex items-center justify-between p-3 rounded-lg mb-4 ${stateStyle.bg} border ${stateStyle.border}`}
+      >
         <div className="flex items-center gap-3">
           <span className="text-2xl filter drop-shadow-sm">{stateStyle.icon}</span>
           <div>
@@ -185,10 +189,12 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
         {/* Azimuth */}
         <div className="flex flex-col justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Azimuth</p>
+            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Azimuth
+            </p>
             <CopyButton text={position.azimuthDeg.toFixed(1)} label="Azimuth" />
           </div>
-          
+
           <div className="flex items-end justify-between mt-auto">
             <div>
               <div className="flex items-baseline gap-1">
@@ -209,10 +215,12 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
         {/* Altitude */}
         <div className="flex flex-col justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Altitude</p>
+            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Altitude
+            </p>
             <CopyButton text={position.altitudeDeg.toFixed(1)} label="Altitude" />
           </div>
-          
+
           <div className="mt-auto">
             <div className="flex items-baseline gap-1">
               <span

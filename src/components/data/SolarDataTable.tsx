@@ -94,9 +94,7 @@ export function SolarDataTable({
   );
 
   return (
-    <div
-      className={`overflow-hidden ${className}`}
-    >
+    <div className={`overflow-hidden ${className}`}>
       {/* Table header */}
       <div className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
         <div className="grid grid-cols-4 gap-2 px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -122,8 +120,8 @@ export function SolarDataTable({
                 w-full grid grid-cols-4 gap-2 px-4 py-2.5 text-sm text-left
                 transition-all duration-200
                 ${
-                  isSelected 
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium' 
+                  isSelected
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
                     : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }
                 ${
@@ -152,7 +150,11 @@ export function SolarDataTable({
               {/* State indicator */}
               <div className="flex items-center gap-2">
                 <div className={`w-1.5 h-1.5 rounded-full ${stateColors.dot}`} />
-                <span className={`text-xs capitalize truncate ${isSelected ? 'text-blue-600 dark:text-blue-300' : stateColors.text}`}>
+                <span
+                  className={`text-xs capitalize truncate ${
+                    isSelected ? 'text-blue-600 dark:text-blue-300' : stateColors.text
+                  }`}
+                >
                   {position.daylightState}
                 </span>
               </div>
@@ -165,7 +167,9 @@ export function SolarDataTable({
       {positions.length > 0 && (
         <div className="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 px-4 py-2.5">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-            <span className="font-medium">{positions.filter((p) => p.altitudeDeg > 0).length} hours of daylight</span>
+            <span className="font-medium">
+              {positions.filter((p) => p.altitudeDeg > 0).length} hours of daylight
+            </span>
             {timezone && <span className="font-mono opacity-75">{timezone.replace('_', ' ')}</span>}
           </div>
         </div>

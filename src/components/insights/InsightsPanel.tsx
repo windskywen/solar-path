@@ -84,16 +84,15 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
     <section aria-labelledby="insights-heading" className={className}>
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg">💡</span>
-        <h2 id="insights-heading" className="text-base font-semibold text-slate-900 dark:text-white">
+        <h2
+          id="insights-heading"
+          className="text-base font-semibold text-slate-900 dark:text-white"
+        >
           Insights
         </h2>
       </div>
 
-      <div
-        className=""
-        role="region"
-        aria-label="Solar insights"
-      >
+      <div className="" role="region" aria-label="Solar insights">
         {hasInsights ? (
           <ul className="space-y-2" role="list">
             {insights.messages.map((message, index) => {
@@ -115,7 +114,11 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
                     text-slate-700 dark:text-slate-300
                   `}
                 >
-                  <span className="flex-shrink-0 text-lg leading-none mt-0.5" role="img" aria-hidden="true">
+                  <span
+                    className="flex-shrink-0 text-lg leading-none mt-0.5"
+                    role="img"
+                    aria-hidden="true"
+                  >
                     {icon}
                   </span>
                   <span className="leading-snug">{message}</span>

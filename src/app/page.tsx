@@ -148,7 +148,7 @@ export default function HomePage() {
                     Configuration
                   </h2>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Location Input Section */}
                   <section aria-labelledby="location-heading" className="space-y-2">
@@ -173,13 +173,18 @@ export default function HomePage() {
                       <DatePicker />
                       <details className="group">
                         <summary className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1 transition-colors select-none">
-                          <svg 
-                            className="w-3 h-3 transition-transform group-open:rotate-90" 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
+                          <svg
+                            className="w-3 h-3 transition-transform group-open:rotate-90"
+                            fill="none"
+                            viewBox="0 0 24 24"
                             stroke="currentColor"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
                           </svg>
                           Timezone Settings
                         </summary>
@@ -199,7 +204,10 @@ export default function HomePage() {
               {/* Solar Status Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Selected Hour Metrics Section */}
-                <section aria-labelledby="metrics-heading" className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col">
+                <section
+                  aria-labelledby="metrics-heading"
+                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col"
+                >
                   <div className="flex items-center justify-between mb-4">
                     <h2
                       id="metrics-heading"
@@ -214,7 +222,10 @@ export default function HomePage() {
                 </section>
 
                 {/* Sun Events Section */}
-                <section aria-labelledby="events-heading" className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col">
+                <section
+                  aria-labelledby="events-heading"
+                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col"
+                >
                   <div className="flex items-center justify-between mb-4">
                     <h2
                       id="events-heading"
@@ -230,7 +241,10 @@ export default function HomePage() {
               </div>
 
               {/* Charts Section */}
-              <section aria-labelledby="charts-heading" className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5">
+              <section
+                aria-labelledby="charts-heading"
+                className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5"
+              >
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-lg">📈</span>
                   <h2
@@ -249,13 +263,18 @@ export default function HomePage() {
                 ) : (
                   <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-8 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-slate-700">
                     <span className="text-2xl mb-2">📊</span>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">Select a location to generate charts</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">
+                      Select a location to generate charts
+                    </p>
                   </div>
                 )}
               </section>
 
               {/* Hourly Data Table Section */}
-              <section aria-labelledby="hourly-heading" className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+              <section
+                aria-labelledby="hourly-heading"
+                className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
+              >
                 <div className="p-5 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">📋</span>
