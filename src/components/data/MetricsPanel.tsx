@@ -162,52 +162,56 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
       className={`rounded-lg border ${stateStyle.border} ${stateStyle.bg} overflow-hidden ${className}`}
     >
       {/* Header with time and state */}
-      <div className="flex items-center justify-between p-3 border-b border-inherit">
+      <div className="flex items-center justify-between p-2 border-b border-inherit">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">{stateStyle.icon}</span>
+          <span className="text-xl">{stateStyle.icon}</span>
           <div>
-            <p className="font-semibold text-slate-900 dark:text-white">
+            <p className="font-semibold text-sm text-slate-900 dark:text-white">
               {formatTime(position.hour)}
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{position.localTimeLabel}</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              {position.localTimeLabel}
+            </p>
           </div>
         </div>
         <div className="text-right">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300">
             {stateStyle.label}
           </span>
         </div>
       </div>
 
       {/* Main metrics */}
-      <div className="p-3 space-y-3">
+      <div className="p-2 space-y-2">
         {/* Azimuth */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2">
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs text-slate-500 dark:text-slate-400">Azimuth</p>
+            <div className="flex items-center justify-between mb-0.5">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">Azimuth</p>
               <CopyButton text={position.azimuthDeg.toFixed(1)} label="Azimuth" />
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-bold text-slate-900 dark:text-white tabular-nums">
                 {position.azimuthDeg.toFixed(1)}°
               </span>
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 {shortDir}
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{cardinalDir}</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+              {cardinalDir}
+            </p>
           </div>
 
           {/* Altitude */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs text-slate-500 dark:text-slate-400">Altitude</p>
+            <div className="flex items-center justify-between mb-0.5">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">Altitude</p>
               <CopyButton text={position.altitudeDeg.toFixed(1)} label="Altitude" />
             </div>
             <div className="flex items-baseline gap-1">
               <span
-                className={`text-2xl font-bold tabular-nums ${
+                className={`text-lg font-bold tabular-nums ${
                   position.altitudeDeg < 0
                     ? 'text-slate-400 dark:text-slate-500'
                     : 'text-slate-900 dark:text-white'
@@ -217,22 +221,21 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
                 {position.altitudeDeg.toFixed(1)}°
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
               {position.altitudeDeg < 0 ? 'Below horizon' : 'Above horizon'}
             </p>
           </div>
         </div>
 
         {/* Additional info */}
-        <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-          <p className="text-xs text-slate-500 dark:text-slate-400">{altDescription}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-            {stateStyle.description}
+        <div className="pt-1 border-t border-slate-200 dark:border-slate-700">
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+            {altDescription}
           </p>
         </div>
 
         {/* Compass visual */}
-        <div className="flex justify-center pt-2">
+        <div className="flex justify-center pt-1">
           <CompassIndicator azimuth={position.azimuthDeg} />
         </div>
       </div>
@@ -245,34 +248,34 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
  */
 function CompassIndicator({ azimuth }: { azimuth: number }) {
   return (
-    <div className="relative w-16 h-16">
+    <div className="relative w-12 h-12">
       {/* Compass circle */}
-      <div className="absolute inset-0 rounded-full border-2 border-slate-300 dark:border-slate-600" />
+      <div className="absolute inset-0 rounded-full border border-slate-300 dark:border-slate-600" />
 
       {/* Cardinal directions */}
-      <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[10px] font-medium text-slate-500">
+      <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[8px] font-medium text-slate-500">
         N
       </span>
-      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-medium text-slate-500">
+      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-medium text-slate-500">
         S
       </span>
-      <span className="absolute top-1/2 -left-2 -translate-y-1/2 text-[10px] font-medium text-slate-500">
+      <span className="absolute top-1/2 -left-1.5 -translate-y-1/2 text-[8px] font-medium text-slate-500">
         W
       </span>
-      <span className="absolute top-1/2 -right-2 -translate-y-1/2 text-[10px] font-medium text-slate-500">
+      <span className="absolute top-1/2 -right-1.5 -translate-y-1/2 text-[8px] font-medium text-slate-500">
         E
       </span>
 
       {/* Sun indicator line */}
       <div
-        className="absolute top-1/2 left-1/2 w-6 h-0.5 bg-amber-500 origin-left"
+        className="absolute top-1/2 left-1/2 w-4 h-0.5 bg-amber-500 origin-left"
         style={{ transform: `rotate(${azimuth - 90}deg)` }}
       >
-        <div className="absolute -right-1 -top-1 w-2 h-2 bg-amber-400 rounded-full" />
+        <div className="absolute -right-0.5 -top-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
       </div>
 
       {/* Center dot */}
-      <div className="absolute top-1/2 left-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 bg-slate-400 dark:bg-slate-500 rounded-full" />
+      <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 -translate-x-1/2 -translate-y-1/2 bg-slate-400 dark:bg-slate-500 rounded-full" />
     </div>
   );
 }

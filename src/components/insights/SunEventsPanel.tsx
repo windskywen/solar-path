@@ -86,12 +86,12 @@ export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) 
   const isPolarNight = events.dayLengthHours === 0;
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-2 ${className}`}>
       {/* Special condition banner */}
       {condition && (
         <div
           className={`
-            rounded-lg p-3 text-center
+            rounded-lg p-2 text-center text-xs
             ${
               isPolarDay
                 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200'
@@ -105,42 +105,42 @@ export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) 
       )}
 
       {/* Sun events grid */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         {/* Sunrise */}
-        <div className="bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg p-3 text-center">
-          <div className="flex justify-center mb-1">
-            <span className="text-2xl" role="img" aria-label="Sunrise">
+        <div className="bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg p-2 text-center">
+          <div className="flex justify-center mb-0.5">
+            <span className="text-xl" role="img" aria-label="Sunrise">
               🌅
             </span>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Sunrise</p>
-          <p className="text-lg font-semibold text-slate-900 dark:text-white tabular-nums">
+          <p className="text-[10px] text-slate-600 dark:text-slate-400 mb-0.5">Sunrise</p>
+          <p className="text-sm font-semibold text-slate-900 dark:text-white tabular-nums">
             {sunriseTime || '—'}
           </p>
         </div>
 
         {/* Sunset */}
-        <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg p-3 text-center">
-          <div className="flex justify-center mb-1">
-            <span className="text-2xl" role="img" aria-label="Sunset">
+        <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg p-2 text-center">
+          <div className="flex justify-center mb-0.5">
+            <span className="text-xl" role="img" aria-label="Sunset">
               🌇
             </span>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Sunset</p>
-          <p className="text-lg font-semibold text-slate-900 dark:text-white tabular-nums">
+          <p className="text-[10px] text-slate-600 dark:text-slate-400 mb-0.5">Sunset</p>
+          <p className="text-sm font-semibold text-slate-900 dark:text-white tabular-nums">
             {sunsetTime || '—'}
           </p>
         </div>
 
         {/* Day Length */}
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-3 text-center">
-          <div className="flex justify-center mb-1">
-            <span className="text-2xl" role="img" aria-label="Day length">
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-2 text-center">
+          <div className="flex justify-center mb-0.5">
+            <span className="text-xl" role="img" aria-label="Day length">
               ⏱️
             </span>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Day Length</p>
-          <p className="text-lg font-semibold text-slate-900 dark:text-white">
+          <p className="text-[10px] text-slate-600 dark:text-slate-400 mb-0.5">Day Length</p>
+          <p className="text-sm font-semibold text-slate-900 dark:text-white">
             {dayLengthLabel || '—'}
           </p>
         </div>
@@ -148,18 +148,18 @@ export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) 
 
       {/* Day length visual bar */}
       {events.dayLengthHours !== null && events.dayLengthHours !== undefined && (
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+        <div className="space-y-0.5">
+          <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
             <span>Night</span>
             <span>Day</span>
           </div>
-          <div className="h-2 bg-slate-700 dark:bg-slate-900 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-slate-700 dark:bg-slate-900 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-amber-400 to-yellow-400 transition-all duration-500"
               style={{ width: `${(events.dayLengthHours / 24) * 100}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
             <span>0h</span>
             <span>12h</span>
             <span>24h</span>

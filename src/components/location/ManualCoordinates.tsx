@@ -155,7 +155,7 @@ export function ManualCoordinates({
         type="button"
         onClick={() => setIsExpanded(true)}
         className={`
-          w-full py-2 px-3 text-sm text-slate-500 dark:text-slate-400
+          w-full py-1.5 px-3 text-xs text-slate-500 dark:text-slate-400
           border border-dashed border-slate-300 dark:border-slate-600
           rounded-lg hover:border-slate-400 dark:hover:border-slate-500
           hover:text-slate-600 dark:hover:text-slate-300
@@ -169,9 +169,9 @@ export function ManualCoordinates({
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`space-y-3 ${className}`}>
+    <form onSubmit={handleSubmit} className={`space-y-2 ${className}`}>
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">
+        <h3 className="text-xs font-medium text-slate-700 dark:text-slate-300">
           Manual Coordinates
         </h3>
         <button
@@ -188,7 +188,7 @@ export function ManualCoordinates({
       <div>
         <label
           htmlFor="manual-lat"
-          className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1"
+          className="block text-[10px] font-medium text-slate-600 dark:text-slate-400 mb-0.5"
         >
           Latitude
         </label>
@@ -201,7 +201,7 @@ export function ManualCoordinates({
           placeholder="e.g., 47.6062"
           inputMode="decimal"
           className={`
-            w-full px-3 py-2 text-sm rounded-lg
+            w-full px-2 py-1.5 text-xs rounded-lg
             bg-white dark:bg-slate-800
             border ${
               errors.lat && touched.lat
@@ -215,18 +215,18 @@ export function ManualCoordinates({
           aria-describedby={errors.lat ? 'lat-error' : undefined}
         />
         {errors.lat && touched.lat && (
-          <p id="lat-error" className="mt-1 text-xs text-red-500">
+          <p id="lat-error" className="mt-0.5 text-[10px] text-red-500">
             {errors.lat}
           </p>
         )}
-        <p className="mt-1 text-xs text-slate-400">Range: -90 to 90 (positive = North)</p>
+        <p className="mt-0.5 text-[10px] text-slate-400">Range: -90 to 90 (positive = North)</p>
       </div>
 
       {/* Longitude input */}
       <div>
         <label
           htmlFor="manual-lng"
-          className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1"
+          className="block text-[10px] font-medium text-slate-600 dark:text-slate-400 mb-0.5"
         >
           Longitude
         </label>
@@ -239,7 +239,7 @@ export function ManualCoordinates({
           placeholder="e.g., -122.3321"
           inputMode="decimal"
           className={`
-            w-full px-3 py-2 text-sm rounded-lg
+            w-full px-2 py-1.5 text-xs rounded-lg
             bg-white dark:bg-slate-800
             border ${
               errors.lng && touched.lng
@@ -253,18 +253,18 @@ export function ManualCoordinates({
           aria-describedby={errors.lng ? 'lng-error' : undefined}
         />
         {errors.lng && touched.lng && (
-          <p id="lng-error" className="mt-1 text-xs text-red-500">
+          <p id="lng-error" className="mt-0.5 text-[10px] text-red-500">
             {errors.lng}
           </p>
         )}
-        <p className="mt-1 text-xs text-slate-400">Range: -180 to 180 (positive = East)</p>
+        <p className="mt-0.5 text-[10px] text-slate-400">Range: -180 to 180 (positive = East)</p>
       </div>
 
       {/* Submit button */}
       <button
         type="submit"
         className="
-          w-full py-2 px-4 text-sm font-medium
+          w-full py-1.5 px-3 text-xs font-medium
           bg-blue-600 hover:bg-blue-700
           text-white rounded-lg
           transition-colors
@@ -275,8 +275,8 @@ export function ManualCoordinates({
       </button>
 
       {/* Example locations */}
-      <div className="text-xs text-slate-400">
-        <p className="mb-1">Examples:</p>
+      <div className="text-[10px] text-slate-400">
+        <p className="mb-0.5">Examples:</p>
         <ul className="space-y-0.5 ml-2">
           <li>• Seattle: 47.6062, -122.3321</li>
           <li>• Tokyo: 35.6762, 139.6503</li>

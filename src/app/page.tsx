@@ -112,7 +112,7 @@ export default function HomePage() {
       >
         {/* Left pane: Map */}
         <section
-          className="lg:w-3/5 h-[50vh] lg:h-full relative bg-slate-100 dark:bg-slate-800"
+          className="lg:w-1/2 h-[40vh] lg:h-full relative bg-slate-100 dark:bg-slate-800"
           aria-label="Solar path map"
         >
           <Suspense fallback={<MapSkeleton />}>
@@ -135,71 +135,81 @@ export default function HomePage() {
         <aside
           id="solar-data"
           tabIndex={-1}
-          className="lg:w-2/5 flex-1 lg:flex-none overflow-y-auto bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700 focus:outline-none"
+          className="lg:w-1/2 flex-1 lg:flex-none overflow-y-auto bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700 focus:outline-none"
           aria-label="Solar data and controls"
         >
           <Suspense fallback={<DataSkeleton />}>
-            <div className="p-4 lg:p-6 space-y-6">
-              {/* Location Input Section */}
-              <section aria-labelledby="location-heading">
-                <h2
-                  id="location-heading"
-                  className="text-lg font-medium text-slate-900 dark:text-white mb-3"
-                >
-                  Location
-                </h2>
-                <LocationInput />
-              </section>
+            <div className="p-3 lg:p-4 space-y-4">
+              {/* Top Controls: Location & Date */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Location Input Section */}
+                <section aria-labelledby="location-heading">
+                  <h2
+                    id="location-heading"
+                    className="text-sm font-semibold text-slate-900 dark:text-white mb-2 uppercase tracking-wider"
+                  >
+                    Location
+                  </h2>
+                  <LocationInput />
+                </section>
 
-              {/* Date Picker Section */}
-              <section aria-labelledby="date-heading">
-                <h2
-                  id="date-heading"
-                  className="text-lg font-medium text-slate-900 dark:text-white mb-3"
-                >
-                  Date &amp; Time
-                </h2>
-                <div className="space-y-4">
-                  <DatePicker />
-                  <details className="group">
-                    <summary className="text-sm text-slate-500 dark:text-slate-400 cursor-pointer hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1">
-                      <span className="group-open:rotate-90 transition-transform">▶</span>
-                      Advanced: Timezone
-                    </summary>
-                    <div className="mt-3 pl-4">
-                      <TimezoneSelector value={timezone} onChange={setTimezone} dateISO={dateISO} />
-                    </div>
-                  </details>
-                </div>
-              </section>
+                {/* Date Picker Section */}
+                <section aria-labelledby="date-heading">
+                  <h2
+                    id="date-heading"
+                    className="text-sm font-semibold text-slate-900 dark:text-white mb-2 uppercase tracking-wider"
+                  >
+                    Date &amp; Time
+                  </h2>
+                  <div className="space-y-2">
+                    <DatePicker />
+                    <details className="group">
+                      <summary className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1">
+                        <span className="group-open:rotate-90 transition-transform">▶</span>
+                        Timezone
+                      </summary>
+                      <div className="mt-2 pl-2">
+                        <TimezoneSelector
+                          value={timezone}
+                          onChange={setTimezone}
+                          dateISO={dateISO}
+                        />
+                      </div>
+                    </details>
+                  </div>
+                </section>
+              </div>
 
-              {/* Selected Hour Metrics Section */}
-              <section aria-labelledby="metrics-heading">
-                <h2
-                  id="metrics-heading"
-                  className="text-lg font-medium text-slate-900 dark:text-white mb-3"
-                >
-                  Selected Hour
-                </h2>
-                <MetricsPanel position={selectedPosition} />
-              </section>
+              {/* Metrics & Events Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Selected Hour Metrics Section */}
+                <section aria-labelledby="metrics-heading">
+                  <h2
+                    id="metrics-heading"
+                    className="text-sm font-semibold text-slate-900 dark:text-white mb-2 uppercase tracking-wider"
+                  >
+                    Selected Hour
+                  </h2>
+                  <MetricsPanel position={selectedPosition} />
+                </section>
 
-              {/* Sun Events Section */}
-              <section aria-labelledby="events-heading">
-                <h2
-                  id="events-heading"
-                  className="text-lg font-medium text-slate-900 dark:text-white mb-3"
-                >
-                  Sun Events
-                </h2>
-                <SunEventsPanel events={solarData?.events ?? null} timezone={timezone} />
-              </section>
+                {/* Sun Events Section */}
+                <section aria-labelledby="events-heading">
+                  <h2
+                    id="events-heading"
+                    className="text-sm font-semibold text-slate-900 dark:text-white mb-2 uppercase tracking-wider"
+                  >
+                    Sun Events
+                  </h2>
+                  <SunEventsPanel events={solarData?.events ?? null} timezone={timezone} />
+                </section>
+              </div>
 
               {/* Hourly Data Table Section */}
               <section aria-labelledby="hourly-heading">
                 <h2
                   id="hourly-heading"
-                  className="text-lg font-medium text-slate-900 dark:text-white mb-3"
+                  className="text-sm font-semibold text-slate-900 dark:text-white mb-2 uppercase tracking-wider"
                 >
                   Hourly Solar Positions
                 </h2>
@@ -211,8 +221,8 @@ export default function HomePage() {
                     timezone={timezone}
                   />
                 ) : (
-                  <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
-                    <p className="text-slate-400">Select a location to see solar data</p>
+                  <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 min-h-[100px] flex items-center justify-center">
+                    <p className="text-slate-400 text-sm">Select a location to see solar data</p>
                   </div>
                 )}
               </section>
@@ -221,7 +231,7 @@ export default function HomePage() {
               <section aria-labelledby="charts-heading">
                 <h2
                   id="charts-heading"
-                  className="text-lg font-medium text-slate-900 dark:text-white mb-3"
+                  className="text-sm font-semibold text-slate-900 dark:text-white mb-2 uppercase tracking-wider"
                 >
                   Solar Charts
                 </h2>
@@ -232,8 +242,8 @@ export default function HomePage() {
                     onHourClick={setSelectedHour}
                   />
                 ) : (
-                  <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
-                    <p className="text-slate-400">Select a location to see charts</p>
+                  <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 min-h-[100px] flex items-center justify-center">
+                    <p className="text-slate-400 text-sm">Select a location to see charts</p>
                   </div>
                 )}
               </section>

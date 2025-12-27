@@ -156,18 +156,24 @@ export function LocationInput({ className = '' }: LocationInputProps) {
   };
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-2 ${className}`}>
       {/* GPS Button */}
       <button
         onClick={handleUseGps}
         disabled={isLoading}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium rounded-lg transition-colors"
-        aria-label="Use GPS to get current location"
+        className="w-full flex items-center justify-center gap-2 px-3 py-1.5 
+                   bg-blue-50 dark:bg-blue-900/20 
+                   text-blue-600 dark:text-blue-400 
+                   hover:bg-blue-100 dark:hover:bg-blue-900/40 
+                   border border-blue-200 dark:border-blue-800
+                   rounded-lg transition-colors text-sm font-medium
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-label="Use current GPS location"
       >
         {isLoading ? (
           <>
             <svg
-              className="animate-spin h-5 w-5"
+              className="animate-spin h-4 w-4"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -187,11 +193,11 @@ export function LocationInput({ className = '' }: LocationInputProps) {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            <span>Getting location...</span>
+            <span>Locating...</span>
           </>
         ) : (
           <>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -219,9 +225,9 @@ export function LocationInput({ className = '' }: LocationInputProps) {
           onFocus={handleSearchFocus}
           onKeyDown={handleKeyDown}
           placeholder="Search location..."
-          className="w-full px-4 py-2 pl-10 bg-white dark:bg-slate-700 
+          className="w-full px-3 py-1.5 pl-9 bg-white dark:bg-slate-700 
                      border border-slate-300 dark:border-slate-600
-                     text-slate-900 dark:text-white 
+                     text-slate-900 dark:text-white text-sm
                      rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
                      placeholder:text-slate-400"
           aria-label="Search for a location"
@@ -229,7 +235,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
           aria-haspopup="listbox"
         />
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -277,38 +283,38 @@ export function LocationInput({ className = '' }: LocationInputProps) {
 
       {/* GPS Error Message */}
       {gpsError && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-sm text-red-600 dark:text-red-400">{gpsError}</p>
+        <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-xs text-red-600 dark:text-red-400">{gpsError}</p>
         </div>
       )}
 
       {/* Search Error Message */}
       {searchError && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-sm text-red-600 dark:text-red-400">{searchError}</p>
+        <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-xs text-red-600 dark:text-red-400">{searchError}</p>
         </div>
       )}
 
       {/* Store Error Message */}
       {error && (
-        <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-          <p className="text-sm text-yellow-600 dark:text-yellow-400">{error}</p>
+        <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <p className="text-xs text-yellow-600 dark:text-yellow-400">{error}</p>
         </div>
       )}
 
       {/* Current Location Display */}
       {location && (
         <div
-          className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+          className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg"
           data-testid="location-display"
         >
           <div className="flex items-start gap-2">
-            <div className="w-2 h-2 mt-1.5 bg-blue-500 rounded-full flex-shrink-0" />
+            <div className="w-1.5 h-1.5 mt-1.5 bg-blue-500 rounded-full flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+              <p className="text-xs font-medium text-slate-900 dark:text-white truncate">
                 {location.name || 'Selected Location'}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                 {location.lat.toFixed(4)}°, {location.lng.toFixed(4)}°
               </p>
               {/* OSM Verification Link */}
@@ -317,11 +323,16 @@ export function LocationInput({ className = '' }: LocationInputProps) {
                   href={location.osmUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 
-                           hover:text-blue-800 dark:hover:text-blue-300 mt-1"
+                  className="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 
+                           hover:text-blue-800 dark:hover:text-blue-300 mt-0.5"
                 >
                   Verify on OpenStreetMap
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-2.5 h-2.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
