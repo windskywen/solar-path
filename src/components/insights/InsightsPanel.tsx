@@ -82,12 +82,15 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
 
   return (
     <section aria-labelledby="insights-heading" className={className}>
-      <h2 id="insights-heading" className="text-lg font-medium text-slate-900 dark:text-white mb-3">
-        Insights
-      </h2>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-lg">💡</span>
+        <h2 id="insights-heading" className="text-base font-semibold text-slate-900 dark:text-white">
+          Insights
+        </h2>
+      </div>
 
       <div
-        className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4"
+        className=""
         role="region"
         aria-label="Solar insights"
       >
@@ -106,15 +109,16 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
                 <li
                   key={index}
                   className={`
-                    flex items-start gap-2 text-sm 
-                    ${compact ? '' : `p-2 rounded border ${variantStyles[variant]}`}
+                    flex items-start gap-3 text-sm p-3 rounded-lg
+                    bg-white/50 dark:bg-slate-800/50 border border-white/50 dark:border-slate-700/50
+                    shadow-sm backdrop-blur-sm
                     text-slate-700 dark:text-slate-300
                   `}
                 >
-                  <span className="flex-shrink-0 text-base" role="img" aria-hidden="true">
+                  <span className="flex-shrink-0 text-lg leading-none mt-0.5" role="img" aria-hidden="true">
                     {icon}
                   </span>
-                  <span>{message}</span>
+                  <span className="leading-snug">{message}</span>
                 </li>
               );
             })}
@@ -127,15 +131,17 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
             )}
           </ul>
         ) : (
-          <p
-            className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2"
-            role="status"
-          >
-            <span role="img" aria-hidden="true">
-              ✓
-            </span>
-            <span>Normal daylight conditions for this location and date.</span>
-          </p>
+          <div className="bg-white/50 dark:bg-slate-800/50 rounded-lg p-4 border border-white/50 dark:border-slate-700/50 shadow-sm">
+            <p
+              className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2"
+              role="status"
+            >
+              <span className="text-green-500" role="img" aria-hidden="true">
+                ✓
+              </span>
+              <span>Normal daylight conditions for this location and date.</span>
+            </p>
+          </div>
         )}
       </div>
     </section>

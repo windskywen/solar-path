@@ -95,11 +95,11 @@ export function SolarDataTable({
 
   return (
     <div
-      className={`overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 ${className}`}
+      className={`overflow-hidden ${className}`}
     >
       {/* Table header */}
-      <div className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-        <div className="grid grid-cols-4 gap-2 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+      <div className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+        <div className="grid grid-cols-4 gap-2 px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
           <div>Time</div>
           <div>Azimuth</div>
           <div>Altitude</div>
@@ -108,7 +108,7 @@ export function SolarDataTable({
       </div>
 
       {/* Table body - scrollable */}
-      <div className="max-h-[400px] overflow-y-auto">
+      <div className="max-h-[320px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
         {sortedPositions.map((position) => {
           const isSelected = position.hour === selectedHour;
           const stateColors = STATE_COLORS[position.daylightState];
@@ -119,15 +119,17 @@ export function SolarDataTable({
               key={position.hour}
               onClick={() => onRowClick?.(position.hour)}
               className={`
-                w-full grid grid-cols-4 gap-2 px-3 py-2 text-sm text-left
-                transition-colors hover:bg-slate-50 dark:hover:bg-slate-800
+                w-full grid grid-cols-4 gap-2 px-4 py-2.5 text-sm text-left
+                transition-all duration-200
                 ${
-                  isSelected ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500 ring-inset' : ''
+                  isSelected 
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium' 
+                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }
                 ${
-                  isBelowHorizon
+                  isBelowHorizon && !isSelected
                     ? 'text-slate-400 dark:text-slate-500'
-                    : 'text-slate-900 dark:text-slate-100'
+                    : 'text-slate-700 dark:text-slate-200'
                 }
                 border-b border-slate-100 dark:border-slate-800 last:border-b-0
               `}
@@ -137,20 +139,20 @@ export function SolarDataTable({
               )}°, Altitude ${position.altitudeDeg.toFixed(1)}°, ${position.daylightState}`}
             >
               {/* Time */}
-              <div className="font-medium tabular-nums">{formatHour(position.hour)}</div>
+              <div className="tabular-nums">{formatHour(position.hour)}</div>
 
               {/* Azimuth */}
               <div className="tabular-nums">{formatAzimuth(position.azimuthDeg)}</div>
 
               {/* Altitude */}
-              <div className={`tabular-nums ${isBelowHorizon ? 'text-slate-400' : ''}`}>
+              <div className={`tabular-nums ${isBelowHorizon && !isSelected ? 'opacity-75' : ''}`}>
                 {formatAltitude(position.altitudeDeg)}
               </div>
 
               {/* State indicator */}
-              <div className="flex items-center gap-1.5">
-                <div className={`w-2 h-2 rounded-full ${stateColors.dot}`} />
-                <span className={`text-xs capitalize ${stateColors.text}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-1.5 h-1.5 rounded-full ${stateColors.dot}`} />
+                <span className={`text-xs capitalize truncate ${isSelected ? 'text-blue-600 dark:text-blue-300' : stateColors.text}`}>
                   {position.daylightState}
                 </span>
               </div>
@@ -161,10 +163,10 @@ export function SolarDataTable({
 
       {/* Summary footer */}
       {positions.length > 0 && (
-        <div className="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 px-3 py-2">
+        <div className="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 px-4 py-2.5">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-            <span>{positions.filter((p) => p.altitudeDeg > 0).length} hours above horizon</span>
-            {timezone && <span className="font-mono">{timezone.replace('_', ' ')}</span>}
+            <span className="font-medium">{positions.filter((p) => p.altitudeDeg > 0).length} hours of daylight</span>
+            {timezone && <span className="font-mono opacity-75">{timezone.replace('_', ' ')}</span>}
           </div>
         </div>
       )}

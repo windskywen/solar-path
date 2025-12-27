@@ -86,12 +86,12 @@ export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) 
   const isPolarNight = events.dayLengthHours === 0;
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`h-full flex flex-col ${className}`}>
       {/* Special condition banner */}
       {condition && (
         <div
           className={`
-            rounded-lg p-2 text-center text-xs
+            rounded-lg p-2 mb-3 text-center text-xs font-medium
             ${
               isPolarDay
                 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200'
@@ -100,69 +100,70 @@ export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) 
             ${isPolarNight ? 'bg-slate-800 dark:bg-slate-900 text-slate-200' : ''}
           `}
         >
-          <p className="font-medium">{condition}</p>
+          {condition}
         </div>
       )}
 
-      {/* Sun events grid */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Sun events list */}
+      <div className="flex-1 space-y-3">
         {/* Sunrise */}
-        <div className="bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg p-2 text-center">
-          <div className="flex justify-center mb-0.5">
-            <span className="text-xl" role="img" aria-label="Sunrise">
+        <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-lg">
               🌅
-            </span>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Sunrise</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
+                {sunriseTime || '—'}
+              </p>
+            </div>
           </div>
-          <p className="text-[10px] text-slate-600 dark:text-slate-400 mb-0.5">Sunrise</p>
-          <p className="text-sm font-semibold text-slate-900 dark:text-white tabular-nums">
-            {sunriseTime || '—'}
-          </p>
         </div>
 
         {/* Sunset */}
-        <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg p-2 text-center">
-          <div className="flex justify-center mb-0.5">
-            <span className="text-xl" role="img" aria-label="Sunset">
+        <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-lg">
               🌇
-            </span>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Sunset</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
+                {sunsetTime || '—'}
+              </p>
+            </div>
           </div>
-          <p className="text-[10px] text-slate-600 dark:text-slate-400 mb-0.5">Sunset</p>
-          <p className="text-sm font-semibold text-slate-900 dark:text-white tabular-nums">
-            {sunsetTime || '—'}
-          </p>
         </div>
 
         {/* Day Length */}
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-2 text-center">
-          <div className="flex justify-center mb-0.5">
-            <span className="text-xl" role="img" aria-label="Day length">
+        <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-lg">
               ⏱️
-            </span>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Day Length</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                {dayLengthLabel || '—'}
+              </p>
+            </div>
           </div>
-          <p className="text-[10px] text-slate-600 dark:text-slate-400 mb-0.5">Day Length</p>
-          <p className="text-sm font-semibold text-slate-900 dark:text-white">
-            {dayLengthLabel || '—'}
-          </p>
         </div>
       </div>
 
       {/* Day length visual bar */}
       {events.dayLengthHours !== null && events.dayLengthHours !== undefined && (
-        <div className="space-y-0.5">
-          <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
+        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex justify-between text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
             <span>Night</span>
-            <span>Day</span>
+            <span>Daylight ({Math.round((events.dayLengthHours / 24) * 100)}%)</span>
           </div>
-          <div className="h-1.5 bg-slate-700 dark:bg-slate-900 rounded-full overflow-hidden">
+          <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700">
             <div
-              className="h-full bg-gradient-to-r from-amber-400 to-yellow-400 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-amber-400 to-orange-400 transition-all duration-500"
               style={{ width: `${(events.dayLengthHours / 24) * 100}%` }}
             />
-          </div>
-          <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
-            <span>0h</span>
-            <span>12h</span>
-            <span>24h</span>
           </div>
         </div>
       )}
