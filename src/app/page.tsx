@@ -261,14 +261,6 @@ export default function HomePage() {
                 </div>
 
                 <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {/* Selected Hour Metrics */}
-                  <div className="p-5">
-                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">
-                      Selected Hour
-                    </h3>
-                    <MetricsPanel position={selectedPosition} />
-                  </div>
-
                   {/* Hourly Data Table */}
                   <div>
                     <div className="px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
@@ -291,6 +283,14 @@ export default function HomePage() {
                         </p>
                       </div>
                     )}
+                  </div>
+
+                  {/* Selected Hour Metrics */}
+                  <div className="p-5">
+                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">
+                      Selected Hour
+                    </h3>
+                    <MetricsPanel position={selectedPosition} />
                   </div>
                 </div>
               </section>
