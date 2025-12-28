@@ -57,7 +57,6 @@ function DataSkeleton() {
 export default function HomePage() {
   const location = useLocation();
   const timezone = useTimezone();
-  const dateISO = useDateISO();
   const selectedHour = useSelectedHour();
   const { setLocation, setSelectedHour, setTimezone } = useSolarActions();
 
@@ -113,6 +112,35 @@ export default function HomePage() {
         </div>
       </header>
 
+      {/* Configuration Section - Top */}
+      <section className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-20 flex-shrink-0 shadow-sm">
+        <div className="max-w-screen-2xl mx-auto p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Location Input Section - Takes up more space */}
+            <div className="lg:col-span-7 space-y-2">
+              <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-2">
+                <span>📍</span> Location
+              </label>
+              <LocationInput className="!space-y-2" />
+            </div>
+
+            {/* Date Picker Section */}
+            <div className="lg:col-span-5 space-y-2">
+              <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-2">
+                <span>📅</span> Date &amp; Time
+              </label>
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700 h-[calc(100%-1.5rem)] flex flex-col justify-center gap-3">
+                <DatePicker className="w-full" />
+                <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 pt-2 border-t border-slate-200 dark:border-slate-700">
+                  <span>🌐</span>
+                  <span className="font-mono">Timezone: {timezone}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Main content - dual pane layout */}
       <main
         id="main-content"
@@ -145,50 +173,10 @@ export default function HomePage() {
           id="solar-data"
           tabIndex={-1}
           className="lg:w-1/2 flex-1 lg:flex-none overflow-y-auto bg-slate-50 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 focus:outline-none"
-          aria-label="Solar data and controls"
+          aria-label="Solar data"
         >
           <Suspense fallback={<DataSkeleton />}>
             <div className="p-4 space-y-6 max-w-3xl mx-auto">
-              {/* Configuration Card */}
-              <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-lg">⚙️</span>
-                  <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-                    Configuration
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Location Input Section */}
-                  <section aria-labelledby="location-heading" className="space-y-2">
-                    <label
-                      id="location-heading"
-                      className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"
-                    >
-                      Location
-                    </label>
-                    <LocationInput />
-                  </section>
-
-                  {/* Date Picker Section */}
-                  <section aria-labelledby="date-heading" className="space-y-2">
-                    <label
-                      id="date-heading"
-                      className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"
-                    >
-                      Date &amp; Time
-                    </label>
-                    <div className="space-y-3">
-                      <DatePicker />
-                      <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <span>🌐</span>
-                        <span>Timezone: {timezone}</span>
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              </div>
-
               {/* Combined Section 1: Daily Events & Charts */}
               <section
                 aria-labelledby="overview-heading"
