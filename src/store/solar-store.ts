@@ -8,15 +8,15 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { devtools } from 'zustand/middleware';
 import type { SolarStore, LocationPoint } from '@/types/solar';
-import { getTodayISO } from '@/lib/utils/timezone';
+import { getTodayISO, getTimezoneFromCoordinates } from '@/lib/utils/timezone';
 
 /**
  * Initial state values
  */
 const initialState = {
   location: null as LocationPoint | null,
-  dateISO: getTodayISO('browser'),
-  timezone: 'browser',
+  dateISO: getTodayISO('UTC'),
+  timezone: 'UTC',
   selectedHour: null as number | null,
   isLoadingLocation: true,
   error: null as string | null,
@@ -39,10 +39,19 @@ export const useSolarStore = create<SolarStore>()(
       ...initialState,
 
       /**
-       * Set the current location
+       * Set the current location and auto-update timezone
        */
       setLocation: (location: LocationPoint) =>
-        set({ location, error: null, isLoadingLocation: false }, undefined, 'setLocation'),
+        set(
+          {
+            location,
+            timezone: getTimezoneFromCoordinates(location.lat, location.lng),
+            error: null,
+            isLoadingLocation: false,
+          },
+          undefined,
+          'setLocation'
+        ),
 
       /**
        * Set the selected date
@@ -75,7 +84,7 @@ export const useSolarStore = create<SolarStore>()(
       /**
        * Reset store to initial state
        */
-      reset: () => set({ ...initialState, dateISO: getTodayISO('browser') }, undefined, 'reset'),
+      reset: () => set({ ...initialState, dateISO: getTodayISO('UTC') }, undefined, 'reset'),
     }),
     { name: 'SolarStore' }
   )

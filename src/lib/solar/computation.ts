@@ -8,6 +8,7 @@ import SunCalc from 'suncalc';
 import { DateTime } from 'luxon';
 import { normalizeAzimuth, normalizeAltitude } from './normalize';
 import type { HourlySolarPosition, DaylightState } from '@/types/solar';
+import { resolveTimezone } from '@/lib/utils/timezone';
 
 /**
  * Derive daylight state from altitude
@@ -51,7 +52,7 @@ export function computeSunPosition(
  * @param lat - Latitude in decimal degrees
  * @param lng - Longitude in decimal degrees
  * @param dateISO - Date in ISO format (YYYY-MM-DD)
- * @param timezone - IANA timezone string or "browser" for local
+ * @param timezone - IANA timezone string
  * @returns Array of 24 HourlySolarPosition objects
  */
 export function computeHourlyPositions(
@@ -63,7 +64,7 @@ export function computeHourlyPositions(
   const positions: HourlySolarPosition[] = [];
 
   // Determine the actual timezone to use
-  const zone = timezone === 'browser' ? DateTime.local().zoneName : timezone;
+  const zone = resolveTimezone(timezone);
 
   for (let hour = 0; hour < 24; hour++) {
     // Create DateTime in the specified timezone

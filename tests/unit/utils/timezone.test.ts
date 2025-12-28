@@ -9,7 +9,6 @@ import {
   getTimezoneOffset,
   getTimezoneAbbreviation,
   isInDST,
-  getCommonTimezones,
   parseDate,
   getDateParts,
 } from '@/lib/utils/timezone';
@@ -150,32 +149,6 @@ describe('isInDST', () => {
   it('returns false for non-DST timezones', () => {
     expect(isInDST('2024-06-21', 'UTC')).toBe(false);
     expect(isInDST('2024-06-21', 'Asia/Tokyo')).toBe(false);
-  });
-});
-
-describe('getCommonTimezones', () => {
-  it('returns array of timezone options', () => {
-    const tzs = getCommonTimezones();
-    expect(Array.isArray(tzs)).toBe(true);
-    expect(tzs.length).toBeGreaterThan(0);
-  });
-
-  it('includes browser option', () => {
-    const tzs = getCommonTimezones();
-    expect(tzs.find((tz) => tz.value === 'browser')).toBeDefined();
-  });
-
-  it('includes UTC', () => {
-    const tzs = getCommonTimezones();
-    expect(tzs.find((tz) => tz.value === 'UTC')).toBeDefined();
-  });
-
-  it('has value and label for each option', () => {
-    const tzs = getCommonTimezones();
-    tzs.forEach((tz) => {
-      expect(tz.value).toBeDefined();
-      expect(tz.label).toBeDefined();
-    });
   });
 });
 

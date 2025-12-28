@@ -7,6 +7,7 @@
 import SunCalc from 'suncalc';
 import { DateTime } from 'luxon';
 import type { SunEvents } from '@/types/solar';
+import { resolveTimezone } from '@/lib/utils/timezone';
 
 /**
  * Format duration in hours to human-readable string
@@ -35,7 +36,7 @@ export function formatDayLength(hours: number): string {
  * @param lat - Latitude in decimal degrees
  * @param lng - Longitude in decimal degrees
  * @param dateISO - Date in ISO format (YYYY-MM-DD)
- * @param timezone - IANA timezone string or "browser" for local
+ * @param timezone - IANA timezone string
  * @returns SunEvents object
  */
 export function computeSunEvents(
@@ -44,7 +45,7 @@ export function computeSunEvents(
   dateISO: string,
   timezone: string
 ): SunEvents {
-  const zone = timezone === 'browser' ? DateTime.local().zoneName : timezone;
+  const zone = resolveTimezone(timezone);
 
   // Create date at noon in the specified timezone to get accurate times for that day
   const dt = DateTime.fromISO(`${dateISO}T12:00:00`, { zone });

@@ -4,7 +4,7 @@ import { Suspense, useEffect } from 'react';
 import { MapPanel } from '@/components/map/MapPanel';
 import { SolarRaysLayer, SolarRaysLegend } from '@/components/map/SolarRaysLayer';
 import { LocationInput } from '@/components/location/LocationInput';
-import { DatePicker, TimezoneSelector } from '@/components/date';
+import { DatePicker } from '@/components/date';
 import { SunEventsPanel, InsightsPanel } from '@/components/insights';
 import { SolarDataTable, MetricsPanel } from '@/components/data';
 import { ChartsPanel } from '@/components/charts';
@@ -19,6 +19,7 @@ import {
 } from '@/store/solar-store';
 import { SkipLinks } from '@/components/a11y';
 import { generateInsights } from '@/lib/solar/insights';
+import { getTimezoneFromCoordinates } from '@/lib/utils/timezone';
 
 /**
  * Loading skeleton for the map panel
@@ -69,6 +70,14 @@ export default function HomePage() {
       setLocation(ipLocation);
     }
   }, [ipLocation, ipLoading, location, setLocation]);
+
+  // Auto-update timezone when location changes
+  useEffect(() => {
+    if (location) {
+      const locationTimezone = getTimezoneFromCoordinates(location.lat, location.lng);
+      setTimezone(locationTimezone);
+    }
+  }, [location, setTimezone]);
 
   // Compute solar data
   const solarData = useSolarData();
@@ -171,31 +180,10 @@ export default function HomePage() {
                     </label>
                     <div className="space-y-3">
                       <DatePicker />
-                      <details className="group">
-                        <summary className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1 transition-colors select-none">
-                          <svg
-                            className="w-3 h-3 transition-transform group-open:rotate-90"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
-                          Timezone Settings
-                        </summary>
-                        <div className="mt-2 pl-4 border-l-2 border-slate-100 dark:border-slate-800">
-                          <TimezoneSelector
-                            value={timezone}
-                            onChange={setTimezone}
-                            dateISO={dateISO}
-                          />
-                        </div>
-                      </details>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <span>🌐</span>
+                        <span>Timezone: {timezone}</span>
+                      </div>
                     </div>
                   </section>
                 </div>
