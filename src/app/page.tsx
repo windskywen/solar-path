@@ -189,7 +189,6 @@ export default function HomePage() {
                 </div>
               </div>
 
-
               {/* Combined Section 1: Daily Events & Charts */}
               <section
                 aria-labelledby="overview-heading"
@@ -206,14 +205,18 @@ export default function HomePage() {
                     </h2>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 xl:grid-cols-3 divide-y xl:divide-y-0 xl:divide-x divide-slate-100 dark:divide-slate-800">
                   {/* Daily Events (Left/Top) */}
                   <div className="p-5 xl:col-span-1 flex flex-col">
                     <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">
                       Daily Events
                     </h3>
-                    <SunEventsPanel events={solarData?.events ?? null} timezone={timezone} className="flex-1" />
+                    <SunEventsPanel
+                      events={solarData?.events ?? null}
+                      timezone={timezone}
+                      className="flex-1"
+                    />
                   </div>
 
                   {/* Charts (Right/Bottom) */}
@@ -283,13 +286,14 @@ export default function HomePage() {
                       />
                     ) : (
                       <div className="p-8 flex flex-col items-center justify-center text-center">
-                        <p className="text-slate-500 dark:text-slate-400 text-sm">No data available</p>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">
+                          No data available
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
               </section>
-
 
               {/* Insights Section */}
               <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl shadow-sm border border-indigo-100 dark:border-indigo-800/50 p-5">

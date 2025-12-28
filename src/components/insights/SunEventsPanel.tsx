@@ -156,13 +156,20 @@ export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) 
       {events.dayLengthHours !== null && events.dayLengthHours !== undefined && (
         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
           <div className="flex justify-between text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-            <span>Day ({Math.min(100, Math.max(0, Math.round((events.dayLengthHours / 24) * 100)))}%)</span>
-            <span>Night ({100 - Math.min(100, Math.max(0, Math.round((events.dayLengthHours / 24) * 100)))}%)</span>
+            <span>
+              Day ({Math.min(100, Math.max(0, Math.round((events.dayLengthHours / 24) * 100)))}%)
+            </span>
+            <span>
+              Night (
+              {100 - Math.min(100, Math.max(0, Math.round((events.dayLengthHours / 24) * 100)))}%)
+            </span>
           </div>
           <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700">
             <div
               className="h-full bg-gradient-to-r from-amber-400 to-orange-400 transition-all duration-500"
-              style={{ width: `${Math.min(100, Math.max(0, (events.dayLengthHours / 24) * 100))}%` }}
+              style={{
+                width: `${Math.min(100, Math.max(0, (events.dayLengthHours / 24) * 100))}%`,
+              }}
             />
           </div>
         </div>
