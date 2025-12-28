@@ -189,105 +189,107 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Solar Status Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Selected Hour Metrics Section */}
-                <section
-                  aria-labelledby="metrics-heading"
-                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h2
-                      id="metrics-heading"
-                      className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2"
-                    >
-                      <span>📍</span> Selected Hour
-                    </h2>
-                  </div>
-                  <div className="flex-1">
-                    <MetricsPanel position={selectedPosition} />
-                  </div>
-                </section>
 
-                {/* Sun Events Section */}
-                <section
-                  aria-labelledby="events-heading"
-                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h2
-                      id="events-heading"
-                      className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2"
-                    >
-                      <span>📅</span> Daily Events
-                    </h2>
-                  </div>
-                  <div className="flex-1">
-                    <SunEventsPanel events={solarData?.events ?? null} timezone={timezone} />
-                  </div>
-                </section>
-              </div>
-
-              {/* Charts Section */}
+              {/* Combined Section 1: Daily Events & Charts */}
               <section
-                aria-labelledby="charts-heading"
-                className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5"
+                aria-labelledby="overview-heading"
+                className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
               >
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-lg">📈</span>
-                  <h2
-                    id="charts-heading"
-                    className="text-base font-semibold text-slate-900 dark:text-white"
-                  >
-                    Solar Charts
-                  </h2>
-                </div>
-                {solarData ? (
-                  <ChartsPanel
-                    positions={solarData.hourly}
-                    selectedHour={selectedHour}
-                    onHourClick={setSelectedHour}
-                  />
-                ) : (
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-8 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-slate-700">
-                    <span className="text-2xl mb-2">📊</span>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">
-                      Select a location to generate charts
-                    </p>
+                <div className="p-5 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📊</span>
+                    <h2
+                      id="overview-heading"
+                      className="text-base font-semibold text-slate-900 dark:text-white"
+                    >
+                      Solar Overview
+                    </h2>
                   </div>
-                )}
+                </div>
+                
+                <div className="grid grid-cols-1 xl:grid-cols-3 divide-y xl:divide-y-0 xl:divide-x divide-slate-100 dark:divide-slate-800">
+                  {/* Daily Events (Left/Top) */}
+                  <div className="p-5 xl:col-span-1 flex flex-col">
+                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">
+                      Daily Events
+                    </h3>
+                    <SunEventsPanel events={solarData?.events ?? null} timezone={timezone} className="flex-1" />
+                  </div>
+
+                  {/* Charts (Right/Bottom) */}
+                  <div className="p-5 xl:col-span-2">
+                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">
+                      Charts
+                    </h3>
+                    {solarData ? (
+                      <ChartsPanel
+                        positions={solarData.hourly}
+                        selectedHour={selectedHour}
+                        onHourClick={setSelectedHour}
+                        className="bg-slate-50 dark:bg-slate-800/50"
+                      />
+                    ) : (
+                      <div className="h-64 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-slate-700 rounded-lg">
+                        <span className="text-2xl mb-2">📈</span>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">
+                          Select a location to view charts
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </section>
 
-              {/* Hourly Data Table Section */}
+              {/* Combined Section 2: Selected Hour & Hourly Data */}
               <section
-                aria-labelledby="hourly-heading"
+                aria-labelledby="details-heading"
                 className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
               >
                 <div className="p-5 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">📋</span>
                     <h2
-                      id="hourly-heading"
+                      id="details-heading"
                       className="text-base font-semibold text-slate-900 dark:text-white"
                     >
-                      Hourly Data
+                      Detailed Data
                     </h2>
                   </div>
                 </div>
-                {solarData ? (
-                  <SolarDataTable
-                    positions={solarData.hourly}
-                    selectedHour={selectedHour}
-                    onRowClick={setSelectedHour}
-                    timezone={timezone}
-                    className="border-0 rounded-none"
-                  />
-                ) : (
-                  <div className="p-8 flex flex-col items-center justify-center text-center">
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">No data available</p>
+
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {/* Selected Hour Metrics */}
+                  <div className="p-5">
+                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">
+                      Selected Hour
+                    </h3>
+                    <MetricsPanel position={selectedPosition} />
                   </div>
-                )}
+
+                  {/* Hourly Data Table */}
+                  <div>
+                    <div className="px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                      <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                        Hourly Breakdown
+                      </h3>
+                    </div>
+                    {solarData ? (
+                      <SolarDataTable
+                        positions={solarData.hourly}
+                        selectedHour={selectedHour}
+                        onRowClick={setSelectedHour}
+                        timezone={timezone}
+                        className="border-0 rounded-none shadow-none"
+                      />
+                    ) : (
+                      <div className="p-8 flex flex-col items-center justify-center text-center">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">No data available</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </section>
+
 
               {/* Insights Section */}
               <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl shadow-sm border border-indigo-100 dark:border-indigo-800/50 p-5">
