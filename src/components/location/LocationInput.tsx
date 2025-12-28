@@ -156,65 +156,29 @@ export function LocationInput({ className = '' }: LocationInputProps) {
   };
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      {/* GPS Button */}
-      <button
-        onClick={handleUseGps}
-        disabled={isLoading}
-        className="w-full flex items-center justify-center gap-2 px-3 py-1.5 
-                   bg-blue-50 dark:bg-blue-900/20 
-                   text-blue-600 dark:text-blue-400 
-                   hover:bg-blue-100 dark:hover:bg-blue-900/40 
-                   border border-blue-200 dark:border-blue-800
-                   rounded-lg transition-colors text-sm font-medium
-                   disabled:opacity-50 disabled:cursor-not-allowed"
-        aria-label="Use current GPS location"
-      >
-        {isLoading ? (
-          <>
-            <svg
-              className="animate-spin h-4 w-4"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              data-testid="gps-loading"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            <span>Locating...</span>
-          </>
-        ) : (
-          <>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-            <span>Use My GPS</span>
-          </>
-        )}
-      </button>
+    <div className={`space-y-4 ${className}`}>
+      {/* Manual Coordinates Input - Primary Method */}
+      <ManualCoordinates
+        initialLat={location?.lat}
+        initialLng={location?.lng}
+        onSubmit={(newLocation) => {
+          setLocation(newLocation);
+          setError(null);
+          setGpsError(null);
+          clearSearch();
+        }}
+      />
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+          <div className="w-full border-t border-slate-200 dark:border-slate-700" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-white dark:bg-slate-900 px-2 text-[10px] text-slate-400 uppercase">
+            Or search
+          </span>
+        </div>
+      </div>
 
       {/* Search Input */}
       <div className="relative" ref={searchContainerRef}>
@@ -281,6 +245,65 @@ export function LocationInput({ className = '' }: LocationInputProps) {
         )}
       </div>
 
+      {/* GPS Button */}
+      <button
+        onClick={handleUseGps}
+        disabled={isLoading}
+        className="w-full flex items-center justify-center gap-2 px-3 py-1.5 
+                   bg-blue-50 dark:bg-blue-900/20 
+                   text-blue-600 dark:text-blue-400 
+                   hover:bg-blue-100 dark:hover:bg-blue-900/40 
+                   border border-blue-200 dark:border-blue-800
+                   rounded-lg transition-colors text-sm font-medium
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-label="Use current GPS location"
+      >
+        {isLoading ? (
+          <>
+            <svg
+              className="animate-spin h-4 w-4"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              data-testid="gps-loading"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            <span>Locating...</span>
+          </>
+        ) : (
+          <>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <span>Use My GPS</span>
+          </>
+        )}
+      </button>
+
       {/* GPS Error Message */}
       {gpsError && (
         <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -346,18 +369,6 @@ export function LocationInput({ className = '' }: LocationInputProps) {
           </div>
         </div>
       )}
-
-      {/* Manual Coordinates Input */}
-      <ManualCoordinates
-        initialLat={location?.lat}
-        initialLng={location?.lng}
-        onSubmit={(newLocation) => {
-          setLocation(newLocation);
-          setError(null);
-          setGpsError(null);
-          clearSearch();
-        }}
-      />
     </div>
   );
 }
