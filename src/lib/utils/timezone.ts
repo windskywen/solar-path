@@ -1,76 +1,34 @@
 /**
  * Timezone Helpers
  *
- * Utilities for working with timezones using Luxon.
+ * Utilities for working with timezones using Luxon and tz-lookup.
  */
 
 import { DateTime, IANAZone } from 'luxon';
+import tzlookup from '@photostructure/tz-lookup';
 
 /**
- * Common timezone mappings by region
- * Maps approximate longitude ranges to IANA timezone identifiers
- */
-const TIMEZONE_REGIONS: Array<{
-  minLng: number;
-  maxLng: number;
-  minLat?: number;
-  maxLat?: number;
-  timezone: string;
-}> = [
-  // Asia/Pacific
-  { minLng: 120, maxLng: 122, minLat: 21, maxLat: 26, timezone: 'Asia/Taipei' },
-  { minLng: 139, maxLng: 146, minLat: 30, maxLat: 46, timezone: 'Asia/Tokyo' },
-  { minLng: 126, maxLng: 130, minLat: 33, maxLat: 43, timezone: 'Asia/Seoul' },
-  { minLng: 113, maxLng: 135, minLat: 18, maxLat: 54, timezone: 'Asia/Shanghai' },
-  { minLng: 100, maxLng: 120, minLat: -11, maxLat: 8, timezone: 'Asia/Singapore' },
-  { minLng: 68, maxLng: 97, minLat: 6, maxLat: 36, timezone: 'Asia/Kolkata' },
-  { minLng: 44, maxLng: 63, minLat: 12, maxLat: 40, timezone: 'Asia/Dubai' },
-  // Europe
-  { minLng: -10, maxLng: 2, minLat: 35, maxLat: 60, timezone: 'Europe/London' },
-  { minLng: 2, maxLng: 16, minLat: 35, maxLat: 55, timezone: 'Europe/Paris' },
-  { minLng: 5, maxLng: 15, minLat: 45, maxLat: 55, timezone: 'Europe/Berlin' },
-  { minLng: 19, maxLng: 32, minLat: 35, maxLat: 45, timezone: 'Europe/Athens' },
-  { minLng: 30, maxLng: 50, minLat: 50, maxLat: 70, timezone: 'Europe/Moscow' },
-  // Americas
-  { minLng: -125, maxLng: -115, minLat: 32, maxLat: 49, timezone: 'America/Los_Angeles' },
-  { minLng: -115, maxLng: -102, minLat: 31, maxLat: 49, timezone: 'America/Denver' },
-  { minLng: -102, maxLng: -87, minLat: 25, maxLat: 49, timezone: 'America/Chicago' },
-  { minLng: -87, maxLng: -67, minLat: 24, maxLat: 47, timezone: 'America/New_York' },
-  { minLng: -80, maxLng: -35, minLat: -35, maxLat: 5, timezone: 'America/Sao_Paulo' },
-  // Australia
-  { minLng: 140, maxLng: 154, minLat: -45, maxLat: -10, timezone: 'Australia/Sydney' },
-  { minLng: 113, maxLng: 140, minLat: -35, maxLat: -10, timezone: 'Australia/Perth' },
-  // New Zealand
-  { minLng: 165, maxLng: 179, minLat: -48, maxLat: -34, timezone: 'Pacific/Auckland' },
-];
-
-/**
- * Get timezone from geographic coordinates
- * Uses a combination of region matching and UTC offset estimation
+ * Get timezone from geographic coordinates using tz-lookup library
+ * This provides accurate IANA timezone lookup based on actual timezone boundaries
+ * and works in both browser and Node.js environments
  *
- * @param lat - Latitude
- * @param lng - Longitude
+ * @param lat - Latitude in decimal degrees
+ * @param lng - Longitude in decimal degrees
  * @returns IANA timezone string
  */
 export function getTimezoneFromCoordinates(lat: number, lng: number): string {
-  // First, try to match a specific region
-  for (const region of TIMEZONE_REGIONS) {
-    if (lng >= region.minLng && lng <= region.maxLng) {
-      if (region.minLat !== undefined && region.maxLat !== undefined) {
-        if (lat >= region.minLat && lat <= region.maxLat) {
-          return region.timezone;
-        }
-      } else {
-        return region.timezone;
-      }
-    }
+  // Use tz-lookup for accurate timezone lookup based on actual boundaries
+  const timezone = tzlookup(lat, lng);
+
+  // tzlookup returns an IANA timezone string or undefined for unmapped areas
+  if (timezone) {
+    return timezone;
   }
 
-  // Fallback: estimate UTC offset from longitude
-  // Each 15 degrees of longitude = 1 hour offset
+  // Fallback for locations in international waters or unmapped areas
+  // Estimate UTC offset from longitude (each 15 degrees = 1 hour offset)
   const offsetHours = Math.round(lng / 15);
 
-  // Map to Etc/GMT timezone (note: Etc/GMT signs are inverted)
   if (offsetHours === 0) {
     return 'UTC';
   } else if (offsetHours > 0) {

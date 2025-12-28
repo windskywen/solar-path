@@ -11,7 +11,95 @@ import {
   isInDST,
   parseDate,
   getDateParts,
+  getTimezoneFromCoordinates,
 } from '@/lib/utils/timezone';
+
+describe('getTimezoneFromCoordinates', () => {
+  it('returns correct timezone for New York City', () => {
+    // NYC: 40.7128° N, 74.0060° W
+    const tz = getTimezoneFromCoordinates(40.7128, -74.006);
+    expect(tz).toBe('America/New_York');
+  });
+
+  it('returns correct timezone for Los Angeles', () => {
+    // LA: 34.0522° N, 118.2437° W
+    const tz = getTimezoneFromCoordinates(34.0522, -118.2437);
+    expect(tz).toBe('America/Los_Angeles');
+  });
+
+  it('returns correct timezone for London', () => {
+    // London: 51.5074° N, 0.1278° W
+    const tz = getTimezoneFromCoordinates(51.5074, -0.1278);
+    expect(tz).toBe('Europe/London');
+  });
+
+  it('returns correct timezone for Tokyo', () => {
+    // Tokyo: 35.6762° N, 139.6503° E
+    const tz = getTimezoneFromCoordinates(35.6762, 139.6503);
+    expect(tz).toBe('Asia/Tokyo');
+  });
+
+  it('returns correct timezone for Sydney', () => {
+    // Sydney: 33.8688° S, 151.2093° E
+    const tz = getTimezoneFromCoordinates(-33.8688, 151.2093);
+    expect(tz).toBe('Australia/Sydney');
+  });
+
+  it('returns correct timezone for Taipei', () => {
+    // Taipei: 25.0330° N, 121.5654° E
+    const tz = getTimezoneFromCoordinates(25.033, 121.5654);
+    expect(tz).toBe('Asia/Taipei');
+  });
+
+  it('returns correct timezone for Paris', () => {
+    // Paris: 48.8566° N, 2.3522° E
+    const tz = getTimezoneFromCoordinates(48.8566, 2.3522);
+    expect(tz).toBe('Europe/Paris');
+  });
+
+  it('returns correct timezone for Berlin', () => {
+    // Berlin: 52.5200° N, 13.4050° E
+    const tz = getTimezoneFromCoordinates(52.52, 13.405);
+    expect(tz).toBe('Europe/Berlin');
+  });
+
+  it('returns correct timezone for Singapore', () => {
+    // Singapore: 1.3521° N, 103.8198° E
+    const tz = getTimezoneFromCoordinates(1.3521, 103.8198);
+    expect(tz).toBe('Asia/Singapore');
+  });
+
+  it('returns correct timezone for Dubai', () => {
+    // Dubai: 25.2048° N, 55.2708° E
+    const tz = getTimezoneFromCoordinates(25.2048, 55.2708);
+    expect(tz).toBe('Asia/Dubai');
+  });
+
+  it('handles edge case near timezone boundaries (Spain uses CET despite longitude)', () => {
+    // Madrid: 40.4168° N, 3.7038° W - Spain uses CET despite being at similar longitude to UK
+    const tz = getTimezoneFromCoordinates(40.4168, -3.7038);
+    expect(tz).toBe('Europe/Madrid');
+  });
+
+  it('handles China timezone zones correctly', () => {
+    // Shanghai: 31.2304° N, 121.4737° E
+    const tzShanghai = getTimezoneFromCoordinates(31.2304, 121.4737);
+    expect(tzShanghai).toBe('Asia/Shanghai');
+
+    // Urumqi: 43.8256° N, 87.6168° E - geo-tz returns the geographically accurate timezone
+    // Note: While China officially uses Beijing Time nationwide, geo-tz returns Asia/Urumqi
+    // for the Xinjiang region, which is the geographically appropriate IANA timezone
+    const tzUrumqi = getTimezoneFromCoordinates(43.8256, 87.6168);
+    expect(tzUrumqi).toBe('Asia/Urumqi');
+  });
+
+  it('returns valid timezone for locations in international waters', () => {
+    // Middle of Pacific Ocean - should fallback to UTC offset estimation
+    const tz = getTimezoneFromCoordinates(0, -150);
+    expect(tz).toBeDefined();
+    expect(typeof tz).toBe('string');
+  });
+});
 
 describe('getBrowserTimezone', () => {
   it('returns a non-empty string', () => {
