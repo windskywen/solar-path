@@ -191,20 +191,14 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 xl:grid-cols-2 divide-y xl:divide-y-0 xl:divide-x divide-slate-100 dark:divide-slate-800">
-                    {/* Daily Events (Left) */}
+                  <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
+                    {/* Daily Events */}
                     <div className="p-4">
-                      <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
-                        Daily Events
-                      </h3>
                       <SunEventsPanel events={solarData?.events ?? null} timezone={timezone} />
                     </div>
 
-                    {/* Charts (Right) */}
+                    {/* Charts */}
                     <div className="p-4">
-                      <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
-                        Charts
-                      </h3>
                       {solarData ? (
                         <ChartsPanel
                           positions={solarData.hourly}

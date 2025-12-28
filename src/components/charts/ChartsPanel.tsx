@@ -95,7 +95,7 @@ export function ChartsPanel({
         )}
 
         {view === 'both' && (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">
                 Altitude (angle above horizon)
@@ -104,7 +104,7 @@ export function ChartsPanel({
                 positions={positions}
                 selectedHour={selectedHour}
                 onHourClick={onHourClick}
-                height={150}
+                height={200}
               />
             </div>
             <div>
@@ -115,7 +115,7 @@ export function ChartsPanel({
                 positions={positions}
                 selectedHour={selectedHour}
                 onHourClick={onHourClick}
-                height={150}
+                height={200}
               />
             </div>
           </div>

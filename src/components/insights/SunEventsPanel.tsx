@@ -86,12 +86,12 @@ export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) 
   const isPolarNight = events.dayLengthHours === 0;
 
   return (
-    <div className={`flex flex-col ${className}`}>
+    <div className={`flex flex-col gap-4 ${className}`}>
       {/* Special condition banner */}
       {condition && (
         <div
           className={`
-            rounded-lg p-2 mb-3 text-center text-xs font-medium
+            rounded-lg p-2 text-center text-xs font-medium
             ${
               isPolarDay
                 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200'
@@ -104,57 +104,45 @@ export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) 
         </div>
       )}
 
-      {/* Sun events list */}
-      <div className="flex-1 space-y-3">
+      {/* Sun events list - Horizontal Row */}
+      <div className="grid grid-cols-3 gap-2">
         {/* Sunrise */}
-        <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-lg">
-              🌅
-            </div>
-            <div>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Sunrise</p>
-              <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
-                {sunriseTime || '—'}
-              </p>
-            </div>
-          </div>
+        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+          <div className="text-xl mb-1">🌅</div>
+          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
+            Sunrise
+          </p>
+          <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
+            {sunriseTime || '—'}
+          </p>
         </div>
 
         {/* Sunset */}
-        <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-lg">
-              🌇
-            </div>
-            <div>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Sunset</p>
-              <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
-                {sunsetTime || '—'}
-              </p>
-            </div>
-          </div>
+        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+          <div className="text-xl mb-1">🌇</div>
+          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
+            Sunset
+          </p>
+          <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
+            {sunsetTime || '—'}
+          </p>
         </div>
 
         {/* Day Length */}
-        <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-lg">
-              ⏱️
-            </div>
-            <div>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Day Length</p>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">
-                {dayLengthLabel || '—'}
-              </p>
-            </div>
-          </div>
+        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+          <div className="text-xl mb-1">⏱️</div>
+          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
+            Day Length
+          </p>
+          <p className="text-sm font-bold text-slate-900 dark:text-white">
+            {dayLengthLabel || '—'}
+          </p>
         </div>
       </div>
 
       {/* Day length visual bar */}
       {events.dayLengthHours !== null && events.dayLengthHours !== undefined && (
-        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <div className="">
           <div className="flex justify-between text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
             <span>
               Day ({Math.min(100, Math.max(0, Math.round((events.dayLengthHours / 24) * 100)))}%)
