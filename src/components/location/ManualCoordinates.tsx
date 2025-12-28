@@ -119,7 +119,7 @@ export function ManualCoordinates({
         >
           Coordinates (Lat, Lng)
         </label>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 sm:gap-2">
           <input
             type="text"
             id="coords-input"
@@ -129,7 +129,7 @@ export function ManualCoordinates({
             onBlur={handleBlur}
             placeholder="e.g. 23.996, 121.572"
             className={`
-              flex-1 px-3 py-2 text-sm rounded-lg
+              flex-1 min-w-0 px-2 sm:px-3 py-2 text-sm rounded-lg
               bg-white dark:bg-slate-800
               border ${error ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'}
               focus:outline-none focus:ring-2 focus:ring-blue-500
@@ -139,19 +139,19 @@ export function ManualCoordinates({
           <button
             type="submit"
             className="
-              px-4 py-2 text-sm font-medium
+              px-3 sm:px-4 py-2 text-sm font-medium
               bg-blue-600 hover:bg-blue-700
               text-white rounded-lg
               transition-colors
-              whitespace-nowrap
+              whitespace-nowrap flex-shrink-0
             "
           >
             Set
           </button>
         </div>
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-        <p className="mt-1 text-[10px] text-slate-400">
-          Paste coordinates from Google Maps (Latitude, Longitude)
+        <p className="mt-1 text-[9px] sm:text-[10px] text-slate-400">
+          Paste coordinates from Google Maps
         </p>
       </div>
     </form>

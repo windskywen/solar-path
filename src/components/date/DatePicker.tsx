@@ -88,15 +88,15 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
   return (
     <div className={`space-y-2 ${className}`}>
       {/* Date display and navigation */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         {/* Previous day button */}
         <button
           onClick={handlePrevDay}
-          className="p-2 rounded-lg hover:bg-muted transition-colors"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
           aria-label="Previous day"
         >
           <svg
-            className="w-5 h-5 text-muted-foreground"
+            className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -116,7 +116,7 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
             type="date"
             value={dateISO}
             onChange={handleDateChange}
-            className="w-full px-3 py-2 bg-background border border-input rounded-lg text-center font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 bg-background border border-input rounded-lg text-center text-sm sm:text-base font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             aria-label="Select date"
           />
         </div>
@@ -124,11 +124,11 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
         {/* Next day button */}
         <button
           onClick={handleNextDay}
-          className="p-2 rounded-lg hover:bg-muted transition-colors"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
           aria-label="Next day"
         >
           <svg
-            className="w-5 h-5 text-muted-foreground"
+            className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -140,44 +140,48 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
 
       {/* Today button and formatted date */}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">{formatDateDisplay(dateISO)}</span>
+        <span className="text-xs sm:text-sm text-muted-foreground truncate">
+          {formatDateDisplay(dateISO)}
+        </span>
 
         {!dateIsToday && (
           <button
             onClick={handleTodayClick}
-            className="text-sm text-primary hover:text-primary/80 font-medium"
+            className="text-xs sm:text-sm text-primary hover:text-primary/80 font-medium whitespace-nowrap ml-2"
           >
             Go to Today
           </button>
         )}
 
         {dateIsToday && (
-          <span className="text-sm text-green-600 dark:text-green-400 font-medium">✓ Today</span>
+          <span className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium whitespace-nowrap ml-2">
+            ✓ Today
+          </span>
         )}
       </div>
 
-      {/* Quick date buttons */}
+      {/* Quick date buttons - hide on very small screens */}
       <div className="flex gap-1 flex-wrap">
         <QuickDateButton
-          label="Solstice (Jun)"
+          label="Jun Sol"
           dateISO={`${new Date().getFullYear()}-06-21`}
           currentDate={dateISO}
           onClick={setDateISO}
         />
         <QuickDateButton
-          label="Equinox (Mar)"
+          label="Mar Eq"
           dateISO={`${new Date().getFullYear()}-03-20`}
           currentDate={dateISO}
           onClick={setDateISO}
         />
         <QuickDateButton
-          label="Solstice (Dec)"
+          label="Dec Sol"
           dateISO={`${new Date().getFullYear()}-12-21`}
           currentDate={dateISO}
           onClick={setDateISO}
         />
         <QuickDateButton
-          label="Equinox (Sep)"
+          label="Sep Eq"
           dateISO={`${new Date().getFullYear()}-09-22`}
           currentDate={dateISO}
           onClick={setDateISO}

@@ -184,7 +184,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {/* Left: Manual Coordinates */}
         <div>
           <ManualCoordinates
@@ -214,7 +214,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
                 onChange={handleSearchChange}
                 onFocus={handleSearchFocus}
                 onKeyDown={handleKeyDown}
-                placeholder="City, address..."
+                placeholder="Search city..."
                 className="w-full px-3 py-2 pl-9 bg-background 
                            border border-input
                            text-foreground text-sm

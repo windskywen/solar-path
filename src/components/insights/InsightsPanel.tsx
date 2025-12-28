@@ -82,11 +82,11 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
 
   return (
     <section aria-labelledby="insights-heading" className={className}>
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-lg">💡</span>
+      <div className="flex items-center gap-2 mb-2 sm:mb-3">
+        <span className="text-base sm:text-lg">💡</span>
         <h2
           id="insights-heading"
-          className="text-base font-semibold text-slate-900 dark:text-white"
+          className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white"
         >
           Insights
         </h2>
@@ -94,7 +94,7 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
 
       <div className="" role="region" aria-label="Solar insights">
         {hasInsights ? (
-          <ul className="space-y-2" role="list">
+          <ul className="space-y-1.5 sm:space-y-2" role="list">
             {insights.messages.map((message, index) => {
               const icon = getInsightIcon(message);
               const variant = getInsightVariant(message);
@@ -108,14 +108,14 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
                 <li
                   key={index}
                   className={`
-                    flex items-start gap-3 text-sm p-3 rounded-lg
+                    flex items-start gap-2 sm:gap-3 text-xs sm:text-sm p-2 sm:p-3 rounded-lg
                     bg-white/50 dark:bg-slate-800/50 border border-white/50 dark:border-slate-700/50
                     shadow-sm backdrop-blur-sm
                     text-slate-700 dark:text-slate-300
                   `}
                 >
                   <span
-                    className="flex-shrink-0 text-lg leading-none mt-0.5"
+                    className="shrink-0 text-base sm:text-lg leading-none mt-0.5"
                     role="img"
                     aria-hidden="true"
                   >
@@ -127,16 +127,16 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
             })}
 
             {compact && insights.messages.length > 2 && (
-              <li className="text-xs text-slate-500 dark:text-slate-400 pl-6">
+              <li className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 pl-5 sm:pl-6">
                 +{insights.messages.length - 2} more insight
                 {insights.messages.length > 3 ? 's' : ''}
               </li>
             )}
           </ul>
         ) : (
-          <div className="bg-white/50 dark:bg-slate-800/50 rounded-lg p-4 border border-white/50 dark:border-slate-700/50 shadow-sm">
+          <div className="bg-white/50 dark:bg-slate-800/50 rounded-lg p-3 sm:p-4 border border-white/50 dark:border-slate-700/50 shadow-sm">
             <p
-              className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2"
+              className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2"
               role="status"
             >
               <span className="text-green-500" role="img" aria-hidden="true">

@@ -91,7 +91,7 @@ export default function HomePage() {
       : null;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="min-h-full md:h-full flex flex-col">
       {/* Skip Links for keyboard navigation */}
       <SkipLinks
         links={[
@@ -101,12 +101,12 @@ export default function HomePage() {
       />
 
       {/* Header */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex-shrink-0">
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-3 flex-shrink-0">
         <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-white">
+          <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">
             ☀️ Solar Path Tracker
           </h1>
-          <div className="text-sm text-slate-500 dark:text-slate-400">
+          <div className="hidden sm:block text-sm text-slate-500 dark:text-slate-400">
             Visualize the sun&apos;s journey across the sky
           </div>
         </div>
@@ -114,10 +114,10 @@ export default function HomePage() {
 
       {/* Configuration Section - Top */}
       <section className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-20 flex-shrink-0 shadow-sm">
-        <div className="max-w-screen-2xl mx-auto p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="max-w-screen-2xl mx-auto p-3 sm:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
             {/* Location Input Section - Takes up more space */}
-            <div className="lg:col-span-7 space-y-2">
+            <div className="md:col-span-7 space-y-2">
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-2">
                 <span>📍</span> Location
               </label>
@@ -125,15 +125,17 @@ export default function HomePage() {
             </div>
 
             {/* Date Picker Section */}
-            <div className="lg:col-span-5 space-y-2">
+            <div className="md:col-span-5 space-y-2">
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-2">
                 <span>📅</span> Date &amp; Time
               </label>
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700 h-[calc(100%-1.5rem)] flex flex-col justify-center gap-3">
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-2 sm:p-3 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-col justify-center gap-2 sm:gap-3">
                 <DatePicker className="w-full" />
                 <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 pt-2 border-t border-slate-200 dark:border-slate-700">
                   <span>🌐</span>
-                  <span className="font-mono">Timezone: {timezone}</span>
+                  <span className="font-mono text-[10px] sm:text-xs truncate">
+                    Timezone: {timezone}
+                  </span>
                 </div>
               </div>
             </div>
@@ -145,11 +147,11 @@ export default function HomePage() {
       <main
         id="main-content"
         tabIndex={-1}
-        className="flex-1 flex flex-col lg:flex-row overflow-hidden focus:outline-none"
+        className="flex-1 flex flex-col md:flex-row md:overflow-hidden focus:outline-none"
       >
-        {/* Left pane: Map (1/3 width) */}
+        {/* Left pane: Map (responsive width) */}
         <section
-          className="lg:w-1/3 h-[40vh] lg:h-full relative bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-800"
+          className="w-full md:w-2/5 lg:w-1/3 h-[280px] sm:h-[320px] md:h-full relative bg-slate-100 dark:bg-slate-800 md:border-r border-b md:border-b-0 border-slate-200 dark:border-slate-800 shrink-0"
           aria-label="Solar path map"
         >
           <Suspense fallback={<MapSkeleton />}>
@@ -164,27 +166,27 @@ export default function HomePage() {
               )}
             </MapPanel>
             {/* Map legend */}
-            <SolarRaysLegend className="absolute bottom-4 left-4 z-10" />
+            <SolarRaysLegend className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-10" />
           </Suspense>
         </section>
 
-        {/* Right container: Middle and Right sections (2/3 width) */}
-        <div className="lg:w-2/3 flex-1 lg:flex-none overflow-y-auto bg-slate-50 dark:bg-slate-950 focus:outline-none">
+        {/* Right container: Middle and Right sections (responsive width) */}
+        <div className="w-full md:w-3/5 lg:w-2/3 md:flex-1 md:overflow-y-auto bg-slate-50 dark:bg-slate-950 focus:outline-none">
           <Suspense fallback={<DataSkeleton />}>
-            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-full h-full">
+            <div className="p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 max-w-full pb-4">
               {/* Middle Section: Overview, Selected Hour, Insights */}
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Solar Overview (Events & Charts) */}
                 <section
                   aria-labelledby="overview-heading"
                   className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
                 >
-                  <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                  <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">📊</span>
+                      <span className="text-base sm:text-lg">📊</span>
                       <h2
                         id="overview-heading"
-                        className="text-base font-semibold text-slate-900 dark:text-white"
+                        className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white"
                       >
                         Solar Overview
                       </h2>
@@ -193,12 +195,12 @@ export default function HomePage() {
 
                   <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
                     {/* Daily Events */}
-                    <div className="p-4">
+                    <div className="p-3 sm:p-4">
                       <SunEventsPanel events={solarData?.events ?? null} timezone={timezone} />
                     </div>
 
                     {/* Charts */}
-                    <div className="p-4">
+                    <div className="p-3 sm:p-4">
                       {solarData ? (
                         <ChartsPanel
                           positions={solarData.hourly}
@@ -207,9 +209,9 @@ export default function HomePage() {
                           className="bg-slate-50 dark:bg-slate-800/50"
                         />
                       ) : (
-                        <div className="h-48 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-slate-700 rounded-lg">
-                          <span className="text-2xl mb-2">📈</span>
-                          <p className="text-slate-500 dark:text-slate-400 text-sm">
+                        <div className="h-36 sm:h-48 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-slate-700 rounded-lg">
+                          <span className="text-xl sm:text-2xl mb-2">📈</span>
+                          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
                             Select a location to view charts
                           </p>
                         </div>
@@ -223,47 +225,47 @@ export default function HomePage() {
                   aria-labelledby="metrics-heading"
                   className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
                 >
-                  <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                  <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">⏱️</span>
+                      <span className="text-base sm:text-lg">⏱️</span>
                       <h2
                         id="metrics-heading"
-                        className="text-base font-semibold text-slate-900 dark:text-white"
+                        className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white"
                       >
                         Selected Hour
                       </h2>
                     </div>
                   </div>
-                  <div className="p-4">
+                  <div className="p-3 sm:p-4">
                     <MetricsPanel position={selectedPosition} />
                   </div>
                 </section>
 
                 {/* Insights Section */}
-                <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl shadow-sm border border-indigo-100 dark:border-indigo-800/50 p-4">
+                <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl shadow-sm border border-indigo-100 dark:border-indigo-800/50 p-3 sm:p-4">
                   <InsightsPanel insights={insights} />
                 </div>
               </div>
 
               {/* Right Section: Hourly Breakdown */}
-              <div className="h-full flex flex-col">
+              <div className="flex flex-col">
                 <section
                   aria-labelledby="details-heading"
-                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex-1 flex flex-col"
+                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col"
                 >
-                  <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+                  <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">📋</span>
+                      <span className="text-base sm:text-lg">📋</span>
                       <h2
                         id="details-heading"
-                        className="text-base font-semibold text-slate-900 dark:text-white"
+                        className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white"
                       >
                         Hourly Breakdown
                       </h2>
                     </div>
                   </div>
 
-                  <div className="">
+                  <div className="max-h-[400px] md:max-h-none overflow-y-auto">
                     {solarData ? (
                       <SolarDataTable
                         positions={solarData.hourly}
@@ -273,8 +275,8 @@ export default function HomePage() {
                         className="border-0 rounded-none shadow-none"
                       />
                     ) : (
-                      <div className="p-8 flex flex-col items-center justify-center text-center h-full">
-                        <p className="text-slate-500 dark:text-slate-400 text-sm">
+                      <div className="p-6 sm:p-8 flex flex-col items-center justify-center text-center h-full">
+                        <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
                           No data available
                         </p>
                       </div>
@@ -288,8 +290,8 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 px-4 py-2 flex-shrink-0">
-        <div className="text-center text-xs text-slate-500 dark:text-slate-400">
+      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 flex-shrink-0">
+        <div className="text-center text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
           Solar calculations powered by{' '}
           <a
             href="https://github.com/mourner/suncalc"
