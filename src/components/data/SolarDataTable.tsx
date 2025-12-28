@@ -97,7 +97,7 @@ export function SolarDataTable({
     <div className={`overflow-hidden ${className}`}>
       {/* Table header */}
       <div className="bg-muted/50 border-b border-border">
-        <div className="grid grid-cols-4 gap-2 px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="grid grid-cols-4 gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           <div>Time</div>
           <div>Azimuth</div>
           <div>Altitude</div>
@@ -117,7 +117,7 @@ export function SolarDataTable({
               key={position.hour}
               onClick={() => onRowClick?.(position.hour)}
               className={`
-                w-full grid grid-cols-4 gap-2 px-4 py-2.5 text-sm text-left
+                w-full grid grid-cols-4 gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-left
                 transition-all duration-200
                 ${isSelected ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted'}
                 ${isBelowHorizon && !isSelected ? 'text-muted-foreground/50' : 'text-foreground'}
@@ -132,7 +132,9 @@ export function SolarDataTable({
               <div className="tabular-nums">{formatHour(position.hour)}</div>
 
               {/* Azimuth */}
-              <div className="tabular-nums">{formatAzimuth(position.azimuthDeg)}</div>
+              <div className="tabular-nums text-[10px] sm:text-sm">
+                {formatAzimuth(position.azimuthDeg)}
+              </div>
 
               {/* Altitude */}
               <div className={`tabular-nums ${isBelowHorizon && !isSelected ? 'opacity-75' : ''}`}>
@@ -140,10 +142,10 @@ export function SolarDataTable({
               </div>
 
               {/* State indicator */}
-              <div className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${stateColors.dot}`} />
+              <div className="flex items-center gap-1 sm:gap-2">
+                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${stateColors.dot}`} />
                 <span
-                  className={`text-xs capitalize truncate ${
+                  className={`text-[10px] sm:text-xs capitalize truncate hidden sm:inline ${
                     isSelected ? 'text-primary' : stateColors.text
                   }`}
                 >
@@ -157,12 +159,16 @@ export function SolarDataTable({
 
       {/* Summary footer */}
       {positions.length > 0 && (
-        <div className="bg-muted/50 border-t border-border px-4 py-2.5">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="bg-muted/50 border-t border-border px-2 sm:px-4 py-2 sm:py-2.5">
+          <div className="flex items-center justify-between text-[10px] sm:text-xs text-muted-foreground">
             <span className="font-medium">
               {positions.filter((p) => p.altitudeDeg > 0).length} hours of daylight
             </span>
-            {timezone && <span className="font-mono opacity-75">{timezone.replace('_', ' ')}</span>}
+            {timezone && (
+              <span className="font-mono opacity-75 truncate max-w-[120px] sm:max-w-none">
+                {timezone.replace('_', ' ')}
+              </span>
+            )}
           </div>
         </div>
       )}

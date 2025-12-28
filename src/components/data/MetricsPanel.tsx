@@ -145,10 +145,10 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
   if (!position) {
     return (
       <div
-        className={`h-full flex flex-col items-center justify-center p-6 text-center ${className}`}
+        className={`h-full flex flex-col items-center justify-center p-4 sm:p-6 text-center ${className}`}
       >
-        <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-3">
-          <span className="text-2xl grayscale opacity-50">☀️</span>
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-2 sm:mb-3">
+          <span className="text-xl sm:text-2xl grayscale opacity-50">☀️</span>
         </div>
         <p className="text-sm font-medium text-slate-600 dark:text-slate-300">No Hour Selected</p>
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
@@ -164,32 +164,32 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
     <div className={`h-full flex flex-col ${className}`}>
       {/* Header with time and state */}
       <div
-        className={`flex items-center justify-between p-3 rounded-lg mb-4 ${stateStyle.bg} border ${stateStyle.border}`}
+        className={`flex items-center justify-between p-2 sm:p-3 rounded-lg mb-3 sm:mb-4 ${stateStyle.bg} border ${stateStyle.border}`}
       >
-        <div className="flex items-center gap-3">
-          <span className="text-2xl filter drop-shadow-sm">{stateStyle.icon}</span>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="text-xl sm:text-2xl filter drop-shadow-sm">{stateStyle.icon}</span>
           <div>
-            <p className="font-bold text-lg text-slate-900 dark:text-white leading-none">
+            <p className="font-bold text-base sm:text-lg text-slate-900 dark:text-white leading-none">
               {formatTime(position.hour)}
             </p>
-            <p className="text-[10px] font-medium uppercase tracking-wider opacity-70 mt-1">
+            <p className="text-[9px] sm:text-[10px] font-medium uppercase tracking-wider opacity-70 mt-0.5 sm:mt-1">
               {position.localTimeLabel}
             </p>
           </div>
         </div>
         <div className="text-right">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-white/60 dark:bg-black/20 backdrop-blur-sm">
+          <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wide bg-white/60 dark:bg-black/20 backdrop-blur-sm">
             {stateStyle.label}
           </span>
         </div>
       </div>
 
       {/* Main metrics */}
-      <div className="flex-1 grid grid-cols-2 gap-4">
+      <div className="flex-1 grid grid-cols-2 gap-2 sm:gap-4">
         {/* Azimuth */}
-        <div className="flex flex-col justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+        <div className="flex flex-col justify-between p-2 sm:p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <p className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Azimuth
             </p>
             <CopyButton text={position.azimuthDeg.toFixed(1)} label="Azimuth" />
@@ -198,24 +198,24 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
           <div className="flex items-end justify-between mt-auto">
             <div>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-foreground tabular-nums tracking-tight">
+                <span className="text-lg sm:text-2xl font-bold text-foreground tabular-nums tracking-tight">
                   {position.azimuthDeg.toFixed(0)}°
                 </span>
               </div>
-              <p className="text-xs font-medium text-muted-foreground truncate">
+              <p className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate">
                 {cardinalDir} ({shortDir})
               </p>
             </div>
-            <div className="transform scale-75 origin-bottom-right">
+            <div className="transform scale-50 sm:scale-75 origin-bottom-right hidden sm:block">
               <CompassIndicator azimuth={position.azimuthDeg} />
             </div>
           </div>
         </div>
 
         {/* Altitude */}
-        <div className="flex flex-col justify-between p-3 bg-card rounded-lg border border-border">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="flex flex-col justify-between p-2 sm:p-3 bg-card rounded-lg border border-border">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <p className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
               Altitude
             </p>
             <CopyButton text={position.altitudeDeg.toFixed(1)} label="Altitude" />
@@ -224,7 +224,7 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
           <div className="mt-auto">
             <div className="flex items-baseline gap-1">
               <span
-                className={`text-2xl font-bold tabular-nums tracking-tight ${
+                className={`text-lg sm:text-2xl font-bold tabular-nums tracking-tight ${
                   position.altitudeDeg < 0 ? 'text-muted-foreground/50' : 'text-foreground'
                 }`}
               >
@@ -232,7 +232,7 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
                 {position.altitudeDeg.toFixed(1)}°
               </span>
             </div>
-            <p className="text-xs font-medium text-muted-foreground mt-0.5 truncate">
+            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mt-0.5 truncate">
               {position.altitudeDeg < 0 ? 'Below Horizon' : 'Above Horizon'}
             </p>
           </div>
@@ -240,8 +240,10 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
       </div>
 
       {/* Additional info footer */}
-      <div className="mt-4 pt-3 border-t border-border">
-        <p className="text-xs text-center text-muted-foreground italic">{altDescription}</p>
+      <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-border">
+        <p className="text-[10px] sm:text-xs text-center text-muted-foreground italic">
+          {altDescription}
+        </p>
       </div>
     </div>
   );

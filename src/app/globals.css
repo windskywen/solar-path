@@ -101,6 +101,24 @@
   }
 }
 
+/* Custom xs breakpoint for very small screens */
+@custom-media --xs (min-width: 480px);
+
+/* Mobile scrolling fix */
+html,
+body {
+  overflow-x: hidden;
+}
+
+@media (max-width: 767px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+    overflow-y: auto;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

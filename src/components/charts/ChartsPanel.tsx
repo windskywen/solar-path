@@ -47,13 +47,13 @@ export function ChartsPanel({
   return (
     <div className={`bg-slate-50 dark:bg-slate-800/50 rounded-lg overflow-hidden ${className}`}>
       {/* View toggle buttons */}
-      <div className="p-1 bg-slate-100 dark:bg-slate-800 rounded-lg m-3 flex gap-1">
+      <div className="p-1 bg-slate-100 dark:bg-slate-800 rounded-lg m-2 sm:m-3 flex gap-1">
         {viewButtons.map((btn) => (
           <button
             key={btn.value}
             type="button"
             onClick={() => setView(btn.value)}
-            className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+            className={`flex-1 px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-medium rounded-md transition-all ${
               view === btn.value
                 ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
@@ -65,10 +65,10 @@ export function ChartsPanel({
       </div>
 
       {/* Chart content */}
-      <div className="px-3 pb-3">
+      <div className="px-2 sm:px-3 pb-2 sm:pb-3">
         {view === 'altitude' && (
           <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">
               Sun altitude (angle above horizon) throughout the day
             </p>
             <AltitudeChart
@@ -82,7 +82,7 @@ export function ChartsPanel({
 
         {view === 'azimuth' && (
           <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">
               Sun azimuth (compass direction) throughout the day
             </p>
             <AzimuthChart
@@ -95,9 +95,9 @@ export function ChartsPanel({
         )}
 
         {view === 'both' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">
                 Altitude (angle above horizon)
               </p>
               <AltitudeChart
@@ -108,7 +108,7 @@ export function ChartsPanel({
               />
             </div>
             <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">
                 Azimuth (compass direction)
               </p>
               <AzimuthChart

@@ -91,7 +91,7 @@ export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) 
       {condition && (
         <div
           className={`
-            rounded-lg p-2 text-center text-xs font-medium
+            rounded-lg p-2 text-center text-[10px] sm:text-xs font-medium
             ${
               isPolarDay
                 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200'
@@ -105,36 +105,36 @@ export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) 
       )}
 
       {/* Sun events list - Horizontal Row */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-1 sm:gap-2">
         {/* Sunrise */}
-        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-          <div className="text-xl mb-1">🌅</div>
-          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
+        <div className="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+          <div className="text-base sm:text-xl mb-0.5 sm:mb-1">🌅</div>
+          <p className="text-[8px] sm:text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
             Sunrise
           </p>
-          <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
+          <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tabular-nums">
             {sunriseTime || '—'}
           </p>
         </div>
 
         {/* Sunset */}
-        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-          <div className="text-xl mb-1">🌇</div>
-          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
+        <div className="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+          <div className="text-base sm:text-xl mb-0.5 sm:mb-1">🌇</div>
+          <p className="text-[8px] sm:text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
             Sunset
           </p>
-          <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
+          <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tabular-nums">
             {sunsetTime || '—'}
           </p>
         </div>
 
         {/* Day Length */}
-        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-          <div className="text-xl mb-1">⏱️</div>
-          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
+        <div className="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+          <div className="text-base sm:text-xl mb-0.5 sm:mb-1">⏱️</div>
+          <p className="text-[8px] sm:text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
             Day Length
           </p>
-          <p className="text-sm font-bold text-slate-900 dark:text-white">
+          <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
             {dayLengthLabel || '—'}
           </p>
         </div>

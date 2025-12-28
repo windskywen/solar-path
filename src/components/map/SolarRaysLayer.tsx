@@ -185,23 +185,28 @@ export function useRayClickHandler(
 export function SolarRaysLegend({ className = '' }: { className?: string }) {
   const items = [
     { color: RAY_COLORS.day, label: 'Daytime' },
-    { color: RAY_COLORS.golden, label: 'Golden Hour' },
+    { color: RAY_COLORS.golden, label: 'Golden' },
     { color: RAY_COLORS.night, label: 'Night' },
     { color: RAY_COLORS.selected, label: 'Selected' },
   ];
 
   return (
     <div
-      className={`bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg p-3 shadow-lg ${className}`}
+      className={`bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg p-2 sm:p-3 shadow-lg ${className}`}
     >
-      <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-        Solar Ray Colors
+      <h3 className="text-[10px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
+        Ray Colors
       </h3>
-      <div className="space-y-1">
+      <div className="space-y-0.5 sm:space-y-1">
         {items.map((item) => (
-          <div key={item.label} className="flex items-center gap-2">
-            <div className="w-4 h-1 rounded-full" style={{ backgroundColor: item.color }} />
-            <span className="text-xs text-slate-600 dark:text-slate-400">{item.label}</span>
+          <div key={item.label} className="flex items-center gap-1.5 sm:gap-2">
+            <div
+              className="w-3 sm:w-4 h-0.5 sm:h-1 rounded-full"
+              style={{ backgroundColor: item.color }}
+            />
+            <span className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400">
+              {item.label}
+            </span>
           </div>
         ))}
       </div>
