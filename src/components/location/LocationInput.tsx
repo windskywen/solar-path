@@ -60,7 +60,10 @@ export function LocationInput({ className = '' }: LocationInputProps) {
 
   /**
    * Handle GPS button click
-   * Uses browser geolocation API with fallback
+   * Uses browser geolocation API with two-phase approach:
+   * 1. First try fast low-accuracy (WiFi/cell) with short timeout
+   * 2. If that fails, fall back to high-accuracy GPS with longer timeout
+   * This prevents timeout errors on first click while still getting good accuracy
    */
   const handleUseGps = useCallback(() => {
     // Check if geolocation is supported
@@ -74,25 +77,44 @@ export function LocationInput({ className = '' }: LocationInputProps) {
     setError(null);
     setIsLoadingLocation(true);
 
-    navigator.geolocation.getCurrentPosition(
-      // Success callback
-      (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
+    // Success callback - used for both phases
+    const onSuccess = (position: GeolocationPosition) => {
+      const { latitude, longitude, accuracy } = position.coords;
 
-        // Round to 6 decimal places
-        const roundedLat = Math.round(latitude * 1000000) / 1000000;
-        const roundedLng = Math.round(longitude * 1000000) / 1000000;
+      // Round to 6 decimal places
+      const roundedLat = Math.round(latitude * 1000000) / 1000000;
+      const roundedLng = Math.round(longitude * 1000000) / 1000000;
 
-        setLocation({
-          lat: roundedLat,
-          lng: roundedLng,
-          name: `GPS Location${accuracy ? ` (±${Math.round(accuracy)}m)` : ''}`,
-          source: 'gps',
-        });
-        setIsLoadingLocation(false);
-      },
-      // Error callback
-      (err) => {
+      setLocation({
+        lat: roundedLat,
+        lng: roundedLng,
+        name: `GPS Location${accuracy ? ` (±${Math.round(accuracy)}m)` : ''}`,
+        source: 'gps',
+      });
+      setIsLoadingLocation(false);
+    };
+
+    // Error handler factory - creates error callback with optional fallback
+    const createErrorHandler =
+      (fallbackToHighAccuracy: boolean) => (err: GeolocationPositionError) => {
+        // If low-accuracy failed due to timeout/unavailable, try high-accuracy as fallback
+        if (
+          fallbackToHighAccuracy &&
+          (err.code === err.TIMEOUT || err.code === err.POSITION_UNAVAILABLE)
+        ) {
+          navigator.geolocation.getCurrentPosition(
+            onSuccess,
+            createErrorHandler(false), // No more fallbacks
+            {
+              enableHighAccuracy: true,
+              timeout: 30000, // Give GPS more time to acquire satellites
+              maximumAge: 60000,
+            }
+          );
+          return;
+        }
+
+        // Final error - no more fallbacks
         setIsLoadingLocation(false);
         switch (err.code) {
           case err.PERMISSION_DENIED:
@@ -107,12 +129,17 @@ export function LocationInput({ className = '' }: LocationInputProps) {
           default:
             setGpsError('Failed to get location. Please try again.');
         }
-      },
-      // Options
+      };
+
+    // Phase 1: Try fast low-accuracy first (uses WiFi/cell towers, usually instant)
+    // This works better on first click when GPS hasn't warmed up
+    navigator.geolocation.getCurrentPosition(
+      onSuccess,
+      createErrorHandler(true), // Will fallback to high-accuracy on failure
       {
-        enableHighAccuracy: true,
+        enableHighAccuracy: false, // Start with low accuracy for speed
         timeout: 10000,
-        maximumAge: 60000, // Cache position for 1 minute
+        maximumAge: 60000, // Accept cached position up to 1 minute old
       }
     );
   }, [setLocation, setIsLoadingLocation, setError]);
