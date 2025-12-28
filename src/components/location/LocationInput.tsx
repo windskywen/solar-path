@@ -175,7 +175,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
 
         {/* Right: Search + GPS */}
         <div>
-          <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
             Search Location
           </label>
           <div className="flex gap-2">
@@ -188,17 +188,17 @@ export function LocationInput({ className = '' }: LocationInputProps) {
                 onFocus={handleSearchFocus}
                 onKeyDown={handleKeyDown}
                 placeholder="City, address..."
-                className="w-full px-3 py-2 pl-9 bg-white dark:bg-slate-800 
-                           border border-slate-300 dark:border-slate-600
-                           text-slate-900 dark:text-white text-sm
-                           rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
-                           placeholder:text-slate-400"
+                className="w-full px-3 py-2 pl-9 bg-background 
+                           border border-input
+                           text-foreground text-sm
+                           rounded-lg focus:outline-none focus:ring-2 focus:ring-ring
+                           placeholder:text-muted-foreground"
                 aria-label="Search for a location"
                 aria-expanded={isSearchOpen}
                 aria-haspopup="listbox"
               />
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -212,7 +212,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
               </svg>
               {isSearching && (
                 <svg
-                  className="animate-spin absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500"
+                  className="animate-spin absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -249,10 +249,10 @@ export function LocationInput({ className = '' }: LocationInputProps) {
               onClick={handleUseGps}
               disabled={isLoading}
               className="flex items-center justify-center px-4 py-2 
-                         bg-blue-50 dark:bg-blue-900/20 
-                         text-blue-600 dark:text-blue-400 
-                         hover:bg-blue-100 dark:hover:bg-blue-900/40 
-                         border border-blue-200 dark:border-blue-800
+                         bg-secondary 
+                         text-secondary-foreground 
+                         hover:bg-secondary/80 
+                         border border-border
                          rounded-lg transition-colors
                          disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Use current GPS location"
@@ -303,27 +303,22 @@ export function LocationInput({ className = '' }: LocationInputProps) {
 
       {/* Error Messages */}
       {(gpsError || searchError || error) && (
-        <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-xs text-red-600 dark:text-red-400">
-            {gpsError || searchError || error}
-          </p>
+        <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-lg">
+          <p className="text-xs text-destructive">{gpsError || searchError || error}</p>
         </div>
       )}
 
       {/* Current Location Display */}
       {location && (
-        <div
-          className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700"
-          data-testid="location-display"
-        >
+        <div className="p-2 bg-card rounded-lg border border-border" data-testid="location-display">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
+            <div className="w-1.5 h-1.5 bg-primary rounded-full flex-shrink-0" />
             <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-900 dark:text-white truncate">
+                <p className="text-xs font-medium text-foreground truncate">
                   {location.name || 'Selected Location'}
                 </p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                <p className="text-[10px] text-muted-foreground font-mono">
                   {location.lat.toFixed(4)}°, {location.lng.toFixed(4)}°
                 </p>
               </div>
@@ -333,7 +328,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
                   href={location.osmUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400"
+                  className="text-muted-foreground hover:text-primary"
                   title="Verify on OpenStreetMap"
                 >
                   <svg

@@ -38,7 +38,7 @@ function highlightMatch(text: string, query: string): React.ReactNode {
 
   return parts.map((part, i) =>
     part.toLowerCase() === query.toLowerCase() ? (
-      <mark key={i} className="bg-amber-200 dark:bg-amber-800 text-inherit rounded px-0.5">
+      <mark key={i} className="bg-primary/10 text-primary font-medium rounded px-0.5">
         {part}
       </mark>
     ) : (
@@ -84,24 +84,24 @@ const SearchResultItem = memo(function SearchResultItem({
     <button
       type="button"
       onClick={handleSelect}
-      className="w-full text-left px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 
-                 focus:bg-slate-100 dark:focus:bg-slate-700 focus:outline-none
+      className="w-full text-left px-2 py-1.5 hover:bg-muted 
+                 focus:bg-muted focus:outline-none
                  transition-colors group"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-slate-900 dark:text-white truncate">
+          <p className="text-xs text-foreground truncate">
             {highlightMatch(result.displayName, query)}
           </p>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+          <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
             {result.lat.toFixed(4)}°, {result.lng.toFixed(4)}°
           </p>
         </div>
         <a
           href={result.osmUrl}
           onClick={handleOsmClick}
-          className="flex-shrink-0 text-[10px] text-blue-600 dark:text-blue-400 
-                     hover:text-blue-800 dark:hover:text-blue-300
+          className="flex-shrink-0 text-[10px] text-primary 
+                     hover:text-primary/80
                      opacity-0 group-hover:opacity-100 transition-opacity
                      underline focus:opacity-100"
           title="Verify on OpenStreetMap"
@@ -121,8 +121,8 @@ function LoadingSkeleton() {
     <div className="p-2 space-y-2">
       {[1, 2, 3].map((i) => (
         <div key={i} className="animate-pulse space-y-1">
-          <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
-          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
+          <div className="h-3 bg-muted rounded w-3/4" />
+          <div className="h-2 bg-muted rounded w-1/3" />
         </div>
       ))}
     </div>
@@ -135,12 +135,8 @@ function LoadingSkeleton() {
 function NoResults({ query }: { query: string }) {
   return (
     <div className="p-3 text-center">
-      <p className="text-xs text-slate-500 dark:text-slate-400">
-        No results found for &ldquo;{query}&rdquo;
-      </p>
-      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-        Try a different search term
-      </p>
+      <p className="text-xs text-muted-foreground">No results found for &ldquo;{query}&rdquo;</p>
+      <p className="text-[10px] text-muted-foreground/80 mt-0.5">Try a different search term</p>
     </div>
   );
 }
@@ -165,8 +161,8 @@ export function SearchResults({
   if (isLoading) {
     return (
       <div
-        className={`absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 
-                    rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 
+        className={`absolute top-full left-0 right-0 mt-1 bg-card 
+                    rounded-lg shadow-lg border border-border 
                     z-50 overflow-hidden ${className}`}
       >
         <LoadingSkeleton />
@@ -178,8 +174,8 @@ export function SearchResults({
   if (results.length === 0) {
     return (
       <div
-        className={`absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 
-                    rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 
+        className={`absolute top-full left-0 right-0 mt-1 bg-card 
+                    rounded-lg shadow-lg border border-border 
                     z-50 ${className}`}
       >
         <NoResults query={query} />
@@ -190,8 +186,8 @@ export function SearchResults({
   // Show results
   return (
     <div
-      className={`absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 
-                  rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 
+      className={`absolute top-full left-0 right-0 mt-1 bg-card 
+                  rounded-lg shadow-lg border border-border 
                   z-50 overflow-hidden max-h-64 overflow-y-auto ${className}`}
       role="listbox"
       aria-label="Search results"
@@ -205,7 +201,7 @@ export function SearchResults({
           onOsmClick={onOsmClick}
         />
       ))}
-      <div className="px-3 py-2 text-xs text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-700">
+      <div className="px-3 py-2 text-xs text-muted-foreground border-t border-border">
         Data from OpenStreetMap contributors
       </div>
     </div>

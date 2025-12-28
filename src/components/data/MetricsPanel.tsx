@@ -18,8 +18,8 @@ import { CopyButton } from './CopyButton';
 // Color schemes for daylight states
 const STATE_STYLES = {
   night: {
-    bg: 'bg-slate-800/50',
-    border: 'border-slate-700',
+    bg: 'bg-muted/50',
+    border: 'border-border',
     icon: '🌙',
     label: 'Night',
     description: 'Sun is below the horizon',
@@ -198,11 +198,11 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
           <div className="flex items-end justify-between mt-auto">
             <div>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tight">
+                <span className="text-2xl font-bold text-foreground tabular-nums tracking-tight">
                   {position.azimuthDeg.toFixed(0)}°
                 </span>
               </div>
-              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 truncate">
+              <p className="text-xs font-medium text-muted-foreground truncate">
                 {cardinalDir} ({shortDir})
               </p>
             </div>
@@ -213,9 +213,9 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
         </div>
 
         {/* Altitude */}
-        <div className="flex flex-col justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
+        <div className="flex flex-col justify-between p-3 bg-card rounded-lg border border-border">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
               Altitude
             </p>
             <CopyButton text={position.altitudeDeg.toFixed(1)} label="Altitude" />
@@ -225,16 +225,14 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
             <div className="flex items-baseline gap-1">
               <span
                 className={`text-2xl font-bold tabular-nums tracking-tight ${
-                  position.altitudeDeg < 0
-                    ? 'text-slate-400 dark:text-slate-500'
-                    : 'text-slate-900 dark:text-white'
+                  position.altitudeDeg < 0 ? 'text-muted-foreground/50' : 'text-foreground'
                 }`}
               >
                 {position.altitudeDeg >= 0 ? '+' : ''}
                 {position.altitudeDeg.toFixed(1)}°
               </span>
             </div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+            <p className="text-xs font-medium text-muted-foreground mt-0.5 truncate">
               {position.altitudeDeg < 0 ? 'Below Horizon' : 'Above Horizon'}
             </p>
           </div>
@@ -242,10 +240,8 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
       </div>
 
       {/* Additional info footer */}
-      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-        <p className="text-xs text-center text-slate-500 dark:text-slate-400 italic">
-          {altDescription}
-        </p>
+      <div className="mt-4 pt-3 border-t border-border">
+        <p className="text-xs text-center text-muted-foreground italic">{altDescription}</p>
       </div>
     </div>
   );
@@ -258,19 +254,19 @@ function CompassIndicator({ azimuth }: { azimuth: number }) {
   return (
     <div className="relative w-12 h-12">
       {/* Compass circle */}
-      <div className="absolute inset-0 rounded-full border border-slate-300 dark:border-slate-600" />
+      <div className="absolute inset-0 rounded-full border border-border" />
 
       {/* Cardinal directions */}
-      <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[8px] font-medium text-slate-500">
+      <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[8px] font-medium text-muted-foreground">
         N
       </span>
-      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-medium text-slate-500">
+      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-medium text-muted-foreground">
         S
       </span>
-      <span className="absolute top-1/2 -left-1.5 -translate-y-1/2 text-[8px] font-medium text-slate-500">
+      <span className="absolute top-1/2 -left-1.5 -translate-y-1/2 text-[8px] font-medium text-muted-foreground">
         W
       </span>
-      <span className="absolute top-1/2 -right-1.5 -translate-y-1/2 text-[8px] font-medium text-slate-500">
+      <span className="absolute top-1/2 -right-1.5 -translate-y-1/2 text-[8px] font-medium text-muted-foreground">
         E
       </span>
 
@@ -283,7 +279,7 @@ function CompassIndicator({ azimuth }: { azimuth: number }) {
       </div>
 
       {/* Center dot */}
-      <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 -translate-x-1/2 -translate-y-1/2 bg-slate-400 dark:bg-slate-500 rounded-full" />
+      <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 -translate-x-1/2 -translate-y-1/2 bg-muted-foreground rounded-full" />
     </div>
   );
 }
@@ -293,7 +289,7 @@ function CompassIndicator({ azimuth }: { azimuth: number }) {
  */
 export function MetricsPanelCompact({ position, className = '' }: MetricsPanelProps) {
   if (!position) {
-    return <span className={`text-sm text-slate-400 ${className}`}>No hour selected</span>;
+    return <span className={`text-sm text-muted-foreground ${className}`}>No hour selected</span>;
   }
 
   const shortDir = getShortDirection(position.azimuthDeg);
@@ -302,10 +298,10 @@ export function MetricsPanelCompact({ position, className = '' }: MetricsPanelPr
   return (
     <div className={`inline-flex items-center gap-3 ${className}`}>
       <span className="font-medium">{formatTime(position.hour)}</span>
-      <span className="text-slate-600 dark:text-slate-400">
+      <span className="text-muted-foreground">
         {position.azimuthDeg.toFixed(1)}° {shortDir}
       </span>
-      <span className={position.altitudeDeg < 0 ? 'text-slate-400' : ''}>
+      <span className={position.altitudeDeg < 0 ? 'text-muted-foreground' : ''}>
         {position.altitudeDeg >= 0 ? '+' : ''}
         {position.altitudeDeg.toFixed(1)}°
       </span>

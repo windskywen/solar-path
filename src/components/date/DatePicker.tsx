@@ -92,11 +92,11 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
         {/* Previous day button */}
         <button
           onClick={handlePrevDay}
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          className="p-2 rounded-lg hover:bg-muted transition-colors"
           aria-label="Previous day"
         >
           <svg
-            className="w-5 h-5 text-slate-600 dark:text-slate-400"
+            className="w-5 h-5 text-muted-foreground"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -116,7 +116,7 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
             type="date"
             value={dateISO}
             onChange={handleDateChange}
-            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-center font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-background border border-input rounded-lg text-center font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             aria-label="Select date"
           />
         </div>
@@ -124,11 +124,11 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
         {/* Next day button */}
         <button
           onClick={handleNextDay}
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          className="p-2 rounded-lg hover:bg-muted transition-colors"
           aria-label="Next day"
         >
           <svg
-            className="w-5 h-5 text-slate-600 dark:text-slate-400"
+            className="w-5 h-5 text-muted-foreground"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -140,14 +140,12 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
 
       {/* Today button and formatted date */}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-slate-500 dark:text-slate-400">
-          {formatDateDisplay(dateISO)}
-        </span>
+        <span className="text-sm text-muted-foreground">{formatDateDisplay(dateISO)}</span>
 
         {!dateIsToday && (
           <button
             onClick={handleTodayClick}
-            className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+            className="text-sm text-primary hover:text-primary/80 font-medium"
           >
             Go to Today
           </button>
@@ -212,8 +210,8 @@ function QuickDateButton({
         px-2 py-1 text-xs rounded-full transition-colors
         ${
           isActive
-            ? 'bg-blue-500 text-white'
-            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-muted text-muted-foreground hover:bg-muted/80'
         }
       `}
     >
@@ -230,10 +228,8 @@ export function DateDisplayCompact({ className = '' }: { className?: string }) {
 
   return (
     <div className={`flex items-center gap-2 text-sm ${className}`}>
-      <span className="text-slate-500 dark:text-slate-400">Date:</span>
-      <span className="font-medium text-slate-900 dark:text-white">
-        {formatDateDisplay(dateISO)}
-      </span>
+      <span className="text-muted-foreground">Date:</span>
+      <span className="font-medium text-foreground">{formatDateDisplay(dateISO)}</span>
       {isToday(dateISO) && (
         <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded">
           Today

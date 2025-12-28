@@ -152,7 +152,7 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
         {location && (
           <Marker longitude={location.lng} latitude={location.lat} anchor="center">
             <div
-              className="w-4 h-4 bg-blue-500 border-2 border-white rounded-full shadow-lg"
+              className="w-4 h-4 bg-primary border-2 border-background rounded-full shadow-lg"
               title={location.name || `${location.lat}, ${location.lng}`}
             />
           </Marker>
@@ -164,8 +164,8 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
 
       {/* Map loading indicator */}
       {!isMapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-100 dark:bg-slate-800">
-          <div className="flex items-center gap-2 text-slate-500">
+        <div className="absolute inset-0 flex items-center justify-center bg-muted">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <svg
               className="animate-spin h-5 w-5"
               xmlns="http://www.w3.org/2000/svg"

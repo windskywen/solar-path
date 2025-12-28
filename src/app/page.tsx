@@ -26,8 +26,8 @@ import { getTimezoneFromCoordinates } from '@/lib/utils/timezone';
  */
 function MapSkeleton() {
   return (
-    <div className="h-full w-full bg-slate-200 dark:bg-slate-800 animate-pulse flex items-center justify-center">
-      <div className="text-slate-400 dark:text-slate-600">Loading map...</div>
+    <div className="h-full w-full bg-muted animate-pulse flex items-center justify-center">
+      <div className="text-muted-foreground">Loading map...</div>
     </div>
   );
 }
@@ -38,10 +38,10 @@ function MapSkeleton() {
 function DataSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
-      <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded" />
-      <div className="h-24 bg-slate-200 dark:bg-slate-700 rounded" />
-      <div className="h-48 bg-slate-200 dark:bg-slate-700 rounded" />
+      <div className="h-8 bg-muted rounded w-3/4" />
+      <div className="h-32 bg-muted rounded" />
+      <div className="h-24 bg-muted rounded" />
+      <div className="h-48 bg-muted rounded" />
     </div>
   );
 }
