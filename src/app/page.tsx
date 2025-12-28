@@ -141,15 +141,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Main content - dual pane layout */}
+      {/* Main content - three pane layout */}
       <main
         id="main-content"
         tabIndex={-1}
         className="flex-1 flex flex-col lg:flex-row overflow-hidden focus:outline-none"
       >
-        {/* Left pane: Map */}
+        {/* Left pane: Map (1/3 width) */}
         <section
-          className="lg:w-1/2 h-[40vh] lg:h-full relative bg-slate-100 dark:bg-slate-800"
+          className="lg:w-1/3 h-[40vh] lg:h-full relative bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-800"
           aria-label="Solar path map"
         >
           <Suspense fallback={<MapSkeleton />}>
@@ -168,94 +168,108 @@ export default function HomePage() {
           </Suspense>
         </section>
 
-        {/* Right pane: Data and controls */}
-        <aside
-          id="solar-data"
-          tabIndex={-1}
-          className="lg:w-1/2 flex-1 lg:flex-none overflow-y-auto bg-slate-50 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 focus:outline-none"
-          aria-label="Solar data"
-        >
+        {/* Right container: Middle and Right sections (2/3 width) */}
+        <div className="lg:w-2/3 flex-1 lg:flex-none overflow-y-auto bg-slate-50 dark:bg-slate-950 focus:outline-none">
           <Suspense fallback={<DataSkeleton />}>
-            <div className="p-4 space-y-6 max-w-3xl mx-auto">
-              {/* Combined Section 1: Daily Events & Charts */}
-              <section
-                aria-labelledby="overview-heading"
-                className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
-              >
-                <div className="p-5 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">📊</span>
-                    <h2
-                      id="overview-heading"
-                      className="text-base font-semibold text-slate-900 dark:text-white"
-                    >
-                      Solar Overview
-                    </h2>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 xl:grid-cols-3 divide-y xl:divide-y-0 xl:divide-x divide-slate-100 dark:divide-slate-800">
-                  {/* Daily Events (Left/Top) */}
-                  <div className="p-5 xl:col-span-1 flex flex-col">
-                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">
-                      Daily Events
-                    </h3>
-                    <SunEventsPanel
-                      events={solarData?.events ?? null}
-                      timezone={timezone}
-                      className="flex-1"
-                    />
-                  </div>
-
-                  {/* Charts (Right/Bottom) */}
-                  <div className="p-5 xl:col-span-2">
-                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">
-                      Charts
-                    </h3>
-                    {solarData ? (
-                      <ChartsPanel
-                        positions={solarData.hourly}
-                        selectedHour={selectedHour}
-                        onHourClick={setSelectedHour}
-                        className="bg-slate-50 dark:bg-slate-800/50"
-                      />
-                    ) : (
-                      <div className="h-64 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-slate-700 rounded-lg">
-                        <span className="text-2xl mb-2">📈</span>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm">
-                          Select a location to view charts
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </section>
-
-              {/* Combined Section 2: Selected Hour & Hourly Data */}
-              <section
-                aria-labelledby="details-heading"
-                className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
-              >
-                <div className="p-5 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">📋</span>
-                    <h2
-                      id="details-heading"
-                      className="text-base font-semibold text-slate-900 dark:text-white"
-                    >
-                      Detailed Data
-                    </h2>
-                  </div>
-                </div>
-
-                <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {/* Hourly Data Table */}
-                  <div>
-                    <div className="px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                      <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                        Hourly Breakdown
-                      </h3>
+            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-full h-full">
+              {/* Middle Section: Overview, Selected Hour, Insights */}
+              <div className="space-y-6">
+                {/* Solar Overview (Events & Charts) */}
+                <section
+                  aria-labelledby="overview-heading"
+                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
+                >
+                  <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">📊</span>
+                      <h2
+                        id="overview-heading"
+                        className="text-base font-semibold text-slate-900 dark:text-white"
+                      >
+                        Solar Overview
+                      </h2>
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 xl:grid-cols-2 divide-y xl:divide-y-0 xl:divide-x divide-slate-100 dark:divide-slate-800">
+                    {/* Daily Events (Left) */}
+                    <div className="p-4">
+                      <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
+                        Daily Events
+                      </h3>
+                      <SunEventsPanel events={solarData?.events ?? null} timezone={timezone} />
+                    </div>
+
+                    {/* Charts (Right) */}
+                    <div className="p-4">
+                      <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
+                        Charts
+                      </h3>
+                      {solarData ? (
+                        <ChartsPanel
+                          positions={solarData.hourly}
+                          selectedHour={selectedHour}
+                          onHourClick={setSelectedHour}
+                          className="bg-slate-50 dark:bg-slate-800/50"
+                        />
+                      ) : (
+                        <div className="h-48 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-slate-700 rounded-lg">
+                          <span className="text-2xl mb-2">📈</span>
+                          <p className="text-slate-500 dark:text-slate-400 text-sm">
+                            Select a location to view charts
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+                {/* Selected Hour Metrics */}
+                <section
+                  aria-labelledby="metrics-heading"
+                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
+                >
+                  <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">⏱️</span>
+                      <h2
+                        id="metrics-heading"
+                        className="text-base font-semibold text-slate-900 dark:text-white"
+                      >
+                        Selected Hour
+                      </h2>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <MetricsPanel position={selectedPosition} />
+                  </div>
+                </section>
+
+                {/* Insights Section */}
+                <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl shadow-sm border border-indigo-100 dark:border-indigo-800/50 p-4">
+                  <InsightsPanel insights={insights} />
+                </div>
+              </div>
+
+              {/* Right Section: Hourly Breakdown */}
+              <div className="h-full flex flex-col">
+                <section
+                  aria-labelledby="details-heading"
+                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex-1 flex flex-col"
+                >
+                  <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">📋</span>
+                      <h2
+                        id="details-heading"
+                        className="text-base font-semibold text-slate-900 dark:text-white"
+                      >
+                        Hourly Breakdown
+                      </h2>
+                    </div>
+                  </div>
+
+                  <div className="">
                     {solarData ? (
                       <SolarDataTable
                         positions={solarData.hourly}
@@ -265,31 +279,18 @@ export default function HomePage() {
                         className="border-0 rounded-none shadow-none"
                       />
                     ) : (
-                      <div className="p-8 flex flex-col items-center justify-center text-center">
+                      <div className="p-8 flex flex-col items-center justify-center text-center h-full">
                         <p className="text-slate-500 dark:text-slate-400 text-sm">
                           No data available
                         </p>
                       </div>
                     )}
                   </div>
-
-                  {/* Selected Hour Metrics */}
-                  <div className="p-5">
-                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">
-                      Selected Hour
-                    </h3>
-                    <MetricsPanel position={selectedPosition} />
-                  </div>
-                </div>
-              </section>
-
-              {/* Insights Section */}
-              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl shadow-sm border border-indigo-100 dark:border-indigo-800/50 p-5">
-                <InsightsPanel insights={insights} />
+                </section>
               </div>
             </div>
           </Suspense>
-        </aside>
+        </div>
       </main>
 
       {/* Footer */}

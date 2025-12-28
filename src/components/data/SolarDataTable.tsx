@@ -105,8 +105,8 @@ export function SolarDataTable({
         </div>
       </div>
 
-      {/* Table body - scrollable */}
-      <div className="max-h-[320px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
+      {/* Table body - full height */}
+      <div className="">
         {sortedPositions.map((position) => {
           const isSelected = position.hour === selectedHour;
           const stateColors = STATE_COLORS[position.daylightState];
