@@ -19,10 +19,10 @@
 
 **Purpose**: Install dependencies and create base structure
 
-- [ ] T001 Install deck.gl and Radix dependencies via `npm install @deck.gl/core@^9.0.0 @deck.gl/layers@^9.0.0 @deck.gl/mapbox@^9.0.0 @radix-ui/react-dialog@^1.0.0`
-- [ ] T002 [P] Create type definitions in src/types/solar3d.ts (Solar3DSnapshot, Solar3DPoint, Solar3DPath, Solar3DViewData, Solar3DTooltipData)
-- [ ] T003 [P] Create barrel export in src/lib/solar3d/index.ts
-- [ ] T004 [P] Create barrel export in src/components/solar3d/index.ts
+- [x] T001 Install deck.gl and Radix dependencies via `npm install @deck.gl/core@^9.0.0 @deck.gl/layers@^9.0.0 @deck.gl/mapbox@^9.0.0 @radix-ui/react-dialog@^1.0.0`
+- [x] T002 [P] Create type definitions in src/types/solar3d.ts (Solar3DSnapshot, Solar3DPoint, Solar3DPath, Solar3DViewData, Solar3DTooltipData)
+- [x] T003 [P] Create barrel export in src/lib/solar3d/index.ts
+- [x] T004 [P] Create barrel export in src/components/solar3d/index.ts
 
 ---
 
@@ -32,11 +32,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 [P] Implement geometry utilities in src/lib/solar3d/geometry.ts (SOLAR_3D_CONSTANTS, degToRad, computePosition)
-- [ ] T006 [P] Implement visibility utilities in src/lib/solar3d/visibility.ts (filterVisibleHours, buildSolar3DPoints, buildSolar3DPath, isSelectedHourVisible)
-- [ ] T007 [P] Create unit tests for geometry in tests/unit/solar3d/geometry.test.ts
-- [ ] T008 [P] Create unit tests for visibility in tests/unit/solar3d/visibility.test.ts
-- [ ] T009 Run tests and verify all pass: `npm run test -- tests/unit/solar3d/`
+- [x] T005 [P] Implement geometry utilities in src/lib/solar3d/geometry.ts (SOLAR_3D_CONSTANTS, degToRad, computePosition)
+- [x] T006 [P] Implement visibility utilities in src/lib/solar3d/visibility.ts (filterVisibleHours, buildSolar3DPoints, buildSolar3DPath, isSelectedHourVisible)
+- [x] T007 [P] Create unit tests for geometry in tests/unit/solar3d/geometry.test.ts
+- [x] T008 [P] Create unit tests for visibility in tests/unit/solar3d/visibility.test.ts
+- [x] T009 Run tests and verify all pass: `npm run test -- tests/unit/solar3d/`
 
 **Checkpoint**: Foundation ready - geometry utilities tested and working
 
@@ -50,12 +50,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Create Solar3DViewModal component in src/components/solar3d/Solar3DViewModal.tsx (Radix Dialog wrapper, snapshot capture on open)
-- [ ] T011 [US1] Create placeholder Solar3DMapCanvas in src/components/solar3d/Solar3DMapCanvas.tsx (client-only dynamic import, basic MapLibre setup)
-- [ ] T012 [US1] Add "3D View" button to src/components/map/MapPanel.tsx with disabled state when data not ready
-- [ ] T013 [US1] Add is3DViewOpen state and Solar3DViewModal integration to src/components/map/MapPanel.tsx
-- [ ] T014 [US1] Create E2E test for open/close in tests/e2e/p1-3d-view.spec.ts (modal opens, Esc closes, main map unchanged)
-- [ ] T015 [US1] Run E2E test and verify: `npm run test:e2e -- tests/e2e/p1-3d-view.spec.ts`
+- [x] T010 [US1] Create Solar3DViewModal component in src/components/solar3d/Solar3DViewModal.tsx (Radix Dialog wrapper, snapshot capture on open)
+- [x] T011 [US1] Create placeholder Solar3DMapCanvas in src/components/solar3d/Solar3DMapCanvas.tsx (client-only dynamic import, basic MapLibre setup)
+- [x] T012 [US1] Add "3D View" button to src/components/map/MapPanel.tsx with disabled state when data not ready
+- [x] T013 [US1] Add is3DViewOpen state and Solar3DViewModal integration to src/components/map/MapPanel.tsx
+- [x] T014 [US1] Create E2E test for open/close in tests/e2e/p1-3d-view.spec.ts (modal opens, Esc closes, main map unchanged)
+- [x] T015 [US1] Run E2E test and verify: `npm run test:e2e -- tests/e2e/p1-3d-view.spec.ts`
 
 **Checkpoint**: User Story 1 complete — modal opens/closes correctly, button disabled when no data
 
@@ -69,11 +69,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Implement full Solar3DMapCanvas with deck.gl layers (ScatterplotLayer, PathLayer) in src/components/solar3d/Solar3DMapCanvas.tsx
-- [ ] T017 [US2] Configure METER_OFFSETS coordinate system and coordinateOrigin for location-based positioning
-- [ ] T018 [US2] Handle empty state (no visible hours) with message "Sun does not rise on this date at this location" in src/components/solar3d/Solar3DMapCanvas.tsx
-- [ ] T019 [US2] Add E2E test scenario for no-selection case in tests/e2e/p1-3d-view.spec.ts
-- [ ] T020 [US2] Run E2E test and verify path renders without highlight: `npm run test:e2e -- tests/e2e/p1-3d-view.spec.ts`
+- [x] T016 [US2] Implement full Solar3DMapCanvas with deck.gl layers (ScatterplotLayer, PathLayer) in src/components/solar3d/Solar3DMapCanvas.tsx
+- [x] T017 [US2] Configure METER_OFFSETS coordinate system and coordinateOrigin for location-based positioning
+- [x] T018 [US2] Handle empty state (no visible hours) with message "Sun does not rise on this date at this location" in src/components/solar3d/Solar3DMapCanvas.tsx
+- [x] T019 [US2] Add E2E test scenario for no-selection case in tests/e2e/p1-3d-view.spec.ts
+- [x] T020 [US2] Run E2E test and verify path renders without highlight: `npm run test:e2e -- tests/e2e/p1-3d-view.spec.ts`
 
 **Checkpoint**: User Story 2 complete — trajectory renders correctly regardless of selection state
 
@@ -87,11 +87,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] Add conditional styling for selected hour in ScatterplotLayer (distinct color/size) in src/components/solar3d/Solar3DMapCanvas.tsx
-- [ ] T022 [US3] Verify isSelectedVisible derivation works for night hours (no highlight, no error)
-- [ ] T023 [US3] Add E2E test scenario for visible selected hour highlight in tests/e2e/p1-3d-view.spec.ts
-- [ ] T024 [US3] Add E2E test scenario for night selected hour (no crash) in tests/e2e/p1-3d-view.spec.ts
-- [ ] T025 [US3] Run E2E tests and verify highlight behavior: `npm run test:e2e -- tests/e2e/p1-3d-view.spec.ts`
+- [x] T021 [US3] Add conditional styling for selected hour in ScatterplotLayer (distinct color/size) in src/components/solar3d/Solar3DMapCanvas.tsx
+- [x] T022 [US3] Verify isSelectedVisible derivation works for night hours (no highlight, no error)
+- [x] T023 [US3] Add E2E test scenario for visible selected hour highlight in tests/e2e/p1-3d-view.spec.ts
+- [x] T024 [US3] Add E2E test scenario for night selected hour (no crash) in tests/e2e/p1-3d-view.spec.ts
+- [x] T025 [US3] Run E2E tests and verify highlight behavior: `npm run test:e2e -- tests/e2e/p1-3d-view.spec.ts`
 
 **Checkpoint**: User Story 3 complete — selected hour highlighting works correctly
 
@@ -105,11 +105,11 @@
 
 ### Implementation for User Story 4
 
-- [ ] T026 [US4] Create Solar3DTooltip component in src/components/solar3d/Solar3DTooltip.tsx
-- [ ] T027 [US4] Add pickable: true and onHover callback to ScatterplotLayer in src/components/solar3d/Solar3DMapCanvas.tsx
-- [ ] T028 [US4] Manage tooltip state and positioning in Solar3DMapCanvas or Solar3DViewModal
-- [ ] T029 [US4] Add E2E test for tooltip display in tests/e2e/p1-3d-view.spec.ts (hover shows hour/azimuth/altitude/state)
-- [ ] T030 [US4] Run E2E test and verify tooltip behavior: `npm run test:e2e -- tests/e2e/p1-3d-view.spec.ts`
+- [x] T026 [US4] Create Solar3DTooltip component in src/components/solar3d/Solar3DTooltip.tsx
+- [x] T027 [US4] Add pickable: true and onHover callback to ScatterplotLayer in src/components/solar3d/Solar3DMapCanvas.tsx
+- [x] T028 [US4] Manage tooltip state and positioning in Solar3DMapCanvas or Solar3DViewModal
+- [x] T029 [US4] Add E2E test for tooltip display in tests/e2e/p1-3d-view.spec.ts (hover shows hour/azimuth/altitude/state)
+- [x] T030 [US4] Run E2E test and verify tooltip behavior: `npm run test:e2e -- tests/e2e/p1-3d-view.spec.ts`
 
 **Checkpoint**: User Story 4 complete — all P1 stories done, core feature functional
 
@@ -123,11 +123,11 @@
 
 ### Implementation for User Story 5
 
-- [ ] T031 [US5] Verify native MapLibre pan/zoom/pitch interactions work in src/components/solar3d/Solar3DMapCanvas.tsx
-- [ ] T032 [US5] Implement Reset View button functionality with map.easeTo(defaultCamera) in src/components/solar3d/Solar3DViewModal.tsx
-- [ ] T033 [US5] Store default camera state and expose reset handler
-- [ ] T034 [US5] Add E2E test for camera reset in tests/e2e/p1-3d-view.spec.ts
-- [ ] T035 [US5] Run E2E test and verify camera controls: `npm run test:e2e -- tests/e2e/p1-3d-view.spec.ts`
+- [x] T031 [US5] Verify native MapLibre pan/zoom/pitch interactions work in src/components/solar3d/Solar3DMapCanvas.tsx
+- [x] T032 [US5] Implement Reset View button functionality with map.easeTo(defaultCamera) in src/components/solar3d/Solar3DViewModal.tsx
+- [x] T033 [US5] Store default camera state and expose reset handler
+- [x] T034 [US5] Add E2E test for camera reset in tests/e2e/p1-3d-view.spec.ts
+- [x] T035 [US5] Run E2E test and verify camera controls: `npm run test:e2e -- tests/e2e/p1-3d-view.spec.ts`
 
 **Checkpoint**: User Story 5 complete — P2 camera controls working
 
@@ -137,14 +137,16 @@
 
 **Purpose**: Accessibility, performance, and code quality
 
-- [ ] T036 [P] Create Solar3DLegend component in src/components/solar3d/Solar3DLegend.tsx (daylight state colors)
-- [ ] T037 [P] Create Solar3DAccessibleSummary component in src/components/solar3d/Solar3DAccessibleSummary.tsx (screen reader text list)
-- [ ] T038 Add legend and accessible summary to Solar3DViewModal in src/components/solar3d/Solar3DViewModal.tsx
-- [ ] T039 [P] Add WebGL detection and graceful degradation fallback per NFR3D-005 in src/components/solar3d/Solar3DMapCanvas.tsx
-- [ ] T040 [P] Add loading state to prevent layout jump during initialization
-- [ ] T041 Run full test suite: `npm run test && npm run test:e2e`
-- [ ] T042 Run typecheck and lint: `npm run typecheck && npm run lint`
-- [ ] T043 Run quickstart.md verification checklist
+- [x] T036 [P] Create Solar3DLegend component in src/components/solar3d/Solar3DLegend.tsx (daylight state colors)
+- [x] T037 [P] Create Solar3DAccessibleSummary component in src/components/solar3d/Solar3DAccessibleSummary.tsx (screen reader text list)
+- [x] T038 Add legend and accessible summary to Solar3DViewModal in src/components/solar3d/Solar3DViewModal.tsx
+- [x] T039 [P] Add WebGL detection and graceful degradation fallback per NFR3D-005 in src/components/solar3d/Solar3DMapCanvas.tsx
+- [x] T040 [P] Add loading state to prevent layout jump during initialization
+- [x] T041 Run full test suite: `npm run test && npm run test:e2e`
+- [x] T042 Run typecheck and lint: `npm run typecheck && npm run lint`
+- [x] T043 Run quickstart.md verification checklist
+
+**Checkpoint**: Phase 8 complete — Feature implementation finished
 
 ---
 

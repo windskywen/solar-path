@@ -5,12 +5,15 @@
  *
  * Interactive map using MapLibre GL and react-map-gl.
  * Displays the location marker and handles map interactions.
+ * Includes 3D View button for opening 3D solar path modal.
  */
 
 import { useRef, useCallback, useState, useEffect } from 'react';
 import Map, { Marker, NavigationControl, GeolocateControl } from 'react-map-gl/maplibre';
 import type { MapRef, MapLayerMouseEvent, ViewState } from 'react-map-gl/maplibre';
 import { useLocation, useSolarActions } from '@/store/solar-store';
+import { useSolarData } from '@/hooks/useSolarData';
+import { Solar3DViewModal } from '@/components/solar3d';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 // OpenStreetMap tiles style - free, no API key required
@@ -63,6 +66,13 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
   const mapRef = useRef<MapRef>(null);
   const location = useLocation();
   const { setLocation } = useSolarActions();
+  const { hourly } = useSolarData();
+
+  // 3D View modal state
+  const [is3DViewOpen, setIs3DViewOpen] = useState(false);
+
+  // Check if 3D view can be opened (need location and solar data)
+  const can3DViewOpen = location !== null && hourly.length > 0;
 
   // Initialize view state with location if available
   const [viewState, setViewState] = useState<ViewState>(() => ({
@@ -190,6 +200,35 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
           </div>
         </div>
       )}
+
+      {/* 3D View button - positioned at bottom right to avoid collision with SolarRaysLayer legend */}
+      <button
+        onClick={() => setIs3DViewOpen(true)}
+        disabled={!can3DViewOpen}
+        className="absolute bottom-4 right-14 px-4 py-2 bg-primary text-primary-foreground rounded-lg shadow-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors z-20 flex items-center gap-2"
+        aria-label="Open 3D solar path view"
+        title={can3DViewOpen ? 'Open 3D View' : 'Select a location to enable 3D view'}
+        data-testid="3d-view-button"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 3L2 12h3v9h14v-9h3L12 3z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        <span>3D View</span>
+      </button>
+
+      {/* 3D View modal */}
+      <Solar3DViewModal open={is3DViewOpen} onOpenChange={setIs3DViewOpen} />
     </div>
   );
 }
