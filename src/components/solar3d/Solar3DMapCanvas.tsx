@@ -21,6 +21,8 @@ import Map, { NavigationControl } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { ScatterplotLayer, PathLayer, PolygonLayer, LineLayer, TextLayer } from '@deck.gl/layers';
+import { SimpleMeshLayer } from '@deck.gl/mesh-layers';
+import { SphereGeometry } from '@luma.gl/engine';
 import type { PickingInfo } from '@deck.gl/core';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -186,6 +188,9 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
 
   // Check WebGL support on mount
   const hasWebGL = useMemo(() => isWebGLSupported(), []);
+
+  // Create sphere geometry for 3D sun points
+  const sphereGeometry = useMemo(() => new SphereGeometry({ nlat: 20, nlong: 20 }), []);
 
   const { snapshot, visiblePoints, path, isSelectedVisible, isEmpty } = viewData;
   const { location, selectedHour } = snapshot;
@@ -386,34 +391,21 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
         pickable: false,
       }),
 
-      // Halo layer (glow effect behind suns)
-      new ScatterplotLayer({
-        id: 'solar-points-halo',
-        data: visiblePoints,
-        getPosition: (d: Solar3DPoint) => d.position,
-        getRadius: (d: Solar3DPoint) => getPointRadius(d) * 1.5,
-        getFillColor: (d: Solar3DPoint) => {
-          const color = getPointColor(d);
-          return [color[0], color[1], color[2], 100]; // More transparent
-        },
-        radiusUnits: 'meters',
-        radiusMinPixels: 6,
-        radiusMaxPixels: 30,
-        coordinateSystem: 2, // METER_OFFSETS
-        coordinateOrigin: [location.lng, location.lat, 0],
-        pickable: false,
-      }),
-
-      // Scatterplot layer - hourly points
-      new ScatterplotLayer({
+      // 3D Spheres for sun points
+      new SimpleMeshLayer({
         id: 'solar-points',
         data: visiblePoints,
+        mesh: sphereGeometry,
         getPosition: (d: Solar3DPoint) => d.position,
-        getRadius: getPointRadius,
-        getFillColor: getPointColor,
-        radiusUnits: 'meters',
-        radiusMinPixels: 4,
-        radiusMaxPixels: 20,
+        getColor: (d: Solar3DPoint) => {
+          const c = getPointColor(d);
+          return [c[0], c[1], c[2]];
+        },
+        getScale: (d: Solar3DPoint) => {
+          const r = getPointRadius(d);
+          return [r, r, r];
+        },
+        getOrientation: [0, 0, 0],
         coordinateSystem: 2, // METER_OFFSETS
         coordinateOrigin: [location.lng, location.lat, 0],
         pickable: true,
@@ -433,8 +425,14 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
           }
         },
         updateTriggers: {
-          getRadius: [selectedHour, isSelectedVisible],
-          getFillColor: [selectedHour, isSelectedVisible],
+          getScale: [selectedHour, isSelectedVisible],
+          getColor: [selectedHour, isSelectedVisible],
+        },
+        material: {
+          ambient: 0.5,
+          diffuse: 0.8,
+          shininess: 32,
+          specularColor: [255, 255, 255],
         },
       }),
     ];
@@ -517,6 +515,13 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
       >
         <NavigationControl position="top-right" showCompass showZoom />
       </Map>
+
+      {/* Controls Instruction Note */}
+      <div className="absolute top-3 right-14 z-10 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-2 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 pointer-events-none select-none">
+        <p className="text-xs font-medium text-gray-700 dark:text-gray-200">
+          Hold <span className="font-bold">Ctrl</span> + Drag to rotate view
+        </p>
+      </div>
 
       {/* Loading overlay - shows during initialization */}
       {isInitializing && (
