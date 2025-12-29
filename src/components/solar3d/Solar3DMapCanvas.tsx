@@ -20,12 +20,12 @@ import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import Map, { NavigationControl } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { MapboxOverlay } from '@deck.gl/mapbox';
-import { ScatterplotLayer, PathLayer } from '@deck.gl/layers';
+import { ScatterplotLayer, PathLayer, PolygonLayer, LineLayer, TextLayer } from '@deck.gl/layers';
 import type { PickingInfo } from '@deck.gl/core';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import type { Solar3DViewData, Solar3DTooltipData, Solar3DPoint } from '@/types/solar3d';
-import { SOLAR_3D_COLORS } from '@/lib/solar3d/geometry';
+import { SOLAR_3D_COLORS, SOLAR_3D_CONSTANTS } from '@/lib/solar3d/geometry';
 
 /**
  * Check if WebGL is supported and functional in the browser.
@@ -42,17 +42,17 @@ function isWebGLSupported(): boolean {
   }
 }
 
-// OpenStreetMap dark style for better 3D visualization
+// Carto Voyager style for better details
 const MAP_STYLE = {
   version: 8 as const,
-  name: 'OSM Dark',
+  name: 'Carto Voyager',
   sources: {
     osm: {
       type: 'raster' as const,
       tiles: [
-        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+        'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+        'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+        'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
       ],
       tileSize: 256,
       attribution:
@@ -74,7 +74,7 @@ const MAP_STYLE = {
 const DEFAULT_CAMERA = {
   zoom: 14,
   pitch: 60,
-  bearing: 0,
+  bearing: 135, // Look towards Southeast (from Northwest)
 };
 
 export interface Solar3DMapCanvasProps {
@@ -148,11 +148,6 @@ function WebGLFallback({ viewData }: { viewData: Solar3DViewData }) {
 
         <div className="bg-gray-800 rounded-lg p-4 text-left">
           <h3 className="text-white font-medium mb-2">Solar Path Summary</h3>
-          <p className="text-gray-400 text-sm mb-2">
-            {snapshot.location.name ||
-              `${snapshot.location.lat.toFixed(4)}°, ${snapshot.location.lng.toFixed(4)}°`}
-          </p>
-          <p className="text-gray-400 text-sm mb-3">{snapshot.dateISO}</p>
 
           <div className="space-y-1 text-sm">
             <p className="text-gray-300">
@@ -246,23 +241,164 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     // Get point radius
     const getPointRadius = (point: Solar3DPoint): number => {
       if (isSelectedVisible && selectedHour === point.hour) {
-        return 120; // Larger for selected point
+        return SOLAR_3D_CONSTANTS.POINT_RADIUS_SELECTED * 6; // Larger for selected point
       }
-      return 80; // Default radius
+      return SOLAR_3D_CONSTANTS.POINT_RADIUS * 6; // Default radius
     };
 
+    // Generate ground circle geometry
+    const groundRadius = SOLAR_3D_CONSTANTS.GROUND_RADIUS_METERS;
+    const groundPolygon = [];
+    for (let i = 0; i <= 64; i++) {
+      const angle = (i / 64) * 2 * Math.PI;
+      groundPolygon.push([groundRadius * Math.sin(angle), groundRadius * Math.cos(angle), 0]);
+    }
+
+    // Compass lines
+    const compassLines = [
+      { from: [-groundRadius, 0, 0], to: [groundRadius, 0, 0] }, // W-E
+      { from: [0, -groundRadius, 0], to: [0, groundRadius, 0] }, // S-N
+    ];
+
+    // Compass labels
+    const compassLabels = [
+      { text: 'N', position: [0, groundRadius * 0.9, 50] },
+      { text: 'S', position: [0, -groundRadius * 0.9, 50] },
+      { text: 'E', position: [groundRadius * 0.9, 0, 50] },
+      { text: 'W', position: [-groundRadius * 0.9, 0, 50] },
+    ];
+
+    // Shadow path (projected to z=0)
+    const shadowPath = path.positions.map((p) => [p[0], p[1], 0]);
+
+    // Connector lines (center to sun points)
+    const connectorLines = visiblePoints.map((p) => ({
+      from: [0, 0, 0],
+      to: p.position,
+    }));
+
     const layers = [
+      // Ground Plane
+      new PolygonLayer({
+        id: 'ground-plane',
+        data: [{ polygon: groundPolygon }],
+        getPolygon: (d: { polygon: number[][] }) => d.polygon,
+        getFillColor: SOLAR_3D_COLORS.ground,
+        getLineColor: [0, 0, 0, 0],
+        filled: true,
+        stroked: false,
+        coordinateSystem: 2, // METER_OFFSETS
+        coordinateOrigin: [location.lng, location.lat, 0],
+        pickable: false,
+      }),
+
+      // Compass Lines
+      new LineLayer({
+        id: 'compass-lines',
+        data: compassLines,
+        getSourcePosition: (d: { from: number[] }) => d.from as [number, number, number],
+        getTargetPosition: (d: { to: number[] }) => d.to as [number, number, number],
+        getColor: SOLAR_3D_COLORS.compassLines,
+        getWidth: 2,
+        widthUnits: 'pixels',
+        coordinateSystem: 2, // METER_OFFSETS
+        coordinateOrigin: [location.lng, location.lat, 0],
+        pickable: false,
+      }),
+
+      // Connector Lines (Center to Sun)
+      new LineLayer({
+        id: 'connector-lines',
+        data: connectorLines,
+        getSourcePosition: (d: { from: number[] }) => d.from as [number, number, number],
+        getTargetPosition: (d: { to: number[] }) => d.to as [number, number, number],
+        getColor: SOLAR_3D_COLORS.connectorLines,
+        getWidth: 1,
+        widthUnits: 'pixels',
+        coordinateSystem: 2, // METER_OFFSETS
+        coordinateOrigin: [location.lng, location.lat, 0],
+        pickable: false,
+      }),
+
+      // Compass Labels
+      new TextLayer({
+        id: 'compass-labels',
+        data: compassLabels,
+        getPosition: (d: { position: number[] }) => d.position as [number, number, number],
+        getText: (d: { text: string }) => d.text,
+        getColor: SOLAR_3D_COLORS.compassText,
+        getSize: 24,
+        sizeUnits: 'pixels',
+        getTextAnchor: 'middle',
+        getAlignmentBaseline: 'center',
+        coordinateSystem: 2, // METER_OFFSETS
+        coordinateOrigin: [location.lng, location.lat, 0],
+        pickable: false,
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontWeight: 'bold',
+      }),
+
+      // Location Marker (Center)
+      new ScatterplotLayer({
+        id: 'location-marker',
+        data: [{ position: [0, 0, 0] }],
+        getPosition: (d: { position: number[] }) => d.position as [number, number, number],
+        getRadius: 8,
+        getFillColor: SOLAR_3D_COLORS.locationMarker,
+        radiusUnits: 'pixels',
+        coordinateSystem: 2, // METER_OFFSETS
+        coordinateOrigin: [location.lng, location.lat, 0],
+        pickable: false,
+        stroked: true,
+        getLineColor: [255, 255, 255, 255],
+        getLineWidth: 2,
+      }),
+
+      // Shadow Path
+      new PathLayer({
+        id: 'shadow-path',
+        data: [{ path: shadowPath }],
+        getPath: (d: { path: number[][] }) => d.path as [number, number, number][],
+        getColor: SOLAR_3D_COLORS.shadowPath,
+        getWidth: 4,
+        widthUnits: 'meters',
+        widthScale: 1,
+        widthMinPixels: 2,
+        widthMaxPixels: 8,
+        coordinateSystem: 2, // METER_OFFSETS
+        coordinateOrigin: [location.lng, location.lat, 0],
+        pickable: false,
+      }),
+
       // Path layer - connects all visible points
       new PathLayer({
         id: 'solar-path',
         data: [{ path: path.positions }],
         getPath: (d: { path: [number, number, number][] }) => d.path,
         getColor: SOLAR_3D_COLORS.path,
-        getWidth: 4,
+        getWidth: 6,
         widthUnits: 'meters',
         widthScale: 1,
-        widthMinPixels: 2,
-        widthMaxPixels: 10,
+        widthMinPixels: 3,
+        widthMaxPixels: 12,
+        coordinateSystem: 2, // METER_OFFSETS
+        coordinateOrigin: [location.lng, location.lat, 0],
+        pickable: false,
+      }),
+
+      // Halo layer (glow effect behind suns)
+      new ScatterplotLayer({
+        id: 'solar-points-halo',
+        data: visiblePoints,
+        getPosition: (d: Solar3DPoint) => d.position,
+        getRadius: (d: Solar3DPoint) => getPointRadius(d) * 1.5,
+        getFillColor: (d: Solar3DPoint) => {
+          const color = getPointColor(d);
+          return [color[0], color[1], color[2], 100]; // More transparent
+        },
+        radiusUnits: 'meters',
+        radiusMinPixels: 6,
+        radiusMaxPixels: 30,
         coordinateSystem: 2, // METER_OFFSETS
         coordinateOrigin: [location.lng, location.lat, 0],
         pickable: false,

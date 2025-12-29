@@ -159,7 +159,9 @@ test.describe('3D Solar Path View - US2: Trajectory Without Selection', () => {
     const modal = page.locator('[role="dialog"]');
 
     // Should show location info in footer
-    await expect(modal.locator('text=/\\d{4}-\\d{2}-\\d{2}/')).toBeVisible();
+    await expect(
+      modal.locator('p.text-sm.text-gray-400').filter({ hasText: /\d{4}-\d{2}-\d{2}/ })
+    ).toBeVisible();
   });
 
   test('3D view handles empty state gracefully', async ({ page }) => {

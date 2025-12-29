@@ -15,6 +15,8 @@
 export const SOLAR_3D_CONSTANTS = {
   /** Radius of the sun path arc in meters */
   PATH_RADIUS_METERS: 1200,
+  /** Radius of the ground plane in meters */
+  GROUND_RADIUS_METERS: 1400,
   /** Height scale factor for altitude */
   HEIGHT_SCALE: 1.0,
   /** Point radius in pixels (normal) */
@@ -30,13 +32,25 @@ export const SOLAR_3D_CONSTANTS = {
  */
 export const SOLAR_3D_COLORS = {
   /** Golden hour points - warm amber */
-  golden: [255, 183, 77, 255] as [number, number, number, number],
-  /** Daytime points - bright yellow */
-  day: [255, 235, 59, 255] as [number, number, number, number],
-  /** Selected point highlight - deep orange */
+  golden: [255, 160, 0, 255] as [number, number, number, number],
+  /** Daytime points - bright yellow/orange */
+  day: [255, 193, 7, 255] as [number, number, number, number],
+  /** Selected point highlight - deep red-orange */
   selected: [255, 87, 34, 255] as [number, number, number, number],
-  /** Path line color - amber with transparency */
-  path: [255, 193, 7, 200] as [number, number, number, number],
+  /** Path line color - modern blue-grey */
+  path: [52, 152, 219, 200] as [number, number, number, number],
+  /** Shadow path color - subtle gray */
+  shadowPath: [0, 0, 0, 30] as [number, number, number, number],
+  /** Ground plane fill - light blue tint to distinguish from map */
+  ground: [33, 150, 243, 30] as [number, number, number, number],
+  /** Compass lines - medium gray */
+  compassLines: [149, 165, 166, 200] as [number, number, number, number],
+  /** Compass text - dark gray */
+  compassText: [44, 62, 80, 255] as [number, number, number, number],
+  /** Location marker - distinct red */
+  locationMarker: [231, 76, 60, 255] as [number, number, number, number],
+  /** Connector lines (center to sun) - faint yellow/orange */
+  connectorLines: [255, 193, 7, 80] as [number, number, number, number],
 } as const;
 
 /**
