@@ -304,7 +304,16 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     ];
 
     deckOverlayRef.current.setProps({ layers });
-  }, [visiblePoints, path, selectedHour, isSelectedVisible, isEmpty, location, onHover]);
+  }, [
+    visiblePoints,
+    path,
+    selectedHour,
+    isSelectedVisible,
+    isEmpty,
+    location,
+    onHover,
+    isMapLoaded,
+  ]);
 
   // Handle reset view when resetKey changes
   useEffect(() => {
