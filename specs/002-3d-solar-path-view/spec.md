@@ -200,10 +200,11 @@ The modal MUST have access to:
 
 ### Coordinate System
 
-Use a local tangent plane approximation (ENU-like):
-- X = East
-- Z = North
-- Y = Up
+Use deck.gl `METER_OFFSETS` coordinate system (ENU convention):
+- Position array: `[east, north, up]`
+- East = +X direction (positive toward 90° azimuth)
+- North = +Y direction (positive toward 0° azimuth)  
+- Up = +Z direction (positive toward zenith)
 
 ### Mapping Function (Deterministic)
 
@@ -256,7 +257,10 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
   - ARIA labels
   - Keyboard navigable close/reset controls
   - Text-based accessible summary of visible hours (list with hour, azimuth, altitude, daylight state) for screen reader users
-- **NFR3D-005**: Graceful degradation: If device cannot sustain acceptable FPS or lacks WebGL support, display a static 2D fallback image of the solar path instead of the interactive 3D view
+- **NFR3D-005**: Graceful degradation: If device cannot sustain acceptable FPS (<30 FPS for 3+ seconds) or lacks WebGL support, display a fallback state:
+  - **Fallback content**: A static message card with text "Interactive 3D view is not available on this device" and a link/button to return to the main view
+  - **Detection timing**: WebGL capability MUST be checked before attempting to render deck.gl layers
+  - **No pre-rendered image required**: Fallback is a styled component, not a generated image
 
 ---
 

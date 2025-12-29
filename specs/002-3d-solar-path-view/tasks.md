@@ -32,8 +32,8 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Implement geometry utilities in src/lib/solar3d/geometry.ts (SOLAR_3D_CONSTANTS, degToRad, computePosition)
-- [ ] T006 Implement visibility utilities in src/lib/solar3d/visibility.ts (filterVisibleHours, buildSolar3DPoints, buildSolar3DPath, isSelectedHourVisible)
+- [ ] T005 [P] Implement geometry utilities in src/lib/solar3d/geometry.ts (SOLAR_3D_CONSTANTS, degToRad, computePosition)
+- [ ] T006 [P] Implement visibility utilities in src/lib/solar3d/visibility.ts (filterVisibleHours, buildSolar3DPoints, buildSolar3DPath, isSelectedHourVisible)
 - [ ] T007 [P] Create unit tests for geometry in tests/unit/solar3d/geometry.test.ts
 - [ ] T008 [P] Create unit tests for visibility in tests/unit/solar3d/visibility.test.ts
 - [ ] T009 Run tests and verify all pass: `npm run test -- tests/unit/solar3d/`
