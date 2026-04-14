@@ -22,11 +22,11 @@ import type { HourlySolarPosition, DaylightState } from '@/types/solar';
 
 // Colors matching the app's design system
 const COLORS = {
-  line: '#f59e0b', // amber-500
-  selected: '#3b82f6', // blue-500
-  grid: '#e2e8f0', // slate-200
-  axis: '#94a3b8', // slate-400
-  cardinal: '#94a3b8', // slate-400
+  line: '#7dd3fc',
+  selected: '#fbbf24',
+  grid: 'rgba(148, 163, 184, 0.16)',
+  axis: '#94a3b8',
+  cardinal: 'rgba(148, 163, 184, 0.28)',
 };
 
 // Cardinal direction reference lines
@@ -79,12 +79,12 @@ function AzimuthTooltip({
   const data = payload[0].payload;
 
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-3">
-      <p className="font-semibold text-slate-900 dark:text-white">{data.label}</p>
-      <p className="text-sm text-slate-600 dark:text-slate-400">
+    <div className="rounded-2xl border border-white/10 bg-[rgba(5,10,20,0.94)] p-3 shadow-[0_20px_50px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+      <p className="font-semibold text-white">{data.label}</p>
+      <p className="text-sm text-slate-300">
         Azimuth: <span className="font-mono">{data.azimuth.toFixed(1)}°</span>
       </p>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Direction: {data.cardinal}</p>
+      <p className="mt-1 text-xs text-slate-500">Direction: {data.cardinal}</p>
     </div>
   );
 }
@@ -150,7 +150,7 @@ export function AzimuthChart({
           margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
           onClick={handleClick}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} />
+          <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} vertical={false} />
           <XAxis
             dataKey="label"
             tick={{ fontSize: 10, fill: COLORS.axis }}
@@ -189,7 +189,7 @@ export function AzimuthChart({
             activeDot={{
               r: 6,
               fill: selectedHour !== null ? COLORS.selected : COLORS.line,
-              stroke: '#fff',
+              stroke: '#0f172a',
               strokeWidth: 2,
             }}
           />

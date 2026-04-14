@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { validateLatitude, validateLongitude } from '@/lib/geo/validation';
 import type { LocationPoint } from '@/types/solar';
 
@@ -22,6 +22,14 @@ export interface ManualCoordinatesProps {
   className?: string;
 }
 
+function formatCoordinates(lat?: number, lng?: number): string {
+  if (lat !== undefined && lng !== undefined) {
+    return `${lat}, ${lng}`;
+  }
+
+  return '';
+}
+
 /**
  * ManualCoordinates provides precision coordinate input via a single text field
  */
@@ -31,24 +39,13 @@ export function ManualCoordinates({
   onSubmit,
   className = '',
 }: ManualCoordinatesProps) {
-  const [input, setInput] = useState(() => {
-    if (initialLat !== undefined && initialLng !== undefined) {
-      return `${initialLat}, ${initialLng}`;
-    }
-    return '';
-  });
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const isEditingRef = useRef(false);
 
-  // Sync input with props only when not actively editing
   useEffect(() => {
-    if (isEditingRef.current) return;
-
-    if (initialLat !== undefined && initialLng !== undefined) {
-      setInput(`${initialLat}, ${initialLng}`);
-    } else {
-      setInput('');
-    }
+    if (!inputRef.current || isEditingRef.current) return;
+    inputRef.current.value = formatCoordinates(initialLat, initialLng);
   }, [initialLat, initialLng]);
 
   const handleFocus = () => {
@@ -59,13 +56,14 @@ export function ManualCoordinates({
     isEditingRef.current = false;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
+  const handleChange = () => {
     if (error) setError(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const input = inputRef.current?.value ?? '';
 
     // Parse input using regex to extract numbers
     // This handles various formats:
@@ -115,44 +113,41 @@ export function ManualCoordinates({
       <div>
         <label
           htmlFor="coords-input"
-          className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+          className="mb-2 block text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-slate-400"
         >
-          Coordinates (Lat, Lng)
+          Manual Coordinates
         </label>
-        <div className="flex gap-1.5 sm:gap-2">
+        <p className="mb-3 text-xs text-slate-500">Exact latitude and longitude when you already know the point.</p>
+        <div className="flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             id="coords-input"
-            value={input}
+            defaultValue={formatCoordinates(initialLat, initialLng)}
             onChange={handleChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholder="e.g. 23.996, 121.572"
             className={`
-              flex-1 min-w-0 px-2 sm:px-3 py-2 text-sm rounded-lg
-              bg-white dark:bg-slate-800
-              border ${error ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'}
-              focus:outline-none focus:ring-2 focus:ring-blue-500
-              placeholder:text-slate-400
+              h-10 min-w-0 flex-1 rounded-2xl border px-3 text-sm text-white
+              shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-all
+              placeholder:text-slate-500
+              ${
+                error
+                  ? 'border-rose-300/40 bg-rose-500/12 focus:border-rose-300/50 focus:ring-2 focus:ring-rose-300/20'
+                  : 'border-white/10 bg-slate-950/50 focus:border-sky-300/35 focus:ring-2 focus:ring-sky-300/20'
+              }
             `}
           />
           <button
             type="submit"
-            className="
-              px-3 sm:px-4 py-2 text-sm font-medium
-              bg-blue-600 hover:bg-blue-700
-              text-white rounded-lg
-              transition-colors
-              whitespace-nowrap flex-shrink-0
-            "
+            className="flex h-10 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-3 text-sm font-semibold text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-300/30 hover:bg-sky-400/12 whitespace-nowrap"
           >
             Set
           </button>
         </div>
-        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-        <p className="mt-1 text-[9px] sm:text-[10px] text-slate-400">
-          Paste coordinates from Google Maps
-        </p>
+        {error && <p className="mt-2 text-xs text-rose-200">{error}</p>}
+        <p className="mt-2 text-[10px] text-slate-500">Paste coordinates from Google Maps</p>
       </div>
     </form>
   );

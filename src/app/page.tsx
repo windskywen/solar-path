@@ -21,13 +21,34 @@ import { SkipLinks } from '@/components/a11y';
 import { generateInsights } from '@/lib/solar/insights';
 import { getTimezoneFromCoordinates } from '@/lib/utils/timezone';
 
+function formatDisplayDate(dateISO: string): string {
+  try {
+    return new Date(`${dateISO}T12:00:00`).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  } catch {
+    return dateISO;
+  }
+}
+
 /**
  * Loading skeleton for the map panel
  */
 function MapSkeleton() {
   return (
-    <div className="h-full w-full bg-muted animate-pulse flex items-center justify-center">
-      <div className="text-muted-foreground">Loading map...</div>
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(125,211,252,0.18),transparent_42%),linear-gradient(180deg,rgba(8,15,30,0.94),rgba(2,6,23,0.9))]" />
+      <div className="relative flex flex-col items-center gap-3 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full border border-sky-300/25 bg-sky-400/10 shadow-[0_0_36px_rgba(56,189,248,0.18)]">
+          <div className="h-6 w-6 animate-pulse rounded-full bg-sky-200/70" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-slate-100">Loading map...</p>
+          <p className="text-xs text-slate-400">Calibrating the daylight canvas</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -38,25 +59,21 @@ function MapSkeleton() {
 function DataSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      <div className="h-8 bg-muted rounded w-3/4" />
-      <div className="h-32 bg-muted rounded" />
-      <div className="h-24 bg-muted rounded" />
-      <div className="h-48 bg-muted rounded" />
+      <div className="h-20 rounded-[28px] border border-white/10 bg-white/[0.04]" />
+      <div className="h-56 rounded-[28px] border border-white/10 bg-white/[0.04]" />
+      <div className="h-40 rounded-[28px] border border-white/10 bg-white/[0.04]" />
+      <div className="h-72 rounded-[28px] border border-white/10 bg-white/[0.04]" />
     </div>
   );
 }
 
 /**
  * Main application page
- *
- * Implements dual-pane layout per plan.md:
- * - Left pane: Interactive map (60% width on desktop)
- * - Right pane: Solar data, controls, and charts (40% width on desktop)
- * - Mobile: Stacked layout (map on top, data below)
  */
 export default function HomePage() {
   const location = useLocation();
   const timezone = useTimezone();
+  const dateISO = useDateISO();
   const selectedHour = useSelectedHour();
   const { setLocation, setSelectedHour, setTimezone } = useSolarActions();
 
@@ -90,8 +107,39 @@ export default function HomePage() {
       ? generateInsights(location.lat, solarData.hourly, solarData.events)
       : null;
 
+  const displayDate = formatDisplayDate(dateISO);
+  const displayTimezone = timezone.replace('_', ' ');
+  const locationName = location?.name || 'No location selected';
+  const locationSource =
+    location?.source === 'gps'
+      ? 'GPS lock'
+      : location?.source === 'manual'
+        ? 'Manual coordinates'
+        : location?.source === 'search'
+          ? 'Search result'
+          : 'Set a location';
+  const selectedStatus = selectedPosition
+    ? `${selectedPosition.localTimeLabel} · ${selectedPosition.daylightState}`
+    : 'Choose a ray or row';
+  const daylightSummary =
+    solarData?.events?.dayLengthLabel ||
+    solarData?.events?.dayLengthFormatted ||
+    'Awaiting solar data';
+
+  const glassPanel =
+    'relative overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.045] shadow-[0_28px_90px_rgba(2,6,23,0.5)] backdrop-blur-2xl';
+  const railPanel =
+    'relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.045] shadow-[0_20px_70px_rgba(2,6,23,0.42)] backdrop-blur-xl';
+  const insetPanel =
+    'rounded-[24px] border border-white/10 bg-slate-950/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl';
+  const eyebrow = 'text-[0.64rem] font-semibold uppercase tracking-[0.32em] text-sky-200/72';
+  const capsule =
+    'inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[0.68rem] font-medium text-slate-200 backdrop-blur-xl';
+  const statCard =
+    'rounded-[22px] border border-white/10 bg-slate-950/40 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]';
+
   return (
-    <div className="min-h-full md:h-full flex flex-col">
+    <div className="solar-main-shell relative min-h-screen">
       {/* Skip Links for keyboard navigation */}
       <SkipLinks
         links={[
@@ -100,209 +148,323 @@ export default function HomePage() {
         ]}
       />
 
-      {/* Header */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-3 flex-shrink-0">
-        <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
-          <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">
-            ☀️ Solar Path Tracker
-          </h1>
-          <div className="hidden sm:block text-sm text-slate-500 dark:text-slate-400">
-            Visualize the sun&apos;s journey across the sky
-          </div>
-        </div>
-      </header>
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-screen-2xl flex-col px-3 pb-4 sm:px-4 lg:px-6">
+        {/* Header */}
+        <header className="sticky top-0 z-30 py-3 sm:py-4">
+          <div className={`${glassPanel} px-4 py-3 sm:px-5`}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <p className={eyebrow}>Solar mission control</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-lg font-semibold tracking-[-0.02em] text-white sm:text-xl lg:text-2xl">
+                    Solar Path Tracker
+                  </h1>
+                  <span className="hidden h-1.5 w-1.5 rounded-full bg-sky-300/70 sm:inline-block" />
+                  <p className="text-sm text-slate-300">
+                    Visualize the sun&apos;s journey across the sky
+                  </p>
+                </div>
+              </div>
 
-      {/* Configuration Section - Top */}
-      <section className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-20 flex-shrink-0 shadow-sm">
-        <div className="max-w-screen-2xl mx-auto p-3 sm:p-4">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
-            {/* Location Input Section - Takes up more space */}
-            <div className="md:col-span-7 space-y-2">
-              <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-2">
-                <span>📍</span> Location
-              </label>
-              <LocationInput className="!space-y-2" />
+              <div className="flex flex-wrap gap-2 sm:justify-end">
+                <span className={capsule}>
+                  <span className="text-slate-400">Date</span>
+                  <span>{displayDate}</span>
+                </span>
+                <span className={capsule}>
+                  <span className="text-slate-400">Timezone</span>
+                  <span className="truncate">{displayTimezone}</span>
+                </span>
+                <span className={`${capsule} hidden lg:inline-flex`}>
+                  <span className="text-slate-400">Focus</span>
+                  <span>{selectedStatus}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Hero + controls */}
+        <section className="pb-4 sm:pb-6">
+          <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+            <div className={`${glassPanel} px-4 py-5 sm:px-6 sm:py-6`}>
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.22),transparent_48%),radial-gradient(circle_at_top_right,rgba(250,204,21,0.14),transparent_38%)]" />
+
+              <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
+                <div className="space-y-5">
+                  <p className={eyebrow}>Cinematic daylight atlas</p>
+                  <div className="space-y-3">
+                    <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl lg:text-[3.75rem] lg:leading-[0.95]">
+                      Track the sun with a live atmospheric workspace.
+                    </h2>
+                    <p className="max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
+                      Search a place, lock a date, and inspect solar bearings, altitude, and
+                      daylight rhythm from one dark-glass control deck tuned to the 3D experience.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2.5">
+                    <span className={capsule}>
+                      <span className="text-slate-400">Location</span>
+                      <span>{locationSource}</span>
+                    </span>
+                    <span className={capsule}>
+                      <span className="text-slate-400">Daylight</span>
+                      <span>{daylightSummary}</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                  <div className={statCard}>
+                    <p className={eyebrow}>Current place</p>
+                    <p className="mt-2 truncate text-base font-semibold text-white">{locationName}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {location
+                        ? `${location.lat.toFixed(3)}°, ${location.lng.toFixed(3)}°`
+                        : 'Search, paste coordinates, or use GPS'}
+                    </p>
+                  </div>
+
+                  <div className={statCard}>
+                    <p className={eyebrow}>Selected focus</p>
+                    <p className="mt-2 text-base font-semibold text-white">
+                      {selectedPosition ? selectedPosition.localTimeLabel : 'No hour pinned'}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {selectedPosition
+                        ? `${selectedPosition.azimuthDeg.toFixed(0)}° azimuth · ${selectedPosition.altitudeDeg.toFixed(1)}° altitude`
+                        : 'Tap the map or hourly rail to inspect a solar moment'}
+                    </p>
+                  </div>
+
+                  <div className={statCard}>
+                    <p className={eyebrow}>Solar profile</p>
+                    <p className="mt-2 text-base font-semibold text-white">{displayDate}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {solarData?.events?.dayLengthHours !== undefined &&
+                      solarData?.events?.dayLengthHours !== null
+                        ? `${Math.round((solarData.events.dayLengthHours / 24) * 100)}% daylight coverage`
+                        : 'Waiting for the daily sun events'}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Date Picker Section */}
-            <div className="md:col-span-5 space-y-2">
-              <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-2">
-                <span>📅</span> Date &amp; Time
-              </label>
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-2 sm:p-3 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-col justify-center gap-2 sm:gap-3">
-                <DatePicker className="w-full" />
-                <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 pt-2 border-t border-slate-200 dark:border-slate-700">
-                  <span>🌐</span>
-                  <span className="font-mono text-[10px] sm:text-xs truncate">
-                    Timezone: {timezone}
-                  </span>
+            <div className={`${glassPanel} px-4 py-4 sm:px-5 sm:py-5`}>
+              <div className="grid gap-4">
+                <div className={`${insetPanel} p-4 sm:p-5`}>
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                      <p className={eyebrow}>Location studio</p>
+                      <h2 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-white">
+                        Set the observation point
+                      </h2>
+                    </div>
+                    <span className="hidden rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[0.68rem] font-medium text-sky-100 sm:inline-flex">
+                      GPS, search, or coordinates
+                    </span>
+                  </div>
+                  <LocationInput className="!space-y-3" />
+                </div>
+
+                <div className={`${insetPanel} p-4 sm:p-5`}>
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                      <p className={eyebrow}>Temporal controls</p>
+                      <h2 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-white">
+                        Tune the solar timeline
+                      </h2>
+                    </div>
+                    <span className="hidden rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-[0.68rem] font-medium text-amber-100 sm:inline-flex">
+                      {displayTimezone}
+                    </span>
+                  </div>
+                  <DatePicker className="w-full" />
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Main content - three pane layout */}
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="flex-1 flex flex-col md:flex-row md:overflow-hidden focus:outline-none"
-      >
-        {/* Left pane: Map (responsive width) */}
-        <section
-          className="w-full md:w-2/5 lg:w-1/3 h-[280px] sm:h-[320px] md:h-full relative bg-slate-100 dark:bg-slate-800 md:border-r border-b md:border-b-0 border-slate-200 dark:border-slate-800 shrink-0"
-          aria-label="Solar path map"
-        >
-          <Suspense fallback={<MapSkeleton />}>
-            <MapPanel>
-              {location && solarData && (
-                <SolarRaysLayer
-                  location={location}
-                  positions={solarData.hourly}
-                  selectedHour={selectedHour}
-                  onRayClick={setSelectedHour}
-                />
-              )}
-            </MapPanel>
-            {/* Map legend */}
-            <SolarRaysLegend className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-10" />
-          </Suspense>
         </section>
 
-        {/* Right container: Middle and Right sections (responsive width) */}
-        <div className="w-full md:w-3/5 lg:w-2/3 md:flex-1 md:overflow-y-auto bg-slate-50 dark:bg-slate-950 focus:outline-none">
-          <Suspense fallback={<DataSkeleton />}>
-            <div className="p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 max-w-full pb-4">
-              {/* Middle Section: Overview, Selected Hour, Insights */}
-              <div className="space-y-4 sm:space-y-6">
-                {/* Solar Overview (Events & Charts) */}
-                <section
-                  aria-labelledby="overview-heading"
-                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
-                >
-                  <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base sm:text-lg">📊</span>
-                      <h2
-                        id="overview-heading"
-                        className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white"
-                      >
-                        Solar Overview
-                      </h2>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
-                    {/* Daily Events */}
-                    <div className="p-3 sm:p-4">
-                      <SunEventsPanel events={solarData?.events ?? null} timezone={timezone} />
-                    </div>
-
-                    {/* Charts */}
-                    <div className="p-3 sm:p-4">
-                      {solarData ? (
-                        <ChartsPanel
-                          positions={solarData.hourly}
-                          selectedHour={selectedHour}
-                          onHourClick={setSelectedHour}
-                          className="bg-slate-50 dark:bg-slate-800/50"
-                        />
-                      ) : (
-                        <div className="h-36 sm:h-48 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-slate-700 rounded-lg">
-                          <span className="text-xl sm:text-2xl mb-2">📈</span>
-                          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
-                            Select a location to view charts
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </section>
-
-                {/* Selected Hour Metrics */}
-                <section
-                  aria-labelledby="metrics-heading"
-                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
-                >
-                  <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base sm:text-lg">⏱️</span>
-                      <h2
-                        id="metrics-heading"
-                        className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white"
-                      >
-                        Selected Hour
-                      </h2>
-                    </div>
-                  </div>
-                  <div className="p-3 sm:p-4">
-                    <MetricsPanel position={selectedPosition} />
-                  </div>
-                </section>
-
-                {/* Insights Section */}
-                <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl shadow-sm border border-indigo-100 dark:border-indigo-800/50 p-3 sm:p-4">
-                  <InsightsPanel insights={insights} />
-                </div>
+        {/* Main content */}
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="grid flex-1 gap-4 focus:outline-none xl:grid-cols-[minmax(0,1.16fr)_minmax(360px,0.84fr)] xl:items-start"
+        >
+          {/* Map panel */}
+          <section
+            className={`${glassPanel} flex min-h-[420px] flex-col p-3 sm:p-4 xl:sticky xl:top-24 xl:h-[calc(100vh-7.5rem)]`}
+            aria-label="Solar path map"
+          >
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className={eyebrow}>Sky atlas</p>
+                <h2 className="mt-2 text-xl font-semibold tracking-[-0.02em] text-white sm:text-2xl">
+                  Live solar bearings
+                </h2>
+                <p className="mt-1 text-sm text-slate-300">
+                  Tap rays or browse the hourly breakdown to pin any moment of the day.
+                </p>
               </div>
 
-              {/* Right Section: Hourly Breakdown */}
-              <div className="flex flex-col">
-                <section
-                  aria-labelledby="details-heading"
-                  className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col"
-                >
-                  <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base sm:text-lg">📋</span>
-                      <h2
-                        id="details-heading"
-                        className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white"
-                      >
-                        Hourly Breakdown
-                      </h2>
-                    </div>
-                  </div>
-
-                  <div className="max-h-[400px] md:max-h-none overflow-y-auto">
-                    {solarData ? (
-                      <SolarDataTable
-                        positions={solarData.hourly}
-                        selectedHour={selectedHour}
-                        onRowClick={setSelectedHour}
-                        timezone={timezone}
-                        className="border-0 rounded-none shadow-none"
-                      />
-                    ) : (
-                      <div className="p-6 sm:p-8 flex flex-col items-center justify-center text-center h-full">
-                        <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
-                          No data available
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </section>
+              <div className="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-300">
+                <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-sky-200/72">
+                  Active focus
+                </p>
+                <p className="mt-2 font-medium text-white">
+                  {selectedPosition ? selectedPosition.localTimeLabel : 'Map ready for exploration'}
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {selectedPosition
+                    ? `${selectedPosition.daylightState} · ${selectedPosition.azimuthDeg.toFixed(0)}° azimuth`
+                    : 'Select a visible ray to surface detailed solar metrics'}
+                </p>
               </div>
             </div>
-          </Suspense>
-        </div>
-      </main>
 
-      {/* Footer */}
-      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 flex-shrink-0">
-        <div className="text-center text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
-          Solar calculations powered by{' '}
-          <a
-            href="https://github.com/mourner/suncalc"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-slate-700 dark:hover:text-slate-300"
+            <div className="relative flex-1 overflow-hidden rounded-[26px] border border-white/10 bg-[#06101d]/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+              <Suspense fallback={<MapSkeleton />}>
+                <MapPanel className="h-full w-full">
+                  {location && solarData && (
+                    <SolarRaysLayer
+                      location={location}
+                      positions={solarData.hourly}
+                      selectedHour={selectedHour}
+                      onRayClick={setSelectedHour}
+                    />
+                  )}
+                </MapPanel>
+                <SolarRaysLegend className="absolute bottom-3 left-3 z-10 sm:bottom-5 sm:left-5" />
+              </Suspense>
+            </div>
+          </section>
+
+          {/* Data rail */}
+          <div
+            id="solar-data"
+            className="space-y-4 focus:outline-none xl:pr-1"
           >
-            SunCalc
-          </a>
-        </div>
-      </footer>
+            <Suspense fallback={<DataSkeleton />}>
+              <section aria-labelledby="overview-heading" className={railPanel}>
+                <div className="border-b border-white/10 px-4 pb-4 pt-4 sm:px-5 sm:pt-5">
+                  <p className={eyebrow}>Overview deck</p>
+                  <h2
+                    id="overview-heading"
+                    className="mt-2 text-lg font-semibold tracking-[-0.02em] text-white sm:text-xl"
+                  >
+                    Daily solar overview
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-300">
+                    Sunrise, sunset, and azimuth-altitude curves for the selected day.
+                  </p>
+                </div>
+
+                <div className="space-y-5 p-4 sm:p-5">
+                  <SunEventsPanel events={solarData?.events ?? null} timezone={timezone} />
+
+                  {solarData ? (
+                    <ChartsPanel
+                      positions={solarData.hourly}
+                      selectedHour={selectedHour}
+                      onHourClick={setSelectedHour}
+                    />
+                  ) : (
+                    <div className="flex h-44 flex-col items-center justify-center rounded-[24px] border border-dashed border-white/10 bg-slate-950/30 px-6 text-center">
+                      <span className="text-3xl">📈</span>
+                      <p className="mt-3 text-sm font-medium text-white">
+                        Select a location to view charts
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        The curve deck will populate once the solar profile is ready.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <section aria-labelledby="metrics-heading" className={railPanel}>
+                <div className="border-b border-white/10 px-4 pb-4 pt-4 sm:px-5 sm:pt-5">
+                  <p className={eyebrow}>Precision metrics</p>
+                  <h2
+                    id="metrics-heading"
+                    className="mt-2 text-lg font-semibold tracking-[-0.02em] text-white sm:text-xl"
+                  >
+                    Selected hour
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-300">
+                    Azimuth, altitude, and daylight state for the pinned solar moment.
+                  </p>
+                </div>
+
+                <div className="p-4 sm:p-5">
+                  <MetricsPanel position={selectedPosition} />
+                </div>
+              </section>
+
+              <section className={`${railPanel} border-sky-300/12 bg-[linear-gradient(180deg,rgba(14,165,233,0.12),rgba(255,255,255,0.04))]`}>
+                <div className="p-4 sm:p-5">
+                  <InsightsPanel insights={insights} />
+                </div>
+              </section>
+
+              <section
+                aria-labelledby="details-heading"
+                className={`${railPanel} flex flex-col overflow-hidden`}
+              >
+                <div className="border-b border-white/10 px-4 pb-4 pt-4 sm:px-5 sm:pt-5">
+                  <p className={eyebrow}>Hourly rail</p>
+                  <h2
+                    id="details-heading"
+                    className="mt-2 text-lg font-semibold tracking-[-0.02em] text-white sm:text-xl"
+                  >
+                    Hourly breakdown
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-300">
+                    Browse the full day to compare each solar angle and daylight state.
+                  </p>
+                </div>
+
+                <div className="max-h-[430px] overflow-y-auto xl:max-h-none">
+                  {solarData ? (
+                    <SolarDataTable
+                      positions={solarData.hourly}
+                      selectedHour={selectedHour}
+                      onRowClick={setSelectedHour}
+                      timezone={timezone}
+                      className="border-0 rounded-none shadow-none"
+                    />
+                  ) : (
+                    <div className="flex h-56 flex-col items-center justify-center px-6 text-center">
+                      <p className="text-sm font-medium text-white">No data available</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Add a location to generate the hourly solar table.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </Suspense>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="mt-4 pb-2">
+          <div className="rounded-[24px] border border-white/10 bg-white/[0.04] px-4 py-3 text-center text-[11px] text-slate-400 backdrop-blur-xl">
+            Solar calculations powered by{' '}
+            <a
+              href="https://github.com/mourner/suncalc"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sky-100 underline decoration-sky-200/40 underline-offset-4 transition-colors hover:text-white"
+            >
+              SunCalc
+            </a>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

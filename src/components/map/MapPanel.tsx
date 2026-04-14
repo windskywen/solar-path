@@ -86,13 +86,13 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
 
   // Update view when location changes (jump to new location instantly)
   useEffect(() => {
-    if (location && mapRef.current) {
-      mapRef.current.jumpTo({
-        center: [location.lng, location.lat],
-        zoom: viewState.zoom,
-      });
-    }
-  }, [location?.lat, location?.lng, viewState.zoom]);
+    if (!location || !mapRef.current) return;
+
+    mapRef.current.jumpTo({
+      center: [location.lng, location.lat],
+      zoom: viewState.zoom,
+    });
+  }, [location, viewState.zoom]);
 
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {
@@ -205,26 +205,34 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
       <button
         onClick={() => setIs3DViewOpen(true)}
         disabled={!can3DViewOpen}
-        className="absolute bottom-4 right-14 px-4 py-2 bg-primary text-primary-foreground rounded-lg shadow-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors z-20 flex items-center gap-2"
+        className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-2.5 overflow-hidden rounded-full border border-white/70 bg-white/90 pl-2 pr-3.5 py-2.5 text-slate-900 shadow-[0_18px_45px_rgba(15,23,42,0.22)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_24px_55px_rgba(15,23,42,0.28)] disabled:border-slate-200 disabled:bg-white/70 disabled:text-slate-400 disabled:shadow-none disabled:hover:translate-y-0 sm:bottom-4 sm:right-14 sm:gap-3 sm:pl-2.5 sm:pr-4 sm:py-3"
         aria-label="Open 3D solar path view"
         title={can3DViewOpen ? 'Open 3D View' : 'Select a location to enable 3D view'}
         data-testid="3d-view-button"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 3L2 12h3v9h14v-9h3L12 3z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-        <span>3D View</span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] sm:h-10 sm:w-10">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 3L2 12h3v9h14v-9h3L12 3z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        </span>
+        <span className="flex flex-col items-start text-left leading-none">
+          <span className="text-[0.62rem] font-medium uppercase tracking-[0.24em] text-slate-500">
+            Explore
+          </span>
+          <span className="text-sm font-semibold">3D View</span>
+        </span>
       </button>
 
       {/* 3D View modal */}

@@ -75,71 +75,88 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
   const hasInsights = insights && insights.messages.length > 0;
 
   const variantStyles = {
-    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
-    warning: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
-    highlight: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800',
+    info: {
+      shell:
+        'border-sky-300/18 bg-[linear-gradient(135deg,rgba(56,189,248,0.14),rgba(15,23,42,0.52))]',
+      icon: 'bg-sky-300/14 text-sky-100',
+    },
+    warning: {
+      shell:
+        'border-amber-300/18 bg-[linear-gradient(135deg,rgba(251,191,36,0.16),rgba(15,23,42,0.52))]',
+      icon: 'bg-amber-300/14 text-amber-100',
+    },
+    highlight: {
+      shell:
+        'border-emerald-300/18 bg-[linear-gradient(135deg,rgba(74,222,128,0.16),rgba(15,23,42,0.52))]',
+      icon: 'bg-emerald-300/14 text-emerald-100',
+    },
   };
 
   return (
     <section aria-labelledby="insights-heading" className={className}>
-      <div className="flex items-center gap-2 mb-2 sm:mb-3">
-        <span className="text-base sm:text-lg">💡</span>
-        <h2
-          id="insights-heading"
-          className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white"
-        >
-          Insights
-        </h2>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-sky-200/72">
+            Insight stream
+          </p>
+          <h2
+            id="insights-heading"
+            className="mt-2 text-lg font-semibold tracking-[-0.02em] text-white sm:text-xl"
+          >
+            Solar insights
+          </h2>
+        </div>
+        <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[0.68rem] font-medium text-slate-300">
+          {hasInsights ? `${insights.messages.length} signals` : 'Nominal'}
+        </span>
       </div>
 
-      <div className="" role="region" aria-label="Solar insights">
+      <div role="region" aria-label="Solar insights">
         {hasInsights ? (
-          <ul className="space-y-1.5 sm:space-y-2" role="list">
+          <ul className="space-y-2.5" role="list">
             {insights.messages.map((message, index) => {
               const icon = getInsightIcon(message);
               const variant = getInsightVariant(message);
+              const tone = variantStyles[variant];
 
               if (compact && index > 1) {
-                // In compact mode, show max 2 insights
                 return null;
               }
 
               return (
                 <li
                   key={index}
-                  className={`
-                    flex items-start gap-2 sm:gap-3 text-xs sm:text-sm p-2 sm:p-3 rounded-lg
-                    bg-white/50 dark:bg-slate-800/50 border border-white/50 dark:border-slate-700/50
-                    shadow-sm backdrop-blur-sm
-                    text-slate-700 dark:text-slate-300
-                  `}
+                  className={`rounded-[22px] border p-3 text-sm text-slate-100 shadow-[0_16px_40px_rgba(2,6,23,0.16)] backdrop-blur-xl sm:p-4 ${tone.shell}`}
                 >
-                  <span
-                    className="shrink-0 text-base sm:text-lg leading-none mt-0.5"
-                    role="img"
-                    aria-hidden="true"
-                  >
-                    {icon}
-                  </span>
-                  <span className="leading-snug">{message}</span>
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ${tone.icon}`}
+                      role="img"
+                      aria-hidden="true"
+                    >
+                      {icon}
+                    </span>
+                    <span className="leading-6 text-slate-100/92">{message}</span>
+                  </div>
                 </li>
               );
             })}
 
             {compact && insights.messages.length > 2 && (
-              <li className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 pl-5 sm:pl-6">
+              <li className="pl-1 text-xs text-slate-400">
                 +{insights.messages.length - 2} more insight
                 {insights.messages.length > 3 ? 's' : ''}
               </li>
             )}
           </ul>
         ) : (
-          <div className="bg-white/50 dark:bg-slate-800/50 rounded-lg p-3 sm:p-4 border border-white/50 dark:border-slate-700/50 shadow-sm">
-            <p
-              className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2"
-              role="status"
-            >
-              <span className="text-green-500" role="img" aria-hidden="true">
+          <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <p className="flex items-center gap-3 text-sm text-slate-200" role="status">
+              <span
+                className="flex h-9 w-9 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-400/10 text-emerald-100"
+                role="img"
+                aria-hidden="true"
+              >
                 ✓
               </span>
               <span>Normal daylight conditions for this location and date.</span>

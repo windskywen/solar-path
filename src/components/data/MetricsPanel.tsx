@@ -18,22 +18,25 @@ import { CopyButton } from './CopyButton';
 // Color schemes for daylight states
 const STATE_STYLES = {
   night: {
-    bg: 'bg-muted/50',
-    border: 'border-border',
+    shell:
+      'border-white/10 bg-[linear-gradient(135deg,rgba(30,41,59,0.72),rgba(2,6,23,0.84))] text-slate-100',
+    pill: 'border-white/10 bg-white/[0.06] text-slate-200',
     icon: '🌙',
     label: 'Night',
     description: 'Sun is below the horizon',
   },
   golden: {
-    bg: 'bg-amber-100 dark:bg-amber-900/30',
-    border: 'border-amber-200 dark:border-amber-800',
+    shell:
+      'border-amber-300/18 bg-[linear-gradient(135deg,rgba(251,191,36,0.18),rgba(15,23,42,0.82))] text-amber-50',
+    pill: 'border-amber-300/20 bg-amber-400/10 text-amber-100',
     icon: '🌅',
     label: 'Golden Hour',
     description: 'Warm, diffused light ideal for photography',
   },
   day: {
-    bg: 'bg-yellow-50 dark:bg-yellow-900/20',
-    border: 'border-yellow-200 dark:border-yellow-800',
+    shell:
+      'border-sky-300/18 bg-[linear-gradient(135deg,rgba(56,189,248,0.18),rgba(15,23,42,0.82))] text-sky-50',
+    pill: 'border-sky-300/20 bg-sky-400/10 text-sky-100',
     icon: '☀️',
     label: 'Day',
     description: 'Sun is high in the sky',
@@ -145,14 +148,14 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
   if (!position) {
     return (
       <div
-        className={`h-full flex flex-col items-center justify-center p-4 sm:p-6 text-center ${className}`}
+        className={`flex h-full flex-col items-center justify-center rounded-[24px] border border-white/10 bg-slate-950/35 p-6 text-center ${className}`}
       >
-        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-2 sm:mb-3">
-          <span className="text-xl sm:text-2xl grayscale opacity-50">☀️</span>
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/[0.05]">
+          <span className="text-2xl grayscale opacity-70">☀️</span>
         </div>
-        <p className="text-sm font-medium text-slate-600 dark:text-slate-300">No Hour Selected</p>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-          Click on the map or table to view details
+        <p className="text-sm font-semibold text-white">No hour selected</p>
+        <p className="mt-1 max-w-xs text-xs leading-5 text-slate-400">
+          Click on the map rays or the hourly rail to surface a focused solar metric card.
         </p>
       </div>
     );
@@ -161,89 +164,109 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
   const stateStyle = STATE_STYLES[position.daylightState];
 
   return (
-    <div className={`h-full flex flex-col ${className}`}>
-      {/* Header with time and state */}
+    <div className={`flex h-full flex-col ${className}`}>
       <div
-        className={`flex items-center justify-between p-2 sm:p-3 rounded-lg mb-3 sm:mb-4 ${stateStyle.bg} border ${stateStyle.border}`}
+        className={`mb-4 rounded-[24px] border p-4 shadow-[0_18px_46px_rgba(2,6,23,0.18)] backdrop-blur-xl ${stateStyle.shell}`}
       >
-        <div className="flex items-center gap-2 sm:gap-3">
-          <span className="text-xl sm:text-2xl filter drop-shadow-sm">{stateStyle.icon}</span>
-          <div>
-            <p className="font-bold text-base sm:text-lg text-slate-900 dark:text-white leading-none">
-              {formatTime(position.hour)}
-            </p>
-            <p className="text-[9px] sm:text-[10px] font-medium uppercase tracking-wider opacity-70 mt-0.5 sm:mt-1">
-              {position.localTimeLabel}
-            </p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl drop-shadow-sm sm:text-3xl">{stateStyle.icon}</span>
+            <div>
+              <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-slate-300/72">
+                Selected focus
+              </p>
+              <p className="mt-1 text-lg font-semibold tracking-[-0.02em] text-white sm:text-xl">
+                {formatTime(position.hour)}
+              </p>
+              <p className="mt-1 text-xs text-slate-300/80">{position.localTimeLabel}</p>
+            </div>
           </div>
-        </div>
-        <div className="text-right">
-          <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wide bg-white/60 dark:bg-black/20 backdrop-blur-sm">
+
+          <span
+            className={`inline-flex rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] backdrop-blur-sm ${stateStyle.pill}`}
+          >
             {stateStyle.label}
           </span>
         </div>
+
+        <p className="mt-4 text-sm text-slate-200/85">{stateStyle.description}</p>
       </div>
 
-      {/* Main metrics */}
-      <div className="flex-1 grid grid-cols-2 gap-2 sm:gap-4">
-        {/* Azimuth */}
-        <div className="flex flex-col justify-between p-2 sm:p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
-          <div className="flex items-center justify-between mb-1 sm:mb-2">
-            <p className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Azimuth
-            </p>
-            <CopyButton text={position.azimuthDeg.toFixed(1)} label="Azimuth" />
+      <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+        <MetricCard
+          label="Azimuth"
+          value={`${position.azimuthDeg.toFixed(0)}°`}
+          meta={`${cardinalDir} (${shortDir})`}
+          helper="Compass bearing of the sun"
+          copyText={position.azimuthDeg.toFixed(1)}
+          copyLabel="Azimuth"
+          accent="from-sky-300/16 via-cyan-300/10 to-transparent"
+        >
+          <div className="hidden sm:block">
+            <CompassIndicator azimuth={position.azimuthDeg} />
           </div>
+        </MetricCard>
 
-          <div className="flex items-end justify-between mt-auto">
-            <div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-lg sm:text-2xl font-bold text-foreground tabular-nums tracking-tight">
-                  {position.azimuthDeg.toFixed(0)}°
-                </span>
-              </div>
-              <p className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate">
-                {cardinalDir} ({shortDir})
-              </p>
-            </div>
-            <div className="transform scale-50 sm:scale-75 origin-bottom-right hidden sm:block">
-              <CompassIndicator azimuth={position.azimuthDeg} />
-            </div>
-          </div>
-        </div>
-
-        {/* Altitude */}
-        <div className="flex flex-col justify-between p-2 sm:p-3 bg-card rounded-lg border border-border">
-          <div className="flex items-center justify-between mb-1 sm:mb-2">
-            <p className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Altitude
-            </p>
-            <CopyButton text={position.altitudeDeg.toFixed(1)} label="Altitude" />
-          </div>
-
-          <div className="mt-auto">
-            <div className="flex items-baseline gap-1">
-              <span
-                className={`text-lg sm:text-2xl font-bold tabular-nums tracking-tight ${
-                  position.altitudeDeg < 0 ? 'text-muted-foreground/50' : 'text-foreground'
-                }`}
-              >
-                {position.altitudeDeg >= 0 ? '+' : ''}
-                {position.altitudeDeg.toFixed(1)}°
-              </span>
-            </div>
-            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mt-0.5 truncate">
-              {position.altitudeDeg < 0 ? 'Below Horizon' : 'Above Horizon'}
-            </p>
-          </div>
-        </div>
+        <MetricCard
+          label="Altitude"
+          value={`${position.altitudeDeg >= 0 ? '+' : ''}${position.altitudeDeg.toFixed(1)}°`}
+          meta={position.altitudeDeg < 0 ? 'Below horizon' : 'Above horizon'}
+          helper={altDescription}
+          copyText={position.altitudeDeg.toFixed(1)}
+          copyLabel="Altitude"
+          accent="from-amber-300/16 via-orange-300/10 to-transparent"
+          dimmed={position.altitudeDeg < 0}
+        />
       </div>
+    </div>
+  );
+}
 
-      {/* Additional info footer */}
-      <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-border">
-        <p className="text-[10px] sm:text-xs text-center text-muted-foreground italic">
-          {altDescription}
-        </p>
+function MetricCard({
+  label,
+  value,
+  meta,
+  helper,
+  copyText,
+  copyLabel,
+  accent,
+  dimmed = false,
+  children,
+}: {
+  label: string;
+  value: string;
+  meta: string;
+  helper: string;
+  copyText: string;
+  copyLabel: string;
+  accent: string;
+  dimmed?: boolean;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-slate-950/40 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${accent}`} />
+      <div className="relative flex h-full flex-col">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[0.64rem] font-semibold uppercase tracking-[0.24em] text-slate-400">
+              {label}
+            </p>
+            <p
+              className={`mt-3 text-2xl font-semibold tracking-[-0.04em] sm:text-3xl ${
+                dimmed ? 'text-slate-300/60' : 'text-white'
+              }`}
+            >
+              {value}
+            </p>
+          </div>
+          <CopyButton text={copyText} label={copyLabel} />
+        </div>
+
+        <p className="text-sm font-medium text-slate-200">{meta}</p>
+        <p className="mt-1 text-xs text-slate-400">{helper}</p>
+
+        {children && <div className="mt-auto pt-4">{children}</div>}
       </div>
     </div>
   );
@@ -254,34 +277,30 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
  */
 function CompassIndicator({ azimuth }: { azimuth: number }) {
   return (
-    <div className="relative w-12 h-12">
-      {/* Compass circle */}
-      <div className="absolute inset-0 rounded-full border border-border" />
+    <div className="relative h-16 w-16">
+      <div className="absolute inset-0 rounded-full border border-white/10 bg-white/[0.03]" />
 
-      {/* Cardinal directions */}
-      <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[8px] font-medium text-muted-foreground">
+      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-slate-400">
         N
       </span>
-      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-medium text-muted-foreground">
+      <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-slate-400">
         S
       </span>
-      <span className="absolute top-1/2 -left-1.5 -translate-y-1/2 text-[8px] font-medium text-muted-foreground">
+      <span className="absolute top-1/2 -left-2.5 -translate-y-1/2 text-[9px] font-semibold text-slate-400">
         W
       </span>
-      <span className="absolute top-1/2 -right-1.5 -translate-y-1/2 text-[8px] font-medium text-muted-foreground">
+      <span className="absolute top-1/2 -right-2.5 -translate-y-1/2 text-[9px] font-semibold text-slate-400">
         E
       </span>
 
-      {/* Sun indicator line */}
       <div
-        className="absolute top-1/2 left-1/2 w-4 h-0.5 bg-amber-500 origin-left"
+        className="absolute left-1/2 top-1/2 h-0.5 w-5 origin-left bg-gradient-to-r from-amber-300 to-sky-300"
         style={{ transform: `rotate(${azimuth - 90}deg)` }}
       >
-        <div className="absolute -right-0.5 -top-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
+        <div className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-sky-200 shadow-[0_0_16px_rgba(125,211,252,0.75)]" />
       </div>
 
-      {/* Center dot */}
-      <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 -translate-x-1/2 -translate-y-1/2 bg-muted-foreground rounded-full" />
+      <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
     </div>
   );
 }
