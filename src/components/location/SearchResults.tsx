@@ -26,19 +26,28 @@ export interface SearchResultsProps {
   onOsmClick?: (osmUrl: string) => void;
   /** Additional CSS classes */
   className?: string;
+  /** Optional id for the listbox element */
+  listboxId?: string;
 }
 
 /**
  * Highlight matching text in display name
  */
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function highlightMatch(text: string, query: string): React.ReactNode {
   if (!query.trim()) return text;
 
-  const parts = text.split(new RegExp(`(${query})`, 'gi'));
+  const parts = text.split(new RegExp(`(${escapeRegExp(query)})`, 'gi'));
 
   return parts.map((part, i) =>
     part.toLowerCase() === query.toLowerCase() ? (
-      <mark key={i} className="bg-primary/10 text-primary font-medium rounded px-0.5">
+      <mark
+        key={i}
+        className="rounded-md border border-amber-300/20 bg-amber-300/16 px-1 py-0.5 font-semibold text-amber-50 shadow-[0_0_0_1px_rgba(251,191,36,0.05)]"
+      >
         {part}
       </mark>
     ) : (
@@ -84,21 +93,21 @@ const SearchResultItem = memo(function SearchResultItem({
     <button
       type="button"
       onClick={handleSelect}
-      className="group w-full px-3 py-2 text-left transition-colors hover:bg-white/[0.05] focus:bg-white/[0.05] focus:outline-none"
+      className="group w-full px-3 py-2.5 text-left transition-colors hover:bg-sky-400/10 focus:bg-sky-400/10 focus:outline-none"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="truncate text-xs text-slate-100">
+          <p className="truncate text-xs leading-5 text-slate-50">
             {highlightMatch(result.displayName, query)}
           </p>
-          <p className="mt-0.5 font-mono text-[10px] text-slate-500">
+          <p className="mt-1 font-mono text-[10px] text-slate-400">
             {result.lat.toFixed(4)}°, {result.lng.toFixed(4)}°
           </p>
         </div>
         <a
           href={result.osmUrl}
           onClick={handleOsmClick}
-          className="flex-shrink-0 text-[10px] text-sky-200 opacity-0 underline transition-opacity hover:text-white group-hover:opacity-100 focus:opacity-100"
+          className="flex-shrink-0 text-[10px] text-sky-100 underline transition-opacity hover:text-white sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
           title="Verify on OpenStreetMap"
         >
           OSM ↗
@@ -146,6 +155,7 @@ export function SearchResults({
   onSelect,
   onOsmClick,
   className = '',
+  listboxId,
 }: SearchResultsProps) {
   // Don't show anything if no query
   if (!query.trim()) {
@@ -156,7 +166,7 @@ export function SearchResults({
   if (isLoading) {
     return (
       <div
-        className={`absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-[22px] border border-white/10 bg-[rgba(5,10,20,0.94)] shadow-[0_24px_60px_rgba(2,6,23,0.45)] backdrop-blur-2xl ${className}`}
+        className={`absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-[22px] border border-sky-300/12 bg-[linear-gradient(180deg,rgba(8,16,30,0.98),rgba(4,8,18,0.96))] shadow-[0_24px_60px_rgba(2,6,23,0.52)] backdrop-blur-2xl ${className}`}
       >
         <LoadingSkeleton />
       </div>
@@ -167,7 +177,7 @@ export function SearchResults({
   if (results.length === 0) {
     return (
       <div
-        className={`absolute left-0 right-0 top-full z-50 mt-2 rounded-[22px] border border-white/10 bg-[rgba(5,10,20,0.94)] shadow-[0_24px_60px_rgba(2,6,23,0.45)] backdrop-blur-2xl ${className}`}
+        className={`absolute left-0 right-0 top-full z-50 mt-2 rounded-[22px] border border-sky-300/12 bg-[linear-gradient(180deg,rgba(8,16,30,0.98),rgba(4,8,18,0.96))] shadow-[0_24px_60px_rgba(2,6,23,0.52)] backdrop-blur-2xl ${className}`}
       >
         <NoResults query={query} />
       </div>
@@ -177,7 +187,8 @@ export function SearchResults({
   // Show results
   return (
     <div
-      className={`absolute left-0 right-0 top-full z-50 mt-2 max-h-64 overflow-y-auto overflow-hidden rounded-[22px] border border-white/10 bg-[rgba(5,10,20,0.94)] shadow-[0_24px_60px_rgba(2,6,23,0.45)] backdrop-blur-2xl ${className}`}
+      id={listboxId}
+      className={`absolute left-0 right-0 top-full z-50 mt-2 max-h-72 overflow-y-auto overflow-hidden rounded-[22px] border border-sky-300/12 bg-[linear-gradient(180deg,rgba(8,16,30,0.98),rgba(4,8,18,0.96))] shadow-[0_24px_60px_rgba(2,6,23,0.52)] backdrop-blur-2xl ${className}`}
       role="listbox"
       aria-label="Search results"
     >
@@ -190,7 +201,7 @@ export function SearchResults({
           onOsmClick={onOsmClick}
         />
       ))}
-      <div className="border-t border-white/10 px-3 py-2 text-xs text-slate-500">
+      <div className="border-t border-white/10 px-3 py-2 text-xs text-slate-400">
         Data from OpenStreetMap contributors
       </div>
     </div>

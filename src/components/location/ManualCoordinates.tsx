@@ -115,8 +115,9 @@ export function ManualCoordinates({
           htmlFor="coords-input"
           className="mb-2 block text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-slate-400"
         >
-          Coordinates (Lat, Lng)
+          Manual Coordinates
         </label>
+        <p className="mb-3 text-xs text-slate-500">Exact latitude and longitude when you already know the point.</p>
         <div className="flex gap-2">
           <input
             ref={inputRef}
@@ -128,7 +129,7 @@ export function ManualCoordinates({
             onBlur={handleBlur}
             placeholder="e.g. 23.996, 121.572"
             className={`
-              h-11 min-w-0 flex-1 rounded-2xl border px-3 text-sm text-white
+              h-10 min-w-0 flex-1 rounded-2xl border px-3 text-sm text-white
               shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-all
               placeholder:text-slate-500
               ${
@@ -140,7 +141,7 @@ export function ManualCoordinates({
           />
           <button
             type="submit"
-            className="flex h-11 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-sm font-semibold text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-300/30 hover:bg-sky-400/12 whitespace-nowrap"
+            className="flex h-10 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-3 text-sm font-semibold text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-300/30 hover:bg-sky-400/12 whitespace-nowrap"
           >
             Set
           </button>

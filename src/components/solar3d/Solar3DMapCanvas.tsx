@@ -79,6 +79,47 @@ const DEFAULT_CAMERA = {
   bearing: 135, // Look towards Southeast (from Northwest)
 };
 
+const EARTH_RADIUS_METERS = 6378137;
+
+type CameraBounds = [[number, number], [number, number]];
+
+function metersOffsetToLngLat(
+  location: { lat: number; lng: number },
+  eastMeters: number,
+  northMeters: number
+): [number, number] {
+  const latRadians = (location.lat * Math.PI) / 180;
+  const safeCosLat = Math.max(Math.abs(Math.cos(latRadians)), 0.01);
+  const latOffset = (northMeters / EARTH_RADIUS_METERS) * (180 / Math.PI);
+  const lngOffset = (eastMeters / (EARTH_RADIUS_METERS * safeCosLat)) * (180 / Math.PI);
+
+  return [location.lng + lngOffset, location.lat + latOffset];
+}
+
+function buildCameraBounds(
+  location: { lat: number; lng: number },
+  positions: [number, number, number][]
+): CameraBounds | null {
+  if (positions.length === 0) return null;
+
+  const eastValues = positions.map(([east]) => east);
+  const northValues = positions.map(([, north]) => north);
+  const maxUp = positions.reduce((max, [, , up]) => Math.max(max, up), 0);
+
+  const minEast = Math.min(...eastValues);
+  const maxEast = Math.max(...eastValues);
+  const minNorth = Math.min(...northValues);
+  const maxNorth = Math.max(...northValues);
+  const eastSpan = maxEast - minEast;
+  const northSpan = maxNorth - minNorth;
+  const edgeBuffer = Math.max(20, eastSpan * 0.12, northSpan * 0.12, maxUp * 0.25);
+
+  const southwest = metersOffsetToLngLat(location, minEast - edgeBuffer, minNorth - edgeBuffer);
+  const northeast = metersOffsetToLngLat(location, maxEast + edgeBuffer, maxNorth + edgeBuffer);
+
+  return [southwest, northeast];
+}
+
 export interface Solar3DMapCanvasProps {
   /**
    * Derived 3D view data including visible points and path.
@@ -239,6 +280,7 @@ function WebGLFallback({ viewData }: { viewData: Solar3DViewData }) {
  */
 export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMapCanvasProps) {
   const mapRef = useRef<MapRef>(null);
+  const lastAutoFitKeyRef = useRef<string | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const deckOverlayRef = useRef<MapboxOverlay | null>(null);
@@ -251,6 +293,58 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
 
   const { snapshot, visiblePoints, path, isSelectedVisible, isEmpty } = viewData;
   const { location, selectedHour } = snapshot;
+  const cameraGeometryKey = useMemo(() => {
+    const geometryPositions =
+      path.positions.length > 0 ? path.positions : visiblePoints.map((point) => point.position);
+
+    return [
+      location.lat.toFixed(6),
+      location.lng.toFixed(6),
+      ...geometryPositions.map(([east, north, up]) => {
+        return `${east.toFixed(1)},${north.toFixed(1)},${up.toFixed(1)}`;
+      }),
+    ].join('|');
+  }, [location.lat, location.lng, path.positions, visiblePoints]);
+  const cameraBounds = useMemo(() => {
+    if (isEmpty) return null;
+
+    const geometryPositions =
+      path.positions.length > 0 ? path.positions : visiblePoints.map((point) => point.position);
+
+    return buildCameraBounds(location, [[0, 0, 0], ...geometryPositions]);
+  }, [isEmpty, location, path.positions, visiblePoints]);
+
+  const fitMapToVisibleGeometry = useCallback(
+    (duration: number) => {
+      if (!mapRef.current) return;
+
+      if (!cameraBounds) {
+        mapRef.current.easeTo({
+          center: [location.lng, location.lat],
+          zoom: DEFAULT_CAMERA.zoom,
+          pitch: DEFAULT_CAMERA.pitch,
+          bearing: DEFAULT_CAMERA.bearing,
+          duration,
+        });
+        return;
+      }
+
+      const map = mapRef.current.getMap();
+      const { clientWidth } = map.getContainer();
+      const isCompactViewport = clientWidth < 640;
+
+      map.fitBounds(cameraBounds, {
+        padding: isCompactViewport
+          ? { top: 88, right: 28, bottom: 176, left: 28 }
+          : { top: 108, right: 88, bottom: 168, left: 88 },
+        pitch: DEFAULT_CAMERA.pitch,
+        bearing: DEFAULT_CAMERA.bearing,
+        duration,
+        maxZoom: DEFAULT_CAMERA.zoom,
+      });
+    },
+    [cameraBounds, location.lat, location.lng]
+  );
 
   // Handle map load complete - mark initialization done
   const handleMapLoad = useCallback(() => {
@@ -507,18 +601,21 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     sphereGeometry,
   ]);
 
+  useEffect(() => {
+    if (!isMapLoaded || !mapRef.current) return;
+    if (lastAutoFitKeyRef.current === cameraGeometryKey) return;
+
+    fitMapToVisibleGeometry(0);
+    lastAutoFitKeyRef.current = cameraGeometryKey;
+  }, [isMapLoaded, cameraGeometryKey, fitMapToVisibleGeometry]);
+
   // Handle reset view when resetKey changes
   useEffect(() => {
     if (resetKey > 0 && mapRef.current) {
-      mapRef.current.easeTo({
-        center: [location.lng, location.lat],
-        zoom: DEFAULT_CAMERA.zoom,
-        pitch: DEFAULT_CAMERA.pitch,
-        bearing: DEFAULT_CAMERA.bearing,
-        duration: 500,
-      });
+      fitMapToVisibleGeometry(500);
+      lastAutoFitKeyRef.current = cameraGeometryKey;
     }
-  }, [resetKey, location]);
+  }, [cameraGeometryKey, fitMapToVisibleGeometry, resetKey]);
 
   // If WebGL is not supported, show fallback (must be after all hooks)
   if (!hasWebGL) {

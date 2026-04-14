@@ -184,44 +184,36 @@ export function LocationInput({ className = '' }: LocationInputProps) {
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-        {/* Left: Manual Coordinates */}
-        <div className="rounded-[22px] border border-white/10 bg-slate-950/35 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-          <ManualCoordinates
-            initialLat={location?.lat}
-            initialLng={location?.lng}
-            onSubmit={(newLocation) => {
-              setLocation(newLocation);
-              setError(null);
-              setGpsError(null);
-              clearSearch();
-            }}
-            className="w-full"
-          />
-        </div>
-
-        {/* Right: Search + GPS */}
-        <div className="rounded-[22px] border border-white/10 bg-slate-950/35 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.32fr)_minmax(0,0.88fr)] md:gap-4">
+        {/* Primary: Search + GPS */}
+        <div className="rounded-[22px] border border-sky-300/10 bg-slate-950/42 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-4">
           <label className="mb-2 block text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-slate-400">
             Search Location
           </label>
+          <p className="mb-3 text-xs text-slate-500">
+            Search by address, district, landmark, or city name.
+          </p>
           <div className="flex gap-2">
             {/* Search Input */}
-            <div className="relative flex-1" ref={searchContainerRef}>
+            <div className="relative min-w-0 flex-1" ref={searchContainerRef}>
               <input
                 type="text"
                 value={query}
                 onChange={handleSearchChange}
                 onFocus={handleSearchFocus}
                 onKeyDown={handleKeyDown}
-                placeholder="Search city..."
-                className="h-11 w-full rounded-2xl border border-white/10 bg-slate-950/50 px-3 py-2 pl-10 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all outline-none placeholder:text-slate-500 focus:border-sky-300/35 focus:ring-2 focus:ring-sky-300/20"
+                placeholder="Search address or city..."
+                autoComplete="off"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-controls="search-location-results"
+                aria-expanded={isSearchOpen && query.length >= 2}
+                className="h-12 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-3 py-2 pl-10 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all outline-none placeholder:text-slate-500 focus:border-sky-300/35 focus:ring-2 focus:ring-sky-300/20"
                 aria-label="Search for a location"
-                aria-expanded={isSearchOpen}
                 aria-haspopup="listbox"
               />
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -263,6 +255,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
                   isLoading={isSearching}
                   query={query}
                   onSelect={handleSelectLocation}
+                  listboxId="search-location-results"
                 />
               )}
             </div>
@@ -272,7 +265,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
               type="button"
               onClick={handleUseGps}
               disabled={isLoading}
-              className="flex h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-300/30 hover:bg-sky-400/12 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-300/30 hover:bg-sky-400/12 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Use current GPS location"
               title="Use current GPS location"
             >
@@ -316,6 +309,21 @@ export function LocationInput({ className = '' }: LocationInputProps) {
               )}
             </button>
           </div>
+        </div>
+
+        {/* Secondary: Manual Coordinates */}
+        <div className="rounded-[22px] border border-white/10 bg-slate-950/35 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <ManualCoordinates
+            initialLat={location?.lat}
+            initialLng={location?.lng}
+            onSubmit={(newLocation) => {
+              setLocation(newLocation);
+              setError(null);
+              setGpsError(null);
+              clearSearch();
+            }}
+            className="w-full"
+          />
         </div>
       </div>
 
