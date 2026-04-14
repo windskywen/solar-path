@@ -146,3 +146,72 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--foreground);
 }
+
+.solar-3d-viewer .maplibregl-map {
+  background:
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.14), transparent 36%),
+    linear-gradient(180deg, #0b1123 0%, #040611 100%);
+}
+
+.solar-3d-viewer .maplibregl-ctrl-top-right {
+  top: 1rem;
+  right: 1rem;
+}
+
+.solar-3d-viewer .maplibregl-ctrl-group {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(9, 13, 27, 0.72));
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.45);
+  backdrop-filter: blur(20px);
+}
+
+.solar-3d-viewer .maplibregl-ctrl button {
+  width: 2.75rem;
+  height: 2.75rem;
+  background: transparent;
+}
+
+.solar-3d-viewer .maplibregl-ctrl button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.solar-3d-viewer .maplibregl-ctrl button .maplibregl-ctrl-icon {
+  opacity: 0.94;
+  filter: brightness(0) saturate(100%) invert(94%) sepia(7%) saturate(437%) hue-rotate(180deg)
+    brightness(103%) contrast(101%);
+}
+
+.solar-3d-viewer .maplibregl-ctrl-attrib {
+  right: 1rem;
+  bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(7, 11, 28, 0.72);
+  color: rgba(226, 232, 240, 0.78);
+  box-shadow: 0 14px 32px rgba(2, 6, 23, 0.28);
+  backdrop-filter: blur(14px);
+}
+
+.solar-3d-viewer .maplibregl-ctrl-attrib a,
+.solar-3d-viewer .maplibregl-ctrl-attrib-button {
+  color: inherit;
+}
+
+@media (max-width: 640px) {
+  .solar-3d-viewer .maplibregl-ctrl-top-right {
+    top: 0.85rem;
+    right: 0.85rem;
+  }
+
+  .solar-3d-viewer .maplibregl-ctrl button {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .solar-3d-viewer .maplibregl-ctrl-attrib {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+}
