@@ -22,16 +22,18 @@ export interface Solar3DLegendProps {
 export function Solar3DLegend({ className = '' }: Solar3DLegendProps) {
   return (
     <div
-      className={`rounded-[26px] border border-white/10 bg-[#071022]/74 p-3.5 shadow-[0_24px_60px_rgba(2,6,23,0.38)] backdrop-blur-xl ${className}`}
+      className={`rounded-[22px] border border-white/10 bg-[#071022]/74 p-2.5 shadow-[0_20px_48px_rgba(2,6,23,0.34)] backdrop-blur-xl sm:rounded-[26px] sm:p-3.5 sm:shadow-[0_24px_60px_rgba(2,6,23,0.38)] ${className}`}
       role="complementary"
       aria-label="Color legend for sun positions"
     >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[0.62rem] font-medium uppercase tracking-[0.3em] text-cyan-200/60">
+          <p className="text-[0.56rem] font-medium uppercase tracking-[0.28em] text-cyan-200/60 sm:text-[0.62rem] sm:tracking-[0.3em]">
             Legend
           </p>
-          <h3 className="mt-1 text-sm font-semibold text-white">Light states</h3>
+          <h3 className="mt-0.5 text-[0.78rem] font-semibold text-white sm:mt-1 sm:text-sm">
+            Light states
+          </h3>
         </div>
         <div className="hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-amber-200/90 sm:flex">
           <svg
@@ -52,50 +54,54 @@ export function Solar3DLegend({ className = '' }: Solar3DLegendProps) {
         </div>
       </div>
 
-      <ul className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-1 sm:text-sm">
-        <li className="rounded-[18px] border border-white/10 bg-white/[0.04] px-3 py-2.5">
+      <ul className="mt-2.5 grid grid-cols-2 gap-1.5 text-[0.68rem] sm:mt-3 sm:grid-cols-1 sm:gap-2 sm:text-sm">
+        <li className="rounded-[16px] border border-white/10 bg-white/[0.04] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
           <div className="flex items-center gap-2">
             <span
-              className="h-3 w-3 rounded-full shadow-[0_0_16px_rgba(255,183,77,0.45)]"
+              className="h-2.5 w-2.5 rounded-full shadow-[0_0_16px_rgba(255,183,77,0.45)] sm:h-3 sm:w-3"
               style={{ backgroundColor: 'rgb(255, 183, 77)' }}
               aria-hidden="true"
             />
             <span className="font-medium text-slate-100">Golden Hour</span>
           </div>
-          <p className="mt-1 text-[0.72rem] text-slate-400">Warm, low-angle sun</p>
+          <p className="mt-1 hidden text-[0.72rem] text-slate-400 sm:block">Warm, low-angle sun</p>
         </li>
-        <li className="rounded-[18px] border border-white/10 bg-white/[0.04] px-3 py-2.5">
+        <li className="rounded-[16px] border border-white/10 bg-white/[0.04] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
           <div className="flex items-center gap-2">
             <span
-              className="h-3 w-3 rounded-full shadow-[0_0_16px_rgba(255,235,59,0.4)]"
+              className="h-2.5 w-2.5 rounded-full shadow-[0_0_16px_rgba(255,235,59,0.4)] sm:h-3 sm:w-3"
               style={{ backgroundColor: 'rgb(255, 235, 59)' }}
               aria-hidden="true"
             />
             <span className="font-medium text-slate-100">Daylight</span>
           </div>
-          <p className="mt-1 text-[0.72rem] text-slate-400">Direct visible sun</p>
+          <p className="mt-1 hidden text-[0.72rem] text-slate-400 sm:block">
+            Direct visible sun
+          </p>
         </li>
-        <li className="rounded-[18px] border border-white/10 bg-white/[0.04] px-3 py-2.5">
+        <li className="rounded-[16px] border border-white/10 bg-white/[0.04] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
           <div className="flex items-center gap-2">
             <span
-              className="h-3 w-3 rounded-full shadow-[0_0_16px_rgba(255,87,34,0.4)]"
+              className="h-2.5 w-2.5 rounded-full shadow-[0_0_16px_rgba(255,87,34,0.4)] sm:h-3 sm:w-3"
               style={{ backgroundColor: 'rgb(255, 87, 34)' }}
               aria-hidden="true"
             />
             <span className="font-medium text-slate-100">Selected Hour</span>
           </div>
-          <p className="mt-1 text-[0.72rem] text-slate-400">Focused comparison point</p>
+          <p className="mt-1 hidden text-[0.72rem] text-slate-400 sm:block">
+            Focused comparison point
+          </p>
         </li>
-        <li className="rounded-[18px] border border-white/10 bg-white/[0.04] px-3 py-2.5">
+        <li className="rounded-[16px] border border-white/10 bg-white/[0.04] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
           <div className="flex items-center gap-2">
             <span
-              className="h-1 w-7 rounded-full shadow-[0_0_16px_rgba(255,193,7,0.35)]"
+              className="h-px w-5 rounded-full shadow-[0_0_16px_rgba(255,193,7,0.35)] sm:h-1 sm:w-7"
               style={{ backgroundColor: 'rgb(255, 193, 7)' }}
               aria-hidden="true"
             />
             <span className="font-medium text-slate-100">Sun Path</span>
           </div>
-          <p className="mt-1 text-[0.72rem] text-slate-400">Daily trajectory arc</p>
+          <p className="mt-1 hidden text-[0.72rem] text-slate-400 sm:block">Daily trajectory arc</p>
         </li>
       </ul>
     </div>

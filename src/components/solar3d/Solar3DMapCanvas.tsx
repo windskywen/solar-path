@@ -179,8 +179,8 @@ function WebGLFallback({ viewData }: { viewData: Solar3DViewData }) {
         </div>
 
         <p className="text-sm leading-6 text-slate-300/80">
-          3D visualization requires WebGL support. Here&apos;s the same solar scene distilled into
-          a readable summary for {locationLabel} on {snapshot.dateISO}.
+          3D visualization requires WebGL support. Here&apos;s the same solar scene distilled into a
+          readable summary for {locationLabel} on {snapshot.dateISO}.
         </p>
 
         <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
@@ -195,7 +195,8 @@ function WebGLFallback({ viewData }: { viewData: Solar3DViewData }) {
 
           <div className="grid gap-2 text-sm">
             <p className="text-slate-300">
-              <span className="text-slate-500">First Light:</span> {visiblePoints[0]?.localTimeLabel}
+              <span className="text-slate-500">First Light:</span>{' '}
+              {visiblePoints[0]?.localTimeLabel}
             </p>
             <p className="text-slate-300">
               <span className="text-slate-500">Last Light:</span>{' '}

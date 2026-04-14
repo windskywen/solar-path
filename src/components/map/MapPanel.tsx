@@ -205,12 +205,12 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
       <button
         onClick={() => setIs3DViewOpen(true)}
         disabled={!can3DViewOpen}
-        className="absolute bottom-3 right-3 z-20 overflow-hidden rounded-full border border-white/70 bg-white/90 px-2.5 py-2 text-slate-900 shadow-[0_18px_45px_rgba(15,23,42,0.22)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_24px_55px_rgba(15,23,42,0.28)] disabled:border-slate-200 disabled:bg-white/70 disabled:text-slate-400 disabled:shadow-none disabled:hover:translate-y-0 sm:bottom-4 sm:right-14"
+        className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-2.5 overflow-hidden rounded-full border border-white/70 bg-white/90 pl-2 pr-3.5 py-2.5 text-slate-900 shadow-[0_18px_45px_rgba(15,23,42,0.22)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_24px_55px_rgba(15,23,42,0.28)] disabled:border-slate-200 disabled:bg-white/70 disabled:text-slate-400 disabled:shadow-none disabled:hover:translate-y-0 sm:bottom-4 sm:right-14 sm:gap-3 sm:pl-2.5 sm:pr-4 sm:py-3"
         aria-label="Open 3D solar path view"
         title={can3DViewOpen ? 'Open 3D View' : 'Select a location to enable 3D view'}
         data-testid="3d-view-button"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] sm:h-10 sm:w-10">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="18"
@@ -227,11 +227,11 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
             <circle cx="12" cy="10" r="3" />
           </svg>
         </span>
-        <span className="flex flex-col items-start pr-1 text-left">
+        <span className="flex flex-col items-start text-left leading-none">
           <span className="text-[0.62rem] font-medium uppercase tracking-[0.24em] text-slate-500">
             Explore
           </span>
-          <span className="text-sm font-semibold leading-tight">3D View</span>
+          <span className="text-sm font-semibold">3D View</span>
         </span>
       </button>
 

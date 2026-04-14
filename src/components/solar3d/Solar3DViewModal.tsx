@@ -155,13 +155,13 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
       : null;
 
   const actionButtonClassName =
-    'inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] px-3.5 py-2 text-xs font-medium text-slate-100 shadow-[0_12px_36px_rgba(2,6,23,0.28)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-300/35 hover:bg-white/[0.1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200/60 sm:px-4 sm:text-sm';
+    'inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.06] px-3 py-1.5 text-[0.72rem] font-medium text-slate-100 shadow-[0_12px_36px_rgba(2,6,23,0.28)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-300/35 hover:bg-white/[0.1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200/60 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm';
 
   const iconButtonClassName =
-    'inline-flex size-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.06] text-slate-200 shadow-[0_12px_36px_rgba(2,6,23,0.28)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200/60 sm:size-10';
+    'inline-flex size-8 items-center justify-center rounded-full border border-white/12 bg-white/[0.06] text-slate-200 shadow-[0_12px_36px_rgba(2,6,23,0.28)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200/60 sm:size-10';
 
   const detailPillClassName =
-    'inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3.5 py-2 text-xs font-medium text-slate-200/90 shadow-[0_10px_28px_rgba(2,6,23,0.22)] backdrop-blur-xl';
+    'inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[0.72rem] font-medium text-slate-200/90 shadow-[0_10px_28px_rgba(2,6,23,0.22)] backdrop-blur-xl sm:gap-2 sm:px-3.5 sm:py-2 sm:text-xs';
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -193,23 +193,23 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
           </div>
 
           <div className="relative flex h-full flex-col">
-            <header className="relative z-20 border-b border-white/10 bg-[#050816]/60 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)] backdrop-blur-xl sm:px-6 sm:pb-5 sm:pt-5">
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <header className="relative z-20 border-b border-white/10 bg-[#050816]/60 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur-xl sm:px-5 sm:pb-4 sm:pt-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-white/[0.08] px-3 py-1 text-[0.65rem] font-medium uppercase tracking-[0.28em] text-cyan-100/80 shadow-[0_8px_30px_rgba(14,165,233,0.14)]">
+                    <span className="hidden items-center gap-2 rounded-full border border-cyan-300/20 bg-white/[0.08] px-2.5 py-0.5 text-[0.6rem] font-medium uppercase tracking-[0.26em] text-cyan-100/80 shadow-[0_8px_30px_rgba(14,165,233,0.14)] sm:inline-flex">
                       Immersive viewer
                     </span>
-                    <Dialog.Title className="mt-3 text-[clamp(1.35rem,1.1rem+1.2vw,2.15rem)] font-semibold tracking-[-0.04em] text-white">
+                    <Dialog.Title className="text-[clamp(1.15rem,1.02rem+0.9vw,1.8rem)] font-semibold tracking-[-0.04em] text-white sm:mt-2">
                       3D Solar Path View
                     </Dialog.Title>
-                    <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300/90">
-                      Trace the sun across a cinematic sky dome with daylight markers, golden
-                      hour cues, and anchored context for the current scene.
+                    <p className="mt-1 hidden max-w-xl text-[0.82rem] leading-5 text-slate-300/85 md:block">
+                      Trace the sun across the sky with daylight markers, golden hour cues, and a
+                      focused scene summary.
                     </p>
                   </div>
 
-                  <div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto">
+                  <div className="flex shrink-0 items-center gap-2">
                     <button
                       type="button"
                       onClick={handleResetView}
@@ -263,7 +263,7 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
                 </div>
 
                 {viewData && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="hidden flex-wrap gap-2 sm:flex">
                     <div className={detailPillClassName}>
                       <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.9)]" />
                       <span className="truncate">{locationLabel}</span>
@@ -275,7 +275,7 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
                       </div>
                     )}
                     {selectedHourLabel && (
-                      <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3.5 py-2 text-xs font-medium text-amber-100 shadow-[0_10px_28px_rgba(251,191,36,0.12)] backdrop-blur-xl">
+                      <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-[0.72rem] font-medium text-amber-100 shadow-[0_10px_28px_rgba(251,191,36,0.12)] backdrop-blur-xl sm:gap-2 sm:px-3.5 sm:py-2 sm:text-xs">
                         <span className="h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_16px_rgba(252,211,77,0.75)]" />
                         <span>Selected {selectedHourLabel}</span>
                       </div>
@@ -295,7 +295,7 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
 
             {viewData && <Solar3DAccessibleSummary viewData={viewData} />}
 
-            <div className="relative min-h-0 flex-1 px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-4">
+            <div className="relative min-h-0 flex-1 px-2.5 pb-2.5 pt-2 sm:px-4 sm:pb-4 sm:pt-3">
               <div className="relative h-full overflow-hidden rounded-[26px] border border-white/10 bg-[#03060f]/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_32px_100px_rgba(2,6,23,0.45)]">
                 <div className="absolute inset-0">
                   {viewData ? (
@@ -324,19 +324,19 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
                 <Solar3DTooltip data={tooltip} />
 
                 {viewData && !viewData.isEmpty && (
-                  <Solar3DLegend className="absolute bottom-4 left-4 right-20 z-20 sm:bottom-6 sm:left-6 sm:right-auto sm:w-[290px]" />
+                  <Solar3DLegend className="absolute bottom-3 left-3 z-20 w-[10.5rem] max-w-[calc(100%-1.5rem)] sm:bottom-6 sm:left-6 sm:w-[290px]" />
                 )}
               </div>
             </div>
 
             {viewData && (
-              <div className="relative z-20 border-t border-white/10 bg-[#050816]/72 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur-xl sm:px-6 sm:pb-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="relative z-20 border-t border-white/10 bg-[#050816]/72 px-4 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] pt-2.5 backdrop-blur-xl sm:px-6 sm:pb-4 sm:pt-3">
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-[0.65rem] font-medium uppercase tracking-[0.3em] text-slate-400/70">
                       Scene capture
                     </p>
-                    <p className="mt-1 text-sm text-gray-400 leading-6">
+                    <p className="mt-1 text-[0.8rem] leading-5 text-gray-400 sm:text-sm sm:leading-6">
                       {locationLabel}
                       {' · '}
                       {viewData.snapshot.dateISO}
@@ -348,18 +348,20 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 sm:min-w-[320px]">
-                    <div className="rounded-[18px] border border-white/10 bg-white/[0.05] px-3 py-2.5 shadow-[0_14px_36px_rgba(2,6,23,0.24)] backdrop-blur-xl">
+                  <div className="grid grid-cols-2 gap-1.5 sm:min-w-[320px] sm:gap-2">
+                    <div className="rounded-[18px] border border-white/10 bg-white/[0.05] px-2.5 py-2 shadow-[0_14px_36px_rgba(2,6,23,0.24)] backdrop-blur-xl sm:px-3 sm:py-2.5">
                       <p className="text-[0.62rem] uppercase tracking-[0.24em] text-slate-400/70">
                         Orbit
                       </p>
-                      <p className="mt-1 text-sm font-semibold text-white">Live 3D camera</p>
+                      <p className="mt-1 text-[0.82rem] font-semibold text-white sm:text-sm">
+                        Live 3D camera
+                      </p>
                     </div>
-                    <div className="rounded-[18px] border border-white/10 bg-white/[0.05] px-3 py-2.5 shadow-[0_14px_36px_rgba(2,6,23,0.24)] backdrop-blur-xl">
+                    <div className="rounded-[18px] border border-white/10 bg-white/[0.05] px-2.5 py-2 shadow-[0_14px_36px_rgba(2,6,23,0.24)] backdrop-blur-xl sm:px-3 sm:py-2.5">
                       <p className="text-[0.62rem] uppercase tracking-[0.24em] text-slate-400/70">
                         Points
                       </p>
-                      <p className="mt-1 text-sm font-semibold text-white">
+                      <p className="mt-1 text-[0.82rem] font-semibold text-white sm:text-sm">
                         {viewData.visiblePoints.length} tracked
                       </p>
                     </div>
