@@ -85,83 +85,67 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
     onChange?.(newDate);
   }, [dateISO, setDateISO, onChange]);
 
+  const iconButtonClass =
+    'flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-950/45 text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-300/30 hover:bg-sky-400/10';
+
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`space-y-3 ${className}`}>
       {/* Date display and navigation */}
-      <div className="flex items-center gap-1 sm:gap-2">
-        {/* Previous day button */}
+      <div className="flex items-center gap-2">
         <button
+          type="button"
           onClick={handlePrevDay}
-          className="p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
+          className={iconButtonClass}
           aria-label="Previous day"
         >
-          <svg
-            className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
+          <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
-        {/* Date input */}
-        <div className="flex-1 relative">
+        <div className="relative flex-1">
           <input
             type="date"
             value={dateISO}
             onChange={handleDateChange}
-            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 bg-background border border-input rounded-lg text-center text-sm sm:text-base font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="h-11 w-full rounded-2xl border border-white/10 bg-slate-950/45 px-4 text-center text-sm font-semibold tracking-[0.02em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] outline-none transition-all focus:border-sky-300/35 focus:ring-2 focus:ring-sky-300/20 sm:text-base"
             aria-label="Select date"
           />
         </div>
 
-        {/* Next day button */}
         <button
+          type="button"
           onClick={handleNextDay}
-          className="p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
+          className={iconButtonClass}
           aria-label="Next day"
         >
-          <svg
-            className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
 
       {/* Today button and formatted date */}
-      <div className="flex items-center justify-between">
-        <span className="text-xs sm:text-sm text-muted-foreground truncate">
-          {formatDateDisplay(dateISO)}
-        </span>
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <span className="truncate text-xs text-slate-300 sm:text-sm">{formatDateDisplay(dateISO)}</span>
 
-        {!dateIsToday && (
+        {!dateIsToday ? (
           <button
+            type="button"
             onClick={handleTodayClick}
-            className="text-xs sm:text-sm text-primary hover:text-primary/80 font-medium whitespace-nowrap ml-2"
+            className="whitespace-nowrap rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[0.7rem] font-semibold text-sky-100 transition-colors hover:bg-sky-400/16 sm:text-xs"
           >
             Go to Today
           </button>
-        )}
-
-        {dateIsToday && (
-          <span className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium whitespace-nowrap ml-2">
+        ) : (
+          <span className="whitespace-nowrap rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-[0.7rem] font-semibold text-emerald-100 sm:text-xs">
             ✓ Today
           </span>
         )}
       </div>
 
-      {/* Quick date buttons - hide on very small screens */}
-      <div className="flex gap-1 flex-wrap">
+      {/* Quick date buttons */}
+      <div className="flex flex-wrap gap-2">
         <QuickDateButton
           label="Jun Sol"
           dateISO={`${new Date().getFullYear()}-06-21`}
@@ -209,15 +193,13 @@ function QuickDateButton({
 
   return (
     <button
+      type="button"
       onClick={() => onClick(dateISO)}
-      className={`
-        px-2 py-1 text-xs rounded-full transition-colors
-        ${
-          isActive
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted text-muted-foreground hover:bg-muted/80'
-        }
-      `}
+      className={`rounded-full border px-3 py-1.5 text-[0.7rem] font-semibold transition-all duration-200 sm:text-xs ${
+        isActive
+          ? 'border-sky-300/24 bg-sky-400/14 text-sky-50 shadow-[0_0_24px_rgba(56,189,248,0.14)]'
+          : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/16 hover:bg-white/[0.07]'
+      }`}
     >
       {label}
     </button>
@@ -235,7 +217,7 @@ export function DateDisplayCompact({ className = '' }: { className?: string }) {
       <span className="text-muted-foreground">Date:</span>
       <span className="font-medium text-foreground">{formatDateDisplay(dateISO)}</span>
       {isToday(dateISO) && (
-        <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded">
+        <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2 py-0.5 text-xs text-emerald-100">
           Today
         </span>
       )}

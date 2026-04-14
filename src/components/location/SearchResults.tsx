@@ -84,26 +84,21 @@ const SearchResultItem = memo(function SearchResultItem({
     <button
       type="button"
       onClick={handleSelect}
-      className="w-full text-left px-2 py-1.5 hover:bg-muted 
-                 focus:bg-muted focus:outline-none
-                 transition-colors group"
+      className="group w-full px-3 py-2 text-left transition-colors hover:bg-white/[0.05] focus:bg-white/[0.05] focus:outline-none"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-foreground truncate">
+          <p className="truncate text-xs text-slate-100">
             {highlightMatch(result.displayName, query)}
           </p>
-          <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+          <p className="mt-0.5 font-mono text-[10px] text-slate-500">
             {result.lat.toFixed(4)}°, {result.lng.toFixed(4)}°
           </p>
         </div>
         <a
           href={result.osmUrl}
           onClick={handleOsmClick}
-          className="flex-shrink-0 text-[10px] text-primary 
-                     hover:text-primary/80
-                     opacity-0 group-hover:opacity-100 transition-opacity
-                     underline focus:opacity-100"
+          className="flex-shrink-0 text-[10px] text-sky-200 opacity-0 underline transition-opacity hover:text-white group-hover:opacity-100 focus:opacity-100"
           title="Verify on OpenStreetMap"
         >
           OSM ↗
@@ -118,11 +113,11 @@ const SearchResultItem = memo(function SearchResultItem({
  */
 function LoadingSkeleton() {
   return (
-    <div className="p-2 space-y-2">
+    <div className="space-y-2 p-3">
       {[1, 2, 3].map((i) => (
         <div key={i} className="animate-pulse space-y-1">
-          <div className="h-3 bg-muted rounded w-3/4" />
-          <div className="h-2 bg-muted rounded w-1/3" />
+          <div className="h-3 w-3/4 rounded bg-white/[0.08]" />
+          <div className="h-2 w-1/3 rounded bg-white/[0.06]" />
         </div>
       ))}
     </div>
@@ -134,9 +129,9 @@ function LoadingSkeleton() {
  */
 function NoResults({ query }: { query: string }) {
   return (
-    <div className="p-3 text-center">
-      <p className="text-xs text-muted-foreground">No results found for &ldquo;{query}&rdquo;</p>
-      <p className="text-[10px] text-muted-foreground/80 mt-0.5">Try a different search term</p>
+    <div className="p-4 text-center">
+      <p className="text-xs text-slate-300">No results found for &ldquo;{query}&rdquo;</p>
+      <p className="mt-0.5 text-[10px] text-slate-500">Try a different search term</p>
     </div>
   );
 }
@@ -161,9 +156,7 @@ export function SearchResults({
   if (isLoading) {
     return (
       <div
-        className={`absolute top-full left-0 right-0 mt-1 bg-card 
-                    rounded-lg shadow-lg border border-border 
-                    z-50 overflow-hidden ${className}`}
+        className={`absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-[22px] border border-white/10 bg-[rgba(5,10,20,0.94)] shadow-[0_24px_60px_rgba(2,6,23,0.45)] backdrop-blur-2xl ${className}`}
       >
         <LoadingSkeleton />
       </div>
@@ -174,9 +167,7 @@ export function SearchResults({
   if (results.length === 0) {
     return (
       <div
-        className={`absolute top-full left-0 right-0 mt-1 bg-card 
-                    rounded-lg shadow-lg border border-border 
-                    z-50 ${className}`}
+        className={`absolute left-0 right-0 top-full z-50 mt-2 rounded-[22px] border border-white/10 bg-[rgba(5,10,20,0.94)] shadow-[0_24px_60px_rgba(2,6,23,0.45)] backdrop-blur-2xl ${className}`}
       >
         <NoResults query={query} />
       </div>
@@ -186,9 +177,7 @@ export function SearchResults({
   // Show results
   return (
     <div
-      className={`absolute top-full left-0 right-0 mt-1 bg-card 
-                  rounded-lg shadow-lg border border-border 
-                  z-50 overflow-hidden max-h-64 overflow-y-auto ${className}`}
+      className={`absolute left-0 right-0 top-full z-50 mt-2 max-h-64 overflow-y-auto overflow-hidden rounded-[22px] border border-white/10 bg-[rgba(5,10,20,0.94)] shadow-[0_24px_60px_rgba(2,6,23,0.45)] backdrop-blur-2xl ${className}`}
       role="listbox"
       aria-label="Search results"
     >
@@ -201,7 +190,7 @@ export function SearchResults({
           onOsmClick={onOsmClick}
         />
       ))}
-      <div className="px-3 py-2 text-xs text-muted-foreground border-t border-border">
+      <div className="border-t border-white/10 px-3 py-2 text-xs text-slate-500">
         Data from OpenStreetMap contributors
       </div>
     </div>

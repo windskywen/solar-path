@@ -24,13 +24,13 @@ import type { HourlySolarPosition, DaylightState } from '@/types/solar';
 
 // Colors matching the app's design system
 const COLORS = {
-  day: '#fbbf24', // amber-400
-  golden: '#f59e0b', // amber-500
-  night: '#1e293b', // slate-800
-  selected: '#3b82f6', // blue-500
-  grid: '#e2e8f0', // slate-200
-  axis: '#94a3b8', // slate-400
-  horizon: '#ef4444', // red-500
+  day: '#fbbf24',
+  golden: '#f59e0b',
+  night: '#0f172a',
+  selected: '#7dd3fc',
+  grid: 'rgba(148, 163, 184, 0.16)',
+  axis: '#94a3b8',
+  horizon: '#fb7185',
 };
 
 interface ChartDataPoint {
@@ -87,12 +87,12 @@ function AltitudeTooltip({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-3">
-      <p className="font-semibold text-slate-900 dark:text-white">{data.label}</p>
-      <p className="text-sm text-slate-600 dark:text-slate-400">
+    <div className="rounded-2xl border border-white/10 bg-[rgba(5,10,20,0.94)] p-3 shadow-[0_20px_50px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+      <p className="font-semibold text-white">{data.label}</p>
+      <p className="text-sm text-slate-300">
         Altitude: <span className="font-mono">{data.altitude.toFixed(1)}°</span>
       </p>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+      <p className="mt-1 text-xs text-slate-500">
         {stateLabels[data.daylightState]}
       </p>
     </div>
@@ -162,11 +162,12 @@ export function AltitudeChart({
         >
           <defs>
             <linearGradient id="altitudeGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={COLORS.day} stopOpacity={0.8} />
-              <stop offset="95%" stopColor={COLORS.day} stopOpacity={0.2} />
+              <stop offset="5%" stopColor={COLORS.day} stopOpacity={0.82} />
+              <stop offset="55%" stopColor={COLORS.golden} stopOpacity={0.28} />
+              <stop offset="95%" stopColor={COLORS.day} stopOpacity={0.06} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} />
+          <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} vertical={false} />
           <XAxis
             dataKey="label"
             tick={{ fontSize: 10, fill: COLORS.axis }}
@@ -202,7 +203,7 @@ export function AltitudeChart({
             activeDot={{
               r: 6,
               fill: selectedHour !== null ? COLORS.selected : COLORS.day,
-              stroke: '#fff',
+              stroke: '#0f172a',
               strokeWidth: 2,
             }}
           />

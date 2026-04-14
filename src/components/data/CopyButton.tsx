@@ -53,9 +53,9 @@ export function CopyButton({
   };
 
   const stateClasses = {
-    idle: 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700',
-    success: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20',
-    error: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20',
+    idle: 'border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.06] hover:text-sky-100',
+    success: 'border-emerald-300/18 bg-emerald-400/12 text-emerald-100',
+    error: 'border-rose-300/18 bg-rose-400/12 text-rose-100',
   };
 
   return (
@@ -63,7 +63,7 @@ export function CopyButton({
       type="button"
       onClick={handleCopy}
       className={`
-        inline-flex items-center gap-1 rounded transition-colors
+        inline-flex items-center gap-1 rounded-full border backdrop-blur-sm transition-all duration-200
         ${sizeClasses[size]}
         ${stateClasses[copyState]}
         ${className}
