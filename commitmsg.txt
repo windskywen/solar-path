@@ -1,0 +1,17 @@
+chore(seo): improve homepage SEO, add focused landing pages and structured data
+
+- Update homepage H1 and meta description to target primary search intent (Sun Path Map & Solar Tracker).
+- Add three intent-focused landing pages:
+  - /sunrise-sunset-calculator
+  - /golden-hour-calculator
+  - /solar-azimuth-altitude
+  Each includes metadata, schema.org JSON-LD, and internal links from the homepage.
+- Add src/lib/structured-data.ts helpers and IntentLandingPage component for consistent landing UI.
+- Update sitemap.xml entries and SITE_TITLE constant.
+- Add unit tests for structured-data builders.
+
+Validation:
+- Ran lint, typecheck, unit tests, and production build successfully.
+- Playwright e2e surfaced pre-existing UI test failures unrelated to these changes (stale selectors/expected text).
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

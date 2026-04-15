@@ -3,7 +3,7 @@ export const SITE_DESCRIPTION =
   'Interactive sun path map for any location and date. Explore solar altitude, azimuth, sunrise, sunset, daylight duration, and 3D solar visualizations.';
 export const SITE_CONTACT_EMAIL = 'solarpathtracker@gmail.com';
 export const SITE_LOCALE = 'en_US';
-export const SITE_TITLE = 'Sun Path Map, Azimuth & Altitude Visualizer';
+export const SITE_TITLE = 'Sun Path Map & Solar Tracker';
 export const SITE_KEYWORDS = [
   'solar path tracker',
   'sun path map',

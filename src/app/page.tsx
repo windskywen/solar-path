@@ -1,13 +1,17 @@
 import type { Metadata } from 'next';
 import HomePage from '@/components/home/HomePage';
 import { buildPageMetadata } from '@/lib/metadata';
+import {
+  buildOrganizationStructuredData,
+  buildWebPageStructuredData,
+} from '@/lib/structured-data';
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, absoluteUrl } from '@/lib/site';
 
 const homeDescription =
-  'Explore the Sun path for any location and date with a live solar map, azimuth and altitude charts, sunrise and sunset data, and immersive 3D daylight visualizations.';
+  'Track sunrise, sunset, golden hour, solar azimuth, altitude, and 3D daylight views for any location with a live sun path map.';
 
 export const metadata: Metadata = buildPageMetadata({
-  title: 'Sun Path Map, Azimuth & Altitude Visualizer',
+  title: 'Sun Path Map & Solar Tracker',
   description: homeDescription,
   path: '/',
   keywords: [
@@ -19,6 +23,7 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 const homeStructuredData = [
+  buildOrganizationStructuredData(),
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -45,11 +50,22 @@ const homeStructuredData = [
       'Interactive sun path map',
       'Solar azimuth and altitude charts',
       'Sunrise and sunset calculations',
+      'Golden hour planning',
       '3D solar visualization',
       'Location search and coordinate lookup',
     ],
     image: absoluteUrl('/opengraph-image'),
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: absoluteUrl('/'),
+    },
   },
+  buildWebPageStructuredData({
+    path: '/',
+    title: 'Sun Path Map & Solar Tracker',
+    description: homeDescription,
+  }),
 ];
 
 export default function Page() {

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Suspense, useEffect } from 'react';
 import { MapPanel } from '@/components/map/MapPanel';
 import { SolarRaysLayer, SolarRaysLegend } from '@/components/map/SolarRaysLayer';
@@ -137,6 +138,23 @@ export default function HomePage() {
     'text-[0.64rem] font-semibold uppercase tracking-[0.32em] text-[var(--solar-kicker)]';
   const capsule =
     'inline-flex items-center gap-2 rounded-full border [border-color:var(--solar-pill-border)] [background:var(--solar-pill-bg)] px-3 py-1.5 text-[0.68rem] font-medium text-[var(--solar-pill-text)] backdrop-blur-xl';
+  const focusedToolLinks = [
+    {
+      href: '/sunrise-sunset-calculator',
+      label: 'Sunrise & Sunset Calculator',
+      description: 'Check first light, last light, and daylight length with the map and hourly solar timeline.',
+    },
+    {
+      href: '/golden-hour-calculator',
+      label: 'Golden Hour Calculator',
+      description: 'Plan soft-light shooting windows with golden-hour timing, sun direction, and 3D daylight context.',
+    },
+    {
+      href: '/solar-azimuth-altitude',
+      label: 'Solar Azimuth & Altitude Calculator',
+      description: 'Measure solar angles for facade studies, outdoor comfort, and solar panel planning.',
+    },
+  ] as const;
 
   return (
     <>
@@ -156,9 +174,9 @@ export default function HomePage() {
               <div className="min-w-0 space-y-1">
                 <p className={eyebrow}>Solar mission control</p>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-lg font-semibold tracking-[-0.02em] text-[var(--solar-text-strong)] sm:text-xl lg:text-2xl">
+                  <p className="text-lg font-semibold tracking-[-0.02em] text-[var(--solar-text-strong)] sm:text-xl lg:text-2xl">
                     Solar Path Tracker
-                  </h1>
+                  </p>
                   <span className="hidden h-1.5 w-1.5 rounded-full bg-sky-300/70 sm:inline-block" />
                   <p className="text-sm text-[var(--solar-text)]">
                     Visualize the sun&apos;s journey across the sky
@@ -195,12 +213,12 @@ export default function HomePage() {
               <div className="relative space-y-5">
                 <p className={eyebrow}>Cinematic daylight atlas</p>
                 <div className="space-y-3">
-                  <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--solar-text-strong)] sm:text-4xl lg:text-[3.75rem] lg:leading-[0.95]">
-                    Track the sun with a live atmospheric workspace.
-                  </h2>
+                  <h1 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--solar-text-strong)] sm:text-4xl lg:text-[3.75rem] lg:leading-[0.95]">
+                    Sun path map and solar tracker for any location.
+                  </h1>
                   <p className="max-w-2xl text-sm leading-6 text-[var(--solar-text)] sm:text-base">
-                    Search a place, lock a date, and inspect solar bearings, altitude, and
-                    daylight rhythm from one dark-glass control deck tuned to the 3D experience.
+                    Search a place, pick a date, and read sunrise, sunset, golden hour, solar
+                    azimuth, altitude, and 3D daylight views from one live map.
                   </p>
                 </div>
 
@@ -216,7 +234,7 @@ export default function HomePage() {
                 </div>
 
                 <p className="max-w-xl text-xs uppercase tracking-[0.28em] text-[var(--solar-text-faint)] sm:text-[0.7rem]">
-                  Search wider. Compare faster. Keep the map front and center.
+                  Compare daylight. Plan faster. Keep the map front and center.
                 </p>
               </div>
             </div>
@@ -501,20 +519,37 @@ export default function HomePage() {
                   </ul>
                 </section>
 
-                <section className={`${insetPanel} p-4 sm:p-5`} aria-labelledby="data-method-heading">
-                  <p className={eyebrow}>Data context</p>
+                <section className={`${insetPanel} p-4 sm:p-5`} aria-labelledby="focused-tools-heading">
+                  <p className={eyebrow}>Focused tools</p>
                   <h2
-                    id="data-method-heading"
+                    id="focused-tools-heading"
                     className="mt-2 text-xl font-semibold tracking-[-0.02em] text-[var(--solar-text-strong)]"
                   >
-                    Read the results with confidence
+                    Explore focused solar calculators
                   </h2>
                   <p className="mt-4 text-sm leading-6 text-[var(--solar-text)]">
-                    The map stays front and center for fast exploration, while the supporting
-                    panels explain sunrise, sunset, selected-hour details, and the full-day solar
-                    curve. Together, they make the topic easier for people and search crawlers to
-                    understand without getting in the way of the core interactive experience.
+                    Jump into dedicated pages for sunrise and sunset, golden hour, and solar angle
+                    planning, then return to the live map when you need the full picture.
                   </p>
+                  <div className="mt-4 grid gap-3">
+                    {focusedToolLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className="rounded-[20px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-4 [box-shadow:var(--solar-surface-inset-shadow)] transition-colors hover:border-sky-300/35 hover:text-[var(--solar-text-strong)]"
+                      >
+                        <p className="text-sm font-semibold text-[var(--solar-text-strong)]">
+                          {link.label}
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-[var(--solar-text)]">
+                          {link.description}
+                        </p>
+                        <span className="mt-3 inline-flex text-xs font-medium text-[var(--solar-accent)]">
+                          Open page -&gt;
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
                 </section>
               </div>
             </div>
