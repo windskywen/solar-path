@@ -46,20 +46,20 @@ export function ChartsPanel({
 
   return (
     <div
-      className={`overflow-hidden rounded-[24px] border border-white/10 bg-slate-950/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ${className}`}
+      className={`overflow-hidden rounded-[24px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] [box-shadow:var(--solar-surface-inset-shadow)] ${className}`}
     >
-      <div className="border-b border-white/10 px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-4">
+      <div className="border-b [border-color:var(--solar-divider)] px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-sky-200/72">
+            <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-kicker)]">
               Curve deck
             </p>
-            <p className="mt-1 text-sm text-slate-300">
+            <p className="mt-1 text-sm text-[var(--solar-text)]">
               Compare the sun&apos;s height and compass path across the day.
             </p>
           </div>
 
-          <div className="flex gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
+          <div className="flex gap-1 rounded-full border [border-color:var(--solar-pill-border)] [background:var(--solar-pill-bg)] p-1">
             {viewButtons.map((btn) => (
               <button
                 key={btn.value}
@@ -67,8 +67,8 @@ export function ChartsPanel({
                 onClick={() => setView(btn.value)}
                 className={`flex-1 rounded-full px-3 py-1.5 text-[0.68rem] font-semibold transition-all duration-200 sm:flex-none sm:text-xs ${
                   view === btn.value
-                    ? 'bg-sky-400/14 text-sky-50 shadow-[0_0_24px_rgba(56,189,248,0.12)]'
-                    : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-200'
+                    ? '[background:var(--solar-accent-soft)] text-[var(--solar-text-strong)] shadow-[0_0_24px_rgba(56,189,248,0.12)]'
+                    : 'text-[var(--solar-text-muted)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-text-strong)]'
                 }`}
               >
                 {btn.label}
@@ -137,8 +137,8 @@ function ChartSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-4">
-      <p className="mb-3 text-center text-[0.72rem] leading-5 text-slate-400 sm:text-xs">
+    <div className="rounded-[22px] border [border-color:var(--solar-chart-card-border)] [background:var(--solar-chart-card-bg)] p-3 [box-shadow:var(--solar-surface-inset-shadow)] sm:p-4">
+      <p className="mb-3 text-center text-[0.72rem] leading-5 text-[var(--solar-text-muted)] sm:text-xs">
         {description}
       </p>
       {children}

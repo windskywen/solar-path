@@ -186,11 +186,11 @@ export function LocationInput({ className = '' }: LocationInputProps) {
     <div className={`space-y-3 ${className}`}>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.32fr)_minmax(0,0.88fr)] md:gap-4">
         {/* Primary: Search + GPS */}
-        <div className="rounded-[22px] border border-sky-300/10 bg-slate-950/42 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-4">
-          <label className="mb-2 block text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-slate-400">
+        <div className="rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-3 [box-shadow:var(--solar-surface-inset-shadow)] sm:p-4">
+          <label className="mb-2 block text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-text-muted)]">
             Search Location
           </label>
-          <p className="mb-3 text-xs text-slate-500">
+          <p className="mb-3 text-xs text-[var(--solar-text-faint)]">
             Search by address, district, landmark, or city name.
           </p>
           <div className="flex gap-2">
@@ -208,12 +208,12 @@ export function LocationInput({ className = '' }: LocationInputProps) {
                 aria-autocomplete="list"
                 aria-controls="search-location-results"
                 aria-expanded={isSearchOpen && query.length >= 2}
-                className="h-12 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-3 py-2 pl-10 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all outline-none placeholder:text-slate-500 focus:border-sky-300/35 focus:ring-2 focus:ring-sky-300/20"
+                className="h-12 w-full rounded-2xl border px-3 py-2 pl-10 text-sm text-[var(--solar-text-strong)] [border-color:var(--solar-input-border)] [background:var(--solar-input-bg)] [box-shadow:var(--solar-input-shadow)] transition-all outline-none placeholder:text-[var(--solar-input-placeholder)] focus:[border-color:var(--solar-input-focus-border)] focus:ring-2 focus:ring-[var(--solar-input-focus-ring)]"
                 aria-label="Search for a location"
                 aria-haspopup="listbox"
               />
               <svg
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--solar-input-icon)]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -227,7 +227,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
               </svg>
               {isSearching && (
                 <svg
-                  className="animate-spin absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-300"
+                  className="animate-spin absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--solar-accent)]"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -265,10 +265,10 @@ export function LocationInput({ className = '' }: LocationInputProps) {
               type="button"
               onClick={handleUseGps}
               disabled={isLoading}
-              className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-300/30 hover:bg-sky-400/12 disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label="Use current GPS location"
-              title="Use current GPS location"
-            >
+               className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] disabled:cursor-not-allowed disabled:opacity-50"
+               aria-label="Use current GPS location"
+               title="Use current GPS location"
+             >
               {isLoading ? (
                 <svg
                   className="animate-spin h-5 w-5"
@@ -312,7 +312,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
         </div>
 
         {/* Secondary: Manual Coordinates */}
-        <div className="rounded-[22px] border border-white/10 bg-slate-950/35 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <div className="rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-3 [box-shadow:var(--solar-surface-inset-shadow)]">
           <ManualCoordinates
             initialLat={location?.lat}
             initialLng={location?.lng}
@@ -329,27 +329,27 @@ export function LocationInput({ className = '' }: LocationInputProps) {
 
       {/* Error Messages */}
       {(gpsError || searchError || error) && (
-        <div className="rounded-2xl border border-rose-300/18 bg-rose-500/12 p-3">
-          <p className="text-xs text-rose-100">{gpsError || searchError || error}</p>
+        <div className="rounded-2xl border [border-color:var(--solar-danger-soft-border)] [background:var(--solar-danger-soft-bg)] p-3">
+          <p className="text-xs text-[var(--solar-danger-soft-text)]">{gpsError || searchError || error}</p>
         </div>
       )}
 
       {/* Current Location Display */}
       {location && (
         <div
-          className="rounded-[22px] border border-white/10 bg-white/[0.05] p-3 shadow-[0_16px_40px_rgba(2,6,23,0.16)] backdrop-blur-xl"
+          className="rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] p-3 [box-shadow:var(--solar-surface-shadow)] backdrop-blur-xl"
           data-testid="location-display"
         >
           <div className="flex items-center gap-2">
-            <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-sky-300 shadow-[0_0_12px_rgba(125,211,252,0.9)]" />
+               <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--solar-accent)] shadow-[0_0_12px_rgba(14,165,233,0.45)]" />
             <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="truncate text-xs font-semibold text-white">
-                  {location.name || 'Selected Location'}
-                </p>
-                <p className="font-mono text-[10px] text-slate-400">
-                  {location.lat.toFixed(4)}°, {location.lng.toFixed(4)}°
-                </p>
+                  <p className="truncate text-xs font-semibold text-[var(--solar-text-strong)]">
+                    {location.name || 'Selected Location'}
+                  </p>
+                  <p className="font-mono text-[10px] text-[var(--solar-text-muted)]">
+                    {location.lat.toFixed(4)}°, {location.lng.toFixed(4)}°
+                  </p>
               </div>
               {/* OSM Verification Link */}
               {location.osmUrl && (
@@ -357,7 +357,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
                   href={location.osmUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-slate-400 transition-colors hover:text-sky-100"
+                  className="text-[var(--solar-text-muted)] transition-colors hover:text-[var(--solar-accent)]"
                   title="Verify on OpenStreetMap"
                 >
                   <svg

@@ -190,21 +190,21 @@ export function SolarRaysLegend({ className = '' }: { className?: string }) {
     { color: RAY_COLORS.selected, label: 'Selected' },
   ];
 
-  return (
-    <div
-      className={`rounded-[22px] border border-white/12 bg-[rgba(5,10,20,0.82)] p-3 shadow-[0_18px_40px_rgba(2,6,23,0.34)] backdrop-blur-2xl ${className}`}
-    >
-      <h3 className="mb-2 text-[0.64rem] font-semibold uppercase tracking-[0.24em] text-slate-300">
+    return (
+      <div
+        className={`max-w-[7.2rem] rounded-[18px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-2 [box-shadow:var(--solar-surface-shadow)] backdrop-blur-2xl sm:max-w-none sm:rounded-[22px] sm:p-3 ${className}`}
+      >
+      <h3 className="mb-1.5 text-[0.56rem] font-semibold uppercase tracking-[0.22em] text-[var(--solar-text)] sm:mb-2 sm:text-[0.64rem] sm:tracking-[0.24em]">
         Ray colors
       </h3>
-      <div className="space-y-1.5">
+      <div className="space-y-1 sm:space-y-1.5">
         {items.map((item) => (
-          <div key={item.label} className="flex items-center gap-2">
+          <div key={item.label} className="flex items-center gap-1.5 sm:gap-2">
             <div
-              className="h-1 w-4 rounded-full"
+              className="h-1 w-3 rounded-full sm:w-4"
               style={{ backgroundColor: item.color }}
             />
-            <span className="text-[0.68rem] text-slate-300">
+            <span className="text-[0.62rem] text-[var(--solar-text)] sm:text-[0.68rem]">
               {item.label}
             </span>
           </div>

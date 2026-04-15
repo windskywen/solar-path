@@ -77,18 +77,20 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
   const variantStyles = {
     info: {
       shell:
-        'border-sky-300/18 bg-[linear-gradient(135deg,rgba(56,189,248,0.14),rgba(15,23,42,0.52))]',
-      icon: 'bg-sky-300/14 text-sky-100',
+        '[border-color:var(--solar-insight-info-border)] [background:var(--solar-insight-info-bg)]',
+      icon: '[background:var(--solar-insight-info-icon-bg)] text-[var(--solar-insight-info-icon-text)]',
     },
     warning: {
       shell:
-        'border-amber-300/18 bg-[linear-gradient(135deg,rgba(251,191,36,0.16),rgba(15,23,42,0.52))]',
-      icon: 'bg-amber-300/14 text-amber-100',
+        '[border-color:var(--solar-insight-warning-border)] [background:var(--solar-insight-warning-bg)]',
+      icon:
+        '[background:var(--solar-insight-warning-icon-bg)] text-[var(--solar-insight-warning-icon-text)]',
     },
     highlight: {
       shell:
-        'border-emerald-300/18 bg-[linear-gradient(135deg,rgba(74,222,128,0.16),rgba(15,23,42,0.52))]',
-      icon: 'bg-emerald-300/14 text-emerald-100',
+        '[border-color:var(--solar-insight-highlight-border)] [background:var(--solar-insight-highlight-bg)]',
+      icon:
+        '[background:var(--solar-insight-highlight-icon-bg)] text-[var(--solar-insight-highlight-icon-text)]',
     },
   };
 
@@ -96,17 +98,17 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
     <section aria-labelledby="insights-heading" className={className}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-sky-200/72">
+          <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-kicker)]">
             Insight stream
           </p>
           <h2
             id="insights-heading"
-            className="mt-2 text-lg font-semibold tracking-[-0.02em] text-white sm:text-xl"
+            className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--solar-text-strong)] sm:text-xl"
           >
             Solar insights
           </h2>
         </div>
-        <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[0.68rem] font-medium text-slate-300">
+        <span className="rounded-full border [border-color:var(--solar-pill-border)] [background:var(--solar-pill-bg)] px-3 py-1 text-[0.68rem] font-medium text-[var(--solar-pill-text)]">
           {hasInsights ? `${insights.messages.length} signals` : 'Nominal'}
         </span>
       </div>
@@ -126,7 +128,7 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
               return (
                 <li
                   key={index}
-                  className={`rounded-[22px] border p-3 text-sm text-slate-100 shadow-[0_16px_40px_rgba(2,6,23,0.16)] backdrop-blur-xl sm:p-4 ${tone.shell}`}
+                  className={`rounded-[22px] border p-3 text-sm text-[var(--solar-text-strong)] [box-shadow:var(--solar-surface-shadow)] backdrop-blur-xl sm:p-4 ${tone.shell}`}
                 >
                   <div className="flex items-start gap-3">
                     <span
@@ -136,24 +138,24 @@ export function InsightsPanel({ insights, className = '', compact = false }: Ins
                     >
                       {icon}
                     </span>
-                    <span className="leading-6 text-slate-100/92">{message}</span>
+                    <span className="leading-6 text-[var(--solar-text-strong)]">{message}</span>
                   </div>
                 </li>
               );
             })}
 
             {compact && insights.messages.length > 2 && (
-              <li className="pl-1 text-xs text-slate-400">
+              <li className="pl-1 text-xs text-[var(--solar-text-muted)]">
                 +{insights.messages.length - 2} more insight
                 {insights.messages.length > 3 ? 's' : ''}
               </li>
             )}
           </ul>
         ) : (
-          <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-            <p className="flex items-center gap-3 text-sm text-slate-200" role="status">
+          <div className="rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] p-4 [box-shadow:var(--solar-surface-inset-shadow)]">
+            <p className="flex items-center gap-3 text-sm text-[var(--solar-text)]" role="status">
               <span
-                className="flex h-9 w-9 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-400/10 text-emerald-100"
+                className="flex h-9 w-9 items-center justify-center rounded-2xl border [border-color:var(--solar-success-border)] [background:var(--solar-success-bg)] text-[var(--solar-success-text)]"
                 role="img"
                 aria-hidden="true"
               >

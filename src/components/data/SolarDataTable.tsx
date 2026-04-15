@@ -16,20 +16,20 @@ import type { HourlySolarPosition } from '@/types/solar';
 // Color classes for daylight states
 const STATE_COLORS = {
   night: {
-    text: 'text-slate-400',
-    dot: 'bg-slate-400',
+    text: 'text-[var(--solar-state-night-pill-text)]',
+    dot: 'bg-[var(--solar-state-night-pill-text)]',
   },
   twilight: {
-    text: 'text-violet-200',
-    dot: 'bg-violet-300',
+    text: 'text-violet-500',
+    dot: 'bg-violet-500',
   },
   golden: {
-    text: 'text-amber-200',
-    dot: 'bg-amber-300',
+    text: 'text-[var(--solar-state-golden-pill-text)]',
+    dot: 'bg-[var(--solar-state-golden-pill-text)]',
   },
   day: {
-    text: 'text-sky-100',
-    dot: 'bg-sky-300',
+    text: 'text-[var(--solar-state-day-pill-text)]',
+    dot: 'bg-[var(--solar-state-day-pill-text)]',
   },
 };
 
@@ -91,8 +91,8 @@ export function SolarDataTable({
 
   return (
     <div className={`overflow-hidden ${className}`}>
-      <div className="border-b border-white/10 bg-white/[0.04]">
-        <div className="grid grid-cols-4 gap-2 px-3 py-3 text-[0.64rem] font-semibold uppercase tracking-[0.24em] text-slate-400 sm:px-4">
+      <div className="border-b [border-color:var(--solar-divider)] [background:var(--solar-surface-soft-bg)]">
+        <div className="grid grid-cols-4 gap-2 px-3 py-3 text-[0.64rem] font-semibold uppercase tracking-[0.24em] text-[var(--solar-text-muted)] sm:px-4">
           <div>Time</div>
           <div>Azimuth</div>
           <div>Altitude</div>
@@ -112,13 +112,14 @@ export function SolarDataTable({
               type="button"
               onClick={() => onRowClick?.(position.hour)}
               className={`
-                w-full grid grid-cols-4 gap-2 border-b border-white/8 px-3 py-3 text-left text-xs transition-all duration-200 last:border-b-0 sm:px-4 sm:text-sm
+                w-full grid grid-cols-4 gap-2 border-b px-3 py-3 text-left text-xs transition-all duration-200 last:border-b-0 sm:px-4 sm:text-sm
                 ${
                   isSelected
-                    ? 'bg-sky-400/12 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
-                    : 'text-slate-200 hover:bg-white/[0.04]'
+                    ? '[background:var(--solar-row-selected)] text-[var(--solar-text-strong)] [box-shadow:var(--solar-surface-inset-shadow)]'
+                    : 'text-[var(--solar-text)] hover:bg-[var(--solar-row-hover)]'
                 }
-                ${isBelowHorizon && !isSelected ? 'text-slate-400/70' : ''}
+                [border-color:var(--solar-divider)]
+                ${isBelowHorizon && !isSelected ? 'text-[var(--solar-text-muted)] opacity-80' : ''}
               `}
               aria-selected={isSelected}
               aria-label={`${formatHour(position.hour)}: Azimuth ${position.azimuthDeg.toFixed(
@@ -139,7 +140,7 @@ export function SolarDataTable({
                 <div className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${stateColors.dot}`} />
                 <span
                   className={`hidden truncate text-[10px] capitalize sm:inline sm:text-xs ${
-                    isSelected ? 'text-sky-100' : stateColors.text
+                    isSelected ? 'text-[var(--solar-text-strong)]' : stateColors.text
                   }`}
                 >
                   {position.daylightState}
@@ -151,9 +152,9 @@ export function SolarDataTable({
       </div>
 
       {positions.length > 0 && (
-        <div className="border-t border-white/10 bg-white/[0.04] px-3 py-3 sm:px-4">
-          <div className="flex items-center justify-between gap-3 text-[0.7rem] text-slate-400 sm:text-xs">
-            <span className="font-medium text-slate-300">
+      <div className="border-t [border-color:var(--solar-divider)] [background:var(--solar-surface-soft-bg)] px-3 py-3 sm:px-4">
+          <div className="flex items-center justify-between gap-3 text-[0.7rem] text-[var(--solar-text-muted)] sm:text-xs">
+            <span className="font-medium text-[var(--solar-text)]">
               {positions.filter((p) => p.altitudeDeg > 0).length} hours of daylight
             </span>
             {timezone && (
@@ -193,7 +194,11 @@ export function SolarDataTableCompact({
               onClick={() => onRowClick?.(position.hour)}
               className={`
                 rounded-xl border px-2 py-2 text-center text-xs
-                ${isSelected ? 'border-sky-300/30 bg-sky-400/14 text-sky-50' : 'border-white/10 bg-white/[0.04] text-slate-300'}
+                ${
+                  isSelected
+                    ? '[border-color:var(--solar-input-focus-border)] [background:var(--solar-row-selected)] text-[var(--solar-text-strong)]'
+                    : '[border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] text-[var(--solar-text)]'
+                }
                 ${isBelowHorizon ? 'opacity-55' : ''}
               `}
               title={`${formatHour(position.hour)}: Az ${position.azimuthDeg.toFixed(
