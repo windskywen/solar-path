@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { AdSenseScript } from '@/components/ads/AdSenseScript';
 import { SiteFooter } from '@/components/layout/SiteFooter';
+import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_LOCALE, SITE_NAME, absoluteUrl, getSiteUrl } from '@/lib/site';
 import { Providers } from '@/components/providers/Providers';
 import { buildThemeInitScript, THEME_META_COLORS } from '@/lib/theme/theme';
 import './globals.css';
@@ -18,24 +19,42 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Solar Path Tracker',
-  description:
-    "Visualize the sun's path across the sky for any location and date. See sunrise, sunset, solar altitude, and azimuth.",
-  keywords: [
-    'solar path',
-    'sun position',
-    'sunrise',
-    'sunset',
-    'solar altitude',
-    'azimuth',
-    'astronomy',
-    'solar tracker',
-  ],
-  authors: [{ name: 'Solar Path Tracker' }],
+  metadataBase: getSiteUrl(),
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [...SITE_KEYWORDS],
+  authors: [{ name: SITE_NAME, url: absoluteUrl('/about') }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: 'technology',
+  referrer: 'origin-when-cross-origin',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   openGraph: {
-    title: 'Solar Path Tracker',
-    description: "Visualize the sun's path across the sky for any location and date.",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
     type: 'website',
+    locale: SITE_LOCALE,
+    siteName: SITE_NAME,
+    url: '/',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
   },
 };
 

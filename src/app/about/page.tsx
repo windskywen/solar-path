@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/metadata';
 
-export const metadata: Metadata = {
-  title: 'About Solar Path Tracker',
+export const metadata: Metadata = buildPageMetadata({
+  title: 'About',
   description:
     'Learn why Solar Path Tracker exists, who it helps, and how to contact the project.',
-};
+  path: '/about',
+  keywords: ['about solar path tracker', 'solar daylight planning tool', 'contact solar path tracker'],
+});
 
 const glassPanel =
   'relative overflow-hidden rounded-[30px] border [border-color:var(--solar-glass-border)] [background:var(--solar-glass-bg)] [box-shadow:var(--solar-glass-shadow)] backdrop-blur-2xl';

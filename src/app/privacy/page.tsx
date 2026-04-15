@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/metadata';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Privacy Policy',
   description:
     'Privacy Policy for Solar Path Tracker, including location handling, cookies, analytics, and Google AdSense disclosures.',
-};
+  path: '/privacy',
+  keywords: ['solar path tracker privacy policy', 'adsense privacy policy', 'location data privacy'],
+});
 
 const glassPanel =
   'relative overflow-hidden rounded-[30px] border [border-color:var(--solar-glass-border)] [background:var(--solar-glass-bg)] [box-shadow:var(--solar-glass-shadow)] backdrop-blur-2xl';
