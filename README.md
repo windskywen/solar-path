@@ -55,9 +55,11 @@ A web application that visualizes the sun's path across the sky for any location
    ```bash
    NEXT_PUBLIC_ADSENSE_ENABLED=false
    NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-0000000000000000
-   NEXT_PUBLIC_ADSENSE_SIDEBAR_SLOT_ID=0000000000
+   NEXT_PUBLIC_ADSENSE_SIDEBAR_SLOT_ID=
    ```
-   Leave `NEXT_PUBLIC_ADSENSE_ENABLED=false` until you have a real AdSense publisher ID and slot ID.
+   Set `NEXT_PUBLIC_ADSENSE_ENABLED=true` and a real `NEXT_PUBLIC_ADSENSE_CLIENT_ID` to enable site-wide Auto ads. `NEXT_PUBLIC_ADSENSE_SIDEBAR_SLOT_ID` is only needed if you also want to render the manual sidebar ad unit.
+
+   The app loads the AdSense script from the root layout and serves `public/ads.txt` from the site root, so both should be deployed together.
 
 6. Start the development server:
    ```bash
