@@ -9,6 +9,7 @@ import { SunEventsPanel, InsightsPanel } from '@/components/insights';
 import { SolarDataTable, MetricsPanel } from '@/components/data';
 import { ChartsPanel } from '@/components/charts';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
+import { SidebarAdPanel } from '@/components/ads/SidebarAdPanel';
 import { useSolarData, useSolarPositionForHour } from '@/hooks/useSolarData';
 import { useIpGeo } from '@/hooks/useIpGeo';
 import {
@@ -138,7 +139,7 @@ export default function HomePage() {
     'inline-flex items-center gap-2 rounded-full border [border-color:var(--solar-pill-border)] [background:var(--solar-pill-bg)] px-3 py-1.5 text-[0.68rem] font-medium text-[var(--solar-pill-text)] backdrop-blur-xl';
 
   return (
-    <div className="solar-main-shell relative min-h-screen">
+    <>
       {/* Skip Links for keyboard navigation */}
       <SkipLinks
         links={[
@@ -418,25 +419,108 @@ export default function HomePage() {
                   )}
                 </div>
               </section>
+
+              <SidebarAdPanel className={railPanel} />
             </Suspense>
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="mt-4 pb-2">
-          <div className="rounded-[24px] border [border-color:var(--solar-glass-border)] [background:var(--solar-surface-soft-bg)] px-4 py-3 text-center text-[11px] text-[var(--solar-text-muted)] backdrop-blur-xl">
-            Solar calculations powered by{' '}
-            <a
-              href="https://github.com/mourner/suncalc"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[var(--solar-accent)] underline decoration-sky-200/40 underline-offset-4 transition-colors hover:text-[var(--solar-text-strong)]"
-            >
-              SunCalc
-            </a>
+        <section className="mt-4 pb-2" aria-labelledby="how-it-works-heading">
+          <div className={`${glassPanel} px-4 py-5 sm:px-6 sm:py-6`}>
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
+              <section className={`${insetPanel} p-4 sm:p-5`} aria-labelledby="how-it-works-heading">
+                <p className={eyebrow}>How it works</p>
+                <h2
+                  id="how-it-works-heading"
+                  className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]"
+                >
+                  How it works
+                </h2>
+                <div className="mt-4 space-y-4 text-sm leading-6 text-[var(--solar-text)] sm:text-base">
+                  <p>
+                    Use Solar Path Tracker to read azimuth, altitude, and daylight behavior before
+                    you build, buy, film, or install.
+                  </p>
+                  <p>
+                    Start by searching a place, using your device&apos;s GPS, or entering manual
+                    coordinates. Solar Path Tracker then computes the Sun&apos;s hourly position for
+                    the selected date so you can read the daylight pattern on the live map, in the
+                    charts, and inside the Hourly breakdown.
+                  </p>
+                  <p>
+                    <strong className="text-[var(--solar-text-strong)]">Azimuth</strong> describes
+                    the compass direction of the Sun, which is useful when you want to compare east
+                    light, south exposure, or harsh west-facing afternoon conditions.{' '}
+                    <strong className="text-[var(--solar-text-strong)]">Altitude</strong> measures
+                    how high the Sun sits above the horizon, helping you estimate glare, shadow
+                    length, and seasonal solar intensity.
+                  </p>
+                  <p>
+                    The 3D view and hourly table make it easier to cross-check the same solar data
+                    from two perspectives: a fast visual path for exploration, and a precise set of
+                    values for decision-making. That is especially useful when comparing Golden Hour
+                    timing, winter sun angles, or all-day exposure on a facade, roof, or outdoor
+                    scene.
+                  </p>
+                </div>
+              </section>
+
+              <div className="grid gap-4">
+                <section className={`${insetPanel} p-4 sm:p-5`} aria-labelledby="use-cases-heading">
+                  <p className={eyebrow}>Use cases</p>
+                  <h2
+                    id="use-cases-heading"
+                    className="mt-2 text-xl font-semibold tracking-[-0.02em] text-[var(--solar-text-strong)]"
+                  >
+                    Use cases
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-[var(--solar-text)]">
+                    Who uses Solar Path Tracker to evaluate daylight, Golden Hour, and solar
+                    exposure?
+                  </p>
+                  <ul className="mt-4 space-y-3 text-sm leading-6 text-[var(--solar-text)]">
+                    <li>
+                      <strong className="text-[var(--solar-text-strong)]">Real-estate buyers:</strong>{' '}
+                      evaluate orientation, morning light, and west-sun heat before committing to a
+                      home.
+                    </li>
+                    <li>
+                      <strong className="text-[var(--solar-text-strong)]">Solar panel planning:</strong>{' '}
+                      compare seasonal daylight hours and the best installation angle for a site.
+                    </li>
+                    <li>
+                      <strong className="text-[var(--solar-text-strong)]">Photographers and architects:</strong>{' '}
+                      predict Golden Hour, shadow direction, and facade exposure for schedules and
+                      designs.
+                    </li>
+                    <li>
+                      <strong className="text-[var(--solar-text-strong)]">General daylight research:</strong>{' '}
+                      understand how azimuth and altitude shift across the calendar before a field
+                      visit.
+                    </li>
+                  </ul>
+                </section>
+
+                <section className={`${insetPanel} p-4 sm:p-5`} aria-labelledby="data-method-heading">
+                  <p className={eyebrow}>Data context</p>
+                  <h2
+                    id="data-method-heading"
+                    className="mt-2 text-xl font-semibold tracking-[-0.02em] text-[var(--solar-text-strong)]"
+                  >
+                    Read the results with confidence
+                  </h2>
+                  <p className="mt-4 text-sm leading-6 text-[var(--solar-text)]">
+                    The map stays front and center for fast exploration, while the supporting
+                    panels explain sunrise, sunset, selected-hour details, and the full-day solar
+                    curve. Together, they make the topic easier for people and search crawlers to
+                    understand without getting in the way of the core interactive experience.
+                  </p>
+                </section>
+              </div>
+            </div>
           </div>
-        </footer>
+        </section>
       </div>
-    </div>
+    </>
   );
 }

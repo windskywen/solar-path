@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
+import { AdSenseScript } from '@/components/ads/AdSenseScript';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 import { Providers } from '@/components/providers/Providers';
 import { buildThemeInitScript, THEME_META_COLORS } from '@/lib/theme/theme';
 import './globals.css';
@@ -59,7 +61,13 @@ export default function RootLayout({
             __html: buildThemeInitScript(),
           }}
         />
-        <Providers>{children}</Providers>
+        <AdSenseScript />
+        <Providers>
+          <div className="solar-main-shell relative flex min-h-screen flex-col">
+            <div className="flex-1">{children}</div>
+            <SiteFooter />
+          </div>
+        </Providers>
         <Analytics />
       </body>
     </html>

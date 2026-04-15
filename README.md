@@ -14,6 +14,8 @@ A web application that visualizes the sun's path across the sky for any location
 - **Timezone Support**: Configure timezone for accurate local time calculations
 - **Responsive Design**: Works on desktop and mobile devices
 - **Accessibility**: Keyboard navigation, screen reader support, WCAG 2.1 AA compliant
+- **Trust Pages**: Built-in Privacy Policy and About/Contact routes for review readiness
+- **Manual Ad Slot Support**: Optional, env-gated AdSense placement below the hourly data rail
 
 ## Getting Started
 
@@ -35,17 +37,25 @@ A web application that visualizes the sun's path across the sky for any location
    npm install
    ```
 
-3. Create environment file (optional, for IP geolocation):
+3. Create environment file (optional, for local overrides and AdSense scaffolding):
    ```bash
    cp .env.example .env.local
    ```
 
-4. Start the development server:
+4. Optional AdSense configuration:
+   ```bash
+   NEXT_PUBLIC_ADSENSE_ENABLED=false
+   NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-0000000000000000
+   NEXT_PUBLIC_ADSENSE_SIDEBAR_SLOT_ID=0000000000
+   ```
+   Leave `NEXT_PUBLIC_ADSENSE_ENABLED=false` until you have a real AdSense publisher ID and slot ID.
+
+5. Start the development server:
    ```bash
    npm run dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Available Scripts
 
