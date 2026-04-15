@@ -7,7 +7,7 @@
  * Defaults to today's date and allows selecting any Gregorian date.
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useDateISO, useSolarActions } from '@/store/solar-store';
 import { getTodayISO } from '@/lib/utils/timezone';
 
@@ -48,6 +48,7 @@ function isToday(dateISO: string): boolean {
 export function DatePicker({ className = '', onChange }: DatePickerProps) {
   const dateISO = useDateISO();
   const { setDateISO } = useSolarActions();
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   // Calculate relative dates
   const today = useMemo(() => getTodayISO(), []);
@@ -85,6 +86,19 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
     onChange?.(newDate);
   }, [dateISO, setDateISO, onChange]);
 
+  const handleOpenPicker = useCallback(() => {
+    const input = dateInputRef.current;
+    if (!input) return;
+
+    input.focus({ preventScroll: true });
+    if (typeof input.showPicker === 'function') {
+      input.showPicker();
+      return;
+    }
+
+    input.click();
+  }, []);
+
   const iconButtonClass =
     'flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-950/45 text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-300/30 hover:bg-sky-400/10';
 
@@ -105,12 +119,30 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
 
         <div className="relative flex-1">
           <input
+            ref={dateInputRef}
             type="date"
             value={dateISO}
             onChange={handleDateChange}
-            className="h-11 w-full rounded-2xl border border-white/10 bg-slate-950/45 px-4 text-center text-sm font-semibold tracking-[0.02em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] outline-none transition-all focus:border-sky-300/35 focus:ring-2 focus:ring-sky-300/20 sm:text-base"
+            className="solar-date-input h-11 w-full rounded-2xl border border-white/10 bg-slate-950/45 px-4 pr-12 text-center text-sm font-semibold tracking-[0.02em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] outline-none transition-all focus:border-sky-300/35 focus:ring-2 focus:ring-sky-300/20 sm:text-base"
             aria-label="Select date"
           />
+          <button
+            type="button"
+            onClick={handleOpenPicker}
+            className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-sky-100/90 transition-colors hover:bg-sky-400/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/30"
+            aria-label="Open calendar"
+          >
+            <svg
+              className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" strokeWidth="1.75" />
+              <path strokeWidth="1.75" strokeLinecap="round" d="M8 2v4M16 2v4M3 10h18" />
+            </svg>
+          </button>
         </div>
 
         <button

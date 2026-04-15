@@ -207,6 +207,15 @@ body {
     linear-gradient(180deg, #09111d 0%, #03060c 100%);
 }
 
+.solar-main-shell .solar-date-input {
+  color-scheme: dark;
+}
+
+.solar-main-shell .solar-date-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+}
+
 .solar-main-shell .maplibregl-ctrl-top-right {
   top: 1rem;
   right: 1rem;
@@ -301,13 +310,17 @@ body {
 
 @media (max-width: 640px) {
   .solar-main-shell .maplibregl-ctrl-top-right {
-    top: 0.85rem;
-    right: 0.85rem;
+    top: 0.65rem;
+    right: 0.65rem;
+  }
+
+  .solar-main-shell .maplibregl-ctrl-group {
+    border-radius: 15px;
   }
 
   .solar-main-shell .maplibregl-ctrl button {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.2rem;
+    height: 2.2rem;
   }
 
   .solar-main-shell .maplibregl-ctrl-attrib {

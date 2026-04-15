@@ -166,7 +166,7 @@ export function SearchResults({
   if (isLoading) {
     return (
       <div
-        className={`absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-[22px] border border-sky-300/12 bg-[linear-gradient(180deg,rgba(8,16,30,0.98),rgba(4,8,18,0.96))] shadow-[0_24px_60px_rgba(2,6,23,0.52)] backdrop-blur-2xl ${className}`}
+        className={`absolute left-0 right-0 top-full z-[80] mt-2 overflow-hidden rounded-[22px] border border-sky-300/12 bg-[linear-gradient(180deg,rgba(8,16,30,0.98),rgba(4,8,18,0.96))] shadow-[0_24px_60px_rgba(2,6,23,0.52)] backdrop-blur-2xl ${className}`}
       >
         <LoadingSkeleton />
       </div>
@@ -177,7 +177,7 @@ export function SearchResults({
   if (results.length === 0) {
     return (
       <div
-        className={`absolute left-0 right-0 top-full z-50 mt-2 rounded-[22px] border border-sky-300/12 bg-[linear-gradient(180deg,rgba(8,16,30,0.98),rgba(4,8,18,0.96))] shadow-[0_24px_60px_rgba(2,6,23,0.52)] backdrop-blur-2xl ${className}`}
+        className={`absolute left-0 right-0 top-full z-[80] mt-2 rounded-[22px] border border-sky-300/12 bg-[linear-gradient(180deg,rgba(8,16,30,0.98),rgba(4,8,18,0.96))] shadow-[0_24px_60px_rgba(2,6,23,0.52)] backdrop-blur-2xl ${className}`}
       >
         <NoResults query={query} />
       </div>
@@ -188,7 +188,7 @@ export function SearchResults({
   return (
     <div
       id={listboxId}
-      className={`absolute left-0 right-0 top-full z-50 mt-2 max-h-72 overflow-y-auto overflow-hidden rounded-[22px] border border-sky-300/12 bg-[linear-gradient(180deg,rgba(8,16,30,0.98),rgba(4,8,18,0.96))] shadow-[0_24px_60px_rgba(2,6,23,0.52)] backdrop-blur-2xl ${className}`}
+      className={`absolute left-0 right-0 top-full z-[80] mt-2 max-h-72 overflow-y-auto overflow-hidden rounded-[22px] border border-sky-300/12 bg-[linear-gradient(180deg,rgba(8,16,30,0.98),rgba(4,8,18,0.96))] shadow-[0_24px_60px_rgba(2,6,23,0.52)] backdrop-blur-2xl ${className}`}
       role="listbox"
       aria-label="Search results"
     >

@@ -109,7 +109,6 @@ export default function HomePage() {
 
   const displayDate = formatDisplayDate(dateISO);
   const displayTimezone = timezone.replace('_', ' ');
-  const locationName = location?.name || 'No location selected';
   const locationSource =
     location?.source === 'gps'
       ? 'GPS lock'
@@ -135,8 +134,6 @@ export default function HomePage() {
   const eyebrow = 'text-[0.64rem] font-semibold uppercase tracking-[0.32em] text-sky-200/72';
   const capsule =
     'inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[0.68rem] font-medium text-slate-200 backdrop-blur-xl';
-  const statCard =
-    'rounded-[22px] border border-white/10 bg-slate-950/40 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]';
 
   return (
     <div className="solar-main-shell relative min-h-screen">
@@ -186,75 +183,42 @@ export default function HomePage() {
 
         {/* Hero + controls */}
         <section className="pb-4 sm:pb-6">
-          <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+          <div className="grid gap-4 xl:grid-cols-[minmax(300px,0.68fr)_minmax(0,1.32fr)]">
             <div className={`${glassPanel} px-4 py-5 sm:px-6 sm:py-6`}>
               <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.22),transparent_48%),radial-gradient(circle_at_top_right,rgba(250,204,21,0.14),transparent_38%)]" />
 
-              <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
-                <div className="space-y-5">
-                  <p className={eyebrow}>Cinematic daylight atlas</p>
-                  <div className="space-y-3">
-                    <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl lg:text-[3.75rem] lg:leading-[0.95]">
-                      Track the sun with a live atmospheric workspace.
-                    </h2>
-                    <p className="max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-                      Search a place, lock a date, and inspect solar bearings, altitude, and
-                      daylight rhythm from one dark-glass control deck tuned to the 3D experience.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2.5">
-                    <span className={capsule}>
-                      <span className="text-slate-400">Location</span>
-                      <span>{locationSource}</span>
-                    </span>
-                    <span className={capsule}>
-                      <span className="text-slate-400">Daylight</span>
-                      <span>{daylightSummary}</span>
-                    </span>
-                  </div>
+              <div className="relative space-y-5">
+                <p className={eyebrow}>Cinematic daylight atlas</p>
+                <div className="space-y-3">
+                  <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl lg:text-[3.75rem] lg:leading-[0.95]">
+                    Track the sun with a live atmospheric workspace.
+                  </h2>
+                  <p className="max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
+                    Search a place, lock a date, and inspect solar bearings, altitude, and
+                    daylight rhythm from one dark-glass control deck tuned to the 3D experience.
+                  </p>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                  <div className={statCard}>
-                    <p className={eyebrow}>Current place</p>
-                    <p className="mt-2 truncate text-base font-semibold text-white">{locationName}</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {location
-                        ? `${location.lat.toFixed(3)}°, ${location.lng.toFixed(3)}°`
-                        : 'Search, paste coordinates, or use GPS'}
-                    </p>
-                  </div>
-
-                  <div className={statCard}>
-                    <p className={eyebrow}>Selected focus</p>
-                    <p className="mt-2 text-base font-semibold text-white">
-                      {selectedPosition ? selectedPosition.localTimeLabel : 'No hour pinned'}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {selectedPosition
-                        ? `${selectedPosition.azimuthDeg.toFixed(0)}° azimuth · ${selectedPosition.altitudeDeg.toFixed(1)}° altitude`
-                        : 'Tap the map or hourly rail to inspect a solar moment'}
-                    </p>
-                  </div>
-
-                  <div className={statCard}>
-                    <p className={eyebrow}>Solar profile</p>
-                    <p className="mt-2 text-base font-semibold text-white">{displayDate}</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {solarData?.events?.dayLengthHours !== undefined &&
-                      solarData?.events?.dayLengthHours !== null
-                        ? `${Math.round((solarData.events.dayLengthHours / 24) * 100)}% daylight coverage`
-                        : 'Waiting for the daily sun events'}
-                    </p>
-                  </div>
+                <div className="flex flex-wrap gap-2.5">
+                  <span className={capsule}>
+                    <span className="text-slate-400">Location</span>
+                    <span>{locationSource}</span>
+                  </span>
+                  <span className={capsule}>
+                    <span className="text-slate-400">Daylight</span>
+                    <span>{daylightSummary}</span>
+                  </span>
                 </div>
+
+                <p className="max-w-xl text-xs uppercase tracking-[0.28em] text-slate-500 sm:text-[0.7rem]">
+                  Search wider. Compare faster. Keep the map front and center.
+                </p>
               </div>
             </div>
 
-            <div className={`${glassPanel} px-4 py-4 sm:px-5 sm:py-5`}>
+            <div className={`${glassPanel} overflow-visible px-4 py-4 sm:px-5 sm:py-5 lg:px-6`}>
               <div className="grid gap-4">
-                <div className={`${insetPanel} p-4 sm:p-5`}>
+                <div className={`${insetPanel} relative z-20 p-4 sm:p-5`}>
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <div>
                       <p className={eyebrow}>Location studio</p>
@@ -269,7 +233,7 @@ export default function HomePage() {
                   <LocationInput className="!space-y-3" />
                 </div>
 
-                <div className={`${insetPanel} p-4 sm:p-5`}>
+                <div className={`${insetPanel} relative z-10 p-4 sm:p-5`}>
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <div>
                       <p className={eyebrow}>Temporal controls</p>
@@ -337,7 +301,7 @@ export default function HomePage() {
                     />
                   )}
                 </MapPanel>
-                <SolarRaysLegend className="absolute bottom-3 left-3 z-10 sm:bottom-5 sm:left-5" />
+                <SolarRaysLegend className="absolute bottom-2 left-2 z-10 sm:bottom-5 sm:left-5" />
               </Suspense>
             </div>
           </section>
