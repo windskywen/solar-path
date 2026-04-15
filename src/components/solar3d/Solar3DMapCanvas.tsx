@@ -150,9 +150,9 @@ function WebGLFallback({ viewData }: { viewData: Solar3DViewData }) {
 
   if (isEmpty) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-[#040611] p-6 sm:p-8">
-        <div className="max-w-lg rounded-[30px] border border-white/10 bg-[#071022]/76 px-6 py-7 text-center shadow-[0_32px_100px_rgba(2,6,23,0.48)] backdrop-blur-xl">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-slate-200">
+      <div className="flex h-full w-full items-center justify-center [background:var(--solar-3d-root-bg)] p-6 sm:p-8">
+        <div className="max-w-lg rounded-[30px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-7 text-center [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] text-[var(--solar-text)]">
             <svg
               className="h-8 w-8"
               xmlns="http://www.w3.org/2000/svg"
@@ -168,14 +168,14 @@ function WebGLFallback({ viewData }: { viewData: Solar3DViewData }) {
               />
             </svg>
           </div>
-          <p className="mt-4 text-[0.65rem] font-medium uppercase tracking-[0.32em] text-slate-400/70">
+          <p className="mt-4 text-[0.65rem] font-medium uppercase tracking-[0.32em] text-[var(--solar-text-faint)]">
             Polar night
           </p>
-          <p className="mt-2 text-lg text-slate-100">Sun does not rise on this date</p>
-          <p className="mt-2 text-sm leading-6 text-slate-300/80">
+          <p className="mt-2 text-lg text-[var(--solar-text-strong)]">Sun does not rise on this date</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--solar-text)]">
             The viewer is centered on {locationLabel} for {snapshot.dateISO}.
           </p>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-[var(--solar-text-muted)]">
             High-latitude locations can remain below the horizon all day.
           </p>
         </div>
@@ -190,10 +190,10 @@ function WebGLFallback({ viewData }: { viewData: Solar3DViewData }) {
   );
 
   return (
-    <div className="flex h-full w-full items-center justify-center overflow-auto bg-[#040611] p-6 sm:p-8">
-      <div className="max-w-lg rounded-[30px] border border-white/10 bg-[#071022]/76 px-6 py-7 text-left shadow-[0_32px_100px_rgba(2,6,23,0.48)] backdrop-blur-xl">
+    <div className="flex h-full w-full items-center justify-center overflow-auto [background:var(--solar-3d-root-bg)] p-6 sm:p-8">
+      <div className="max-w-lg rounded-[30px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-7 text-left [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
         <div className="mb-6 flex items-center gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-amber-300/20 bg-amber-300/10 text-amber-200 shadow-[0_0_36px_rgba(251,191,36,0.16)]">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border [border-color:var(--solar-warning-border)] [background:var(--solar-warning-bg)] text-[var(--solar-warning-text)] shadow-[0_0_36px_rgba(251,191,36,0.16)]">
             <svg
               className="h-8 w-8"
               xmlns="http://www.w3.org/2000/svg"
@@ -210,42 +210,42 @@ function WebGLFallback({ viewData }: { viewData: Solar3DViewData }) {
             </svg>
           </div>
           <div>
-            <p className="text-[0.65rem] font-medium uppercase tracking-[0.32em] text-cyan-200/65">
+            <p className="text-[0.65rem] font-medium uppercase tracking-[0.32em] text-[var(--solar-3d-kicker)]">
               Compatibility mode
             </p>
-            <h3 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-white">
+            <h3 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]">
               Solar Path Summary
             </h3>
           </div>
         </div>
 
-        <p className="text-sm leading-6 text-slate-300/80">
+        <p className="text-sm leading-6 text-[var(--solar-text)]">
           3D visualization requires WebGL support. Here&apos;s the same solar scene distilled into a
           readable summary for {locationLabel} on {snapshot.dateISO}.
         </p>
 
-        <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
-          <div className="mb-4 grid gap-2 text-sm text-slate-300/80 sm:grid-cols-2">
+        <div className="mt-6 rounded-[24px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] p-4">
+          <div className="mb-4 grid gap-2 text-sm text-[var(--solar-text)] sm:grid-cols-2">
             <p>
-              <span className="text-slate-500">Visible Hours:</span> {visiblePoints.length}
+              <span className="text-[var(--solar-text-faint)]">Visible Hours:</span> {visiblePoints.length}
             </p>
             <p>
-              <span className="text-slate-500">Timezone:</span> {snapshot.timezone}
+              <span className="text-[var(--solar-text-faint)]">Timezone:</span> {snapshot.timezone}
             </p>
           </div>
 
           <div className="grid gap-2 text-sm">
-            <p className="text-slate-300">
-              <span className="text-slate-500">First Light:</span>{' '}
+            <p className="text-[var(--solar-text)]">
+              <span className="text-[var(--solar-text-faint)]">First Light:</span>{' '}
               {visiblePoints[0]?.localTimeLabel}
             </p>
-            <p className="text-slate-300">
-              <span className="text-slate-500">Last Light:</span>{' '}
+            <p className="text-[var(--solar-text)]">
+              <span className="text-[var(--solar-text-faint)]">Last Light:</span>{' '}
               {visiblePoints[visiblePoints.length - 1]?.localTimeLabel}
             </p>
             {solarNoon && (
-              <p className="text-slate-300">
-                <span className="text-slate-500">Solar Noon:</span> {solarNoon.localTimeLabel} (
+              <p className="text-[var(--solar-text)]">
+                <span className="text-[var(--solar-text-faint)]">Solar Noon:</span> {solarNoon.localTimeLabel} (
                 {solarNoon.altitudeDeg.toFixed(1)}° altitude)
               </p>
             )}
@@ -254,7 +254,7 @@ function WebGLFallback({ viewData }: { viewData: Solar3DViewData }) {
 
         <div className="mt-6 hidden sm:block">
           <svg
-            className="h-16 w-16 text-amber-400/30"
+            className="h-16 w-16 text-[var(--solar-warning-text)] opacity-30"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -625,11 +625,11 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
   // Handle empty state
   if (isEmpty) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-[#040611] p-6 sm:p-8">
-        <div className="max-w-lg rounded-[30px] border border-white/10 bg-[#071022]/76 px-6 py-7 text-center shadow-[0_32px_100px_rgba(2,6,23,0.48)] backdrop-blur-xl">
-          <svg
-            className="mx-auto mb-4 h-16 w-16 text-slate-500"
-            xmlns="http://www.w3.org/2000/svg"
+      <div className="flex h-full w-full items-center justify-center [background:var(--solar-3d-root-bg)] p-6 sm:p-8">
+        <div className="max-w-lg rounded-[30px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-7 text-center [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
+            <svg
+              className="mx-auto mb-4 h-16 w-16 text-[var(--solar-text-faint)]"
+              xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -641,11 +641,11 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
               d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
             />
           </svg>
-          <p className="text-[0.65rem] font-medium uppercase tracking-[0.32em] text-slate-400/70">
+          <p className="text-[0.65rem] font-medium uppercase tracking-[0.32em] text-[var(--solar-text-faint)]">
             Polar night
           </p>
-          <p className="mt-2 text-lg text-slate-100">Sun does not rise on this date</p>
-          <p className="mt-2 text-sm leading-6 text-slate-400">
+          <p className="mt-2 text-lg text-[var(--solar-text-strong)]">Sun does not rise on this date</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--solar-text-muted)]">
             This can occur during polar night at high latitudes.
           </p>
         </div>
@@ -654,7 +654,7 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#040611]">
+    <div className="relative h-full w-full overflow-hidden [background:var(--solar-3d-root-bg)]">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <div className="absolute left-8 top-8 h-44 w-44 rounded-full bg-cyan-400/12 blur-3xl" />
         <div className="absolute bottom-8 right-8 h-56 w-56 rounded-full bg-amber-300/10 blur-3xl" />
@@ -680,8 +680,8 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
       </div>
 
       <div className="pointer-events-none absolute left-3 right-3 top-3 z-20 sm:left-4 sm:right-auto">
-        <div className="inline-flex max-w-[18rem] items-center gap-3 rounded-full border border-white/10 bg-[#071022]/72 px-3 py-2 shadow-[0_16px_42px_rgba(2,6,23,0.34)] backdrop-blur-xl">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-400/10 text-cyan-100 shadow-[0_0_24px_rgba(56,189,248,0.18)]">
+        <div className="inline-flex max-w-[18rem] items-center gap-3 rounded-full border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-legend-bg)] px-3 py-2 [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-400/10 text-[var(--solar-accent)] shadow-[0_0_24px_rgba(56,189,248,0.18)]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -699,13 +699,13 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
             </svg>
           </div>
           <div className="flex flex-col text-left">
-            <span className="text-[0.62rem] font-medium uppercase tracking-[0.28em] text-cyan-200/65">
+            <span className="text-[0.62rem] font-medium uppercase tracking-[0.28em] text-[var(--solar-3d-kicker)]">
               Camera
             </span>
-            <span className="hidden text-xs font-medium text-slate-100 sm:inline">
+            <span className="hidden text-xs font-medium text-[var(--solar-text-strong)] sm:inline">
               Hold Ctrl + Drag to rotate view
             </span>
-            <span className="text-xs font-medium text-slate-100 sm:hidden">
+            <span className="text-xs font-medium text-[var(--solar-text-strong)] sm:hidden">
               Use gestures and controls to explore
             </span>
           </div>
@@ -714,16 +714,16 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
 
       {isInitializing && (
         <div
-          className="absolute inset-0 z-30 flex items-center justify-center bg-[#040611]/78 transition-opacity duration-500 backdrop-blur-sm"
+          className="absolute inset-0 z-30 flex items-center justify-center [background:var(--solar-3d-root-bg)] transition-opacity duration-500 backdrop-blur-sm"
           style={{ opacity: isMapLoaded ? 0.5 : 1 }}
           data-testid="3d-map-loading"
         >
-          <div className="rounded-[28px] border border-white/10 bg-[#071022]/78 px-6 py-5 text-center shadow-[0_28px_90px_rgba(2,6,23,0.48)] backdrop-blur-xl">
+          <div className="rounded-[28px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-5 text-center [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
             <div className="relative mx-auto flex h-20 w-20 items-center justify-center">
               <div className="absolute inset-0 rounded-full border border-amber-300/25 bg-amber-300/10 blur-[1px]" />
               <div className="absolute inset-3 rounded-full border border-cyan-300/25 bg-cyan-400/10" />
               <svg
-                className="relative h-12 w-12 text-amber-300"
+                className="relative h-12 w-12 text-[var(--solar-warning-text)]"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -738,7 +738,7 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
               </svg>
               <div className="absolute inset-0 animate-ping">
                 <svg
-                  className="h-20 w-20 text-amber-300 opacity-25"
+                  className="h-20 w-20 text-[var(--solar-warning-text)] opacity-25"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -748,10 +748,10 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
                 </svg>
               </div>
             </div>
-            <p className="mt-4 text-[0.65rem] font-medium uppercase tracking-[0.32em] text-cyan-200/65">
+            <p className="mt-4 text-[0.65rem] font-medium uppercase tracking-[0.32em] text-[var(--solar-3d-kicker)]">
               Initializing
             </p>
-            <span className="mt-2 block text-sm text-slate-300">Loading 3D view...</span>
+            <span className="mt-2 block text-sm text-[var(--solar-text)]">Loading 3D view...</span>
           </div>
         </div>
       )}

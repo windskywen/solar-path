@@ -24,9 +24,10 @@ import type { HourlySolarPosition, DaylightState } from '@/types/solar';
 const COLORS = {
   line: '#7dd3fc',
   selected: '#fbbf24',
-  grid: 'rgba(148, 163, 184, 0.16)',
-  axis: '#94a3b8',
+  grid: 'var(--solar-chart-grid)',
+  axis: 'var(--solar-chart-axis)',
   cardinal: 'rgba(148, 163, 184, 0.28)',
+  dotStroke: 'var(--solar-chart-dot-stroke)',
 };
 
 // Cardinal direction reference lines
@@ -79,12 +80,12 @@ function AzimuthTooltip({
   const data = payload[0].payload;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[rgba(5,10,20,0.94)] p-3 shadow-[0_20px_50px_rgba(2,6,23,0.45)] backdrop-blur-xl">
-      <p className="font-semibold text-white">{data.label}</p>
-      <p className="text-sm text-slate-300">
+    <div className="rounded-2xl border [border-color:var(--solar-tooltip-border)] [background:var(--solar-tooltip-bg)] p-3 [box-shadow:var(--solar-tooltip-shadow)] backdrop-blur-xl">
+      <p className="font-semibold text-[var(--solar-tooltip-strong)]">{data.label}</p>
+      <p className="text-sm text-[var(--solar-tooltip-text)]">
         Azimuth: <span className="font-mono">{data.azimuth.toFixed(1)}°</span>
       </p>
-      <p className="mt-1 text-xs text-slate-500">Direction: {data.cardinal}</p>
+      <p className="mt-1 text-xs text-[var(--solar-tooltip-muted)]">Direction: {data.cardinal}</p>
     </div>
   );
 }
@@ -134,7 +135,7 @@ export function AzimuthChart({
   if (positions.length === 0) {
     return (
       <div
-        className={`flex items-center justify-center text-slate-400 ${className}`}
+        className={`flex items-center justify-center text-[var(--solar-text-muted)] ${className}`}
         style={{ height }}
       >
         No data available
@@ -189,9 +190,9 @@ export function AzimuthChart({
             activeDot={{
               r: 6,
               fill: selectedHour !== null ? COLORS.selected : COLORS.line,
-              stroke: '#0f172a',
-              strokeWidth: 2,
-            }}
+               stroke: COLORS.dotStroke,
+               strokeWidth: 2,
+             }}
           />
           {/* Selected hour marker */}
           {selectedHour !== null && (

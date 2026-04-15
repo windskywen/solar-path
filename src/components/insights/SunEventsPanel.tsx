@@ -66,11 +66,13 @@ function getDayLengthLabel(events: SunEvents): string | null {
 export function SunEventsPanel({ events, timezone, className = '' }: SunEventsPanelProps) {
   // Loading/empty state
   if (!events) {
-    return (
-      <div className={`rounded-[24px] border border-white/10 bg-slate-950/35 p-4 ${className}`}>
+      return (
+      <div
+        className={`rounded-[24px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-4 ${className}`}
+      >
         <div className="animate-pulse space-y-3">
-          <div className="h-4 w-1/2 rounded bg-white/[0.08]" />
-          <div className="h-24 rounded-[20px] bg-white/[0.05]" />
+          <div className="h-4 w-1/2 rounded [background-color:var(--solar-divider)]" />
+          <div className="h-24 rounded-[20px] [background:var(--solar-surface-soft-bg)]" />
         </div>
       </div>
     );
@@ -113,12 +115,12 @@ export function SunEventsPanel({ events, timezone, className = '' }: SunEventsPa
     <div className={`space-y-4 ${className}`}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-sky-200/72">
+          <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-kicker)]">
             Event timeline
           </p>
-          <p className="mt-1 text-sm text-slate-300">Daily light window in local time</p>
+          <p className="mt-1 text-sm text-[var(--solar-text)]">Daily light window in local time</p>
         </div>
-        <span className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-slate-500">
+        <span className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[var(--solar-text-faint)]">
           {metaLabel}
         </span>
       </div>
@@ -127,10 +129,10 @@ export function SunEventsPanel({ events, timezone, className = '' }: SunEventsPa
         <div
           className={`rounded-2xl border px-3 py-2 text-center text-xs font-medium ${
             isPolarDay
-              ? 'border-amber-300/20 bg-amber-400/12 text-amber-100'
+              ? '[border-color:var(--solar-warning-border)] [background:var(--solar-warning-bg)] text-[var(--solar-warning-text)]'
               : isPolarNight
-                ? 'border-slate-300/14 bg-slate-950/55 text-slate-200'
-                : 'border-sky-300/20 bg-sky-400/10 text-sky-100'
+                ? '[border-color:var(--solar-state-night-border)] [background:var(--solar-state-night-pill-bg)] text-[var(--solar-text)]'
+                : '[border-color:var(--solar-input-focus-border)] [background:var(--solar-accent-soft)] text-[var(--solar-accent)]'
           }`}
         >
           {condition}
@@ -141,15 +143,15 @@ export function SunEventsPanel({ events, timezone, className = '' }: SunEventsPa
         {eventCards.map((card) => (
           <div
             key={card.label}
-            className="relative overflow-hidden rounded-[22px] border border-white/10 bg-slate-950/40 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+            className="relative overflow-hidden rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-4 [box-shadow:var(--solar-surface-inset-shadow)]"
           >
             <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${card.accent}`} />
             <div className="relative">
               <div className="text-xl">{card.icon}</div>
-              <p className="mt-3 text-[0.64rem] font-semibold uppercase tracking-[0.26em] text-slate-400">
+              <p className="mt-3 text-[0.64rem] font-semibold uppercase tracking-[0.26em] text-[var(--solar-text-muted)]">
                 {card.label}
               </p>
-              <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-white sm:text-xl">
+              <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--solar-text-strong)] sm:text-xl">
                 {card.value}
               </p>
             </div>
@@ -158,20 +160,20 @@ export function SunEventsPanel({ events, timezone, className = '' }: SunEventsPa
       </div>
 
       {events.dayLengthHours !== null && events.dayLengthHours !== undefined && (
-        <div className="rounded-[22px] border border-white/10 bg-slate-950/40 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-          <div className="mb-2 flex items-center justify-between text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-slate-400">
+        <div className="rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-4 [box-shadow:var(--solar-surface-inset-shadow)]">
+          <div className="mb-2 flex items-center justify-between text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[var(--solar-text-muted)]">
             <span>Day {Math.round(dayPercentage)}%</span>
             <span>Night {100 - Math.round(dayPercentage)}%</span>
           </div>
 
-          <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.06] ring-1 ring-white/10">
+          <div className="h-2.5 overflow-hidden rounded-full [background:var(--solar-surface-soft-bg)] ring-1 ring-[var(--solar-surface-border)]">
             <div
               className="h-full rounded-full bg-gradient-to-r from-amber-300 via-orange-300 to-sky-300 transition-all duration-500"
               style={{ width: `${dayPercentage}%` }}
             />
           </div>
 
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-[var(--solar-text-muted)]">
             {dayLengthLabel || 'Solar event data available once the selected location resolves.'}
           </p>
         </div>
@@ -190,7 +192,7 @@ export function SunEventsPanelCompact({
   if (!events) {
     return (
       <div className={`flex items-center gap-4 text-sm ${className}`}>
-        <span className="text-slate-400">Loading...</span>
+        <span className="text-[var(--solar-text-muted)]">Loading...</span>
       </div>
     );
   }

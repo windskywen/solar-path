@@ -113,11 +113,13 @@ export function ManualCoordinates({
       <div>
         <label
           htmlFor="coords-input"
-          className="mb-2 block text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-slate-400"
+          className="mb-2 block text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-text-muted)]"
         >
           Manual Coordinates
         </label>
-        <p className="mb-3 text-xs text-slate-500">Exact latitude and longitude when you already know the point.</p>
+        <p className="mb-3 text-xs text-[var(--solar-text-faint)]">
+          Exact latitude and longitude when you already know the point.
+        </p>
         <div className="flex gap-2">
           <input
             ref={inputRef}
@@ -129,25 +131,26 @@ export function ManualCoordinates({
             onBlur={handleBlur}
             placeholder="e.g. 23.996, 121.572"
             className={`
-              h-10 min-w-0 flex-1 rounded-2xl border px-3 text-sm text-white
-              shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition-all
-              placeholder:text-slate-500
+              h-10 min-w-0 flex-1 rounded-2xl border px-3 text-sm text-[var(--solar-text-strong)]
+              outline-none transition-all placeholder:text-[var(--solar-input-placeholder)]
               ${
                 error
-                  ? 'border-rose-300/40 bg-rose-500/12 focus:border-rose-300/50 focus:ring-2 focus:ring-rose-300/20'
-                  : 'border-white/10 bg-slate-950/50 focus:border-sky-300/35 focus:ring-2 focus:ring-sky-300/20'
+                  ? '[border-color:var(--solar-danger-border)] [background:var(--solar-danger-bg)] focus:[border-color:var(--solar-danger-border)] focus:ring-2 focus:ring-[var(--solar-danger-bg)]'
+                  : '[border-color:var(--solar-input-border)] [background:var(--solar-input-bg)] [box-shadow:var(--solar-input-shadow)] focus:[border-color:var(--solar-input-focus-border)] focus:ring-2 focus:ring-[var(--solar-input-focus-ring)]'
               }
             `}
           />
           <button
             type="submit"
-            className="flex h-10 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-3 text-sm font-semibold text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-300/30 hover:bg-sky-400/12 whitespace-nowrap"
+            className="flex h-10 flex-shrink-0 items-center justify-center rounded-2xl border px-3 text-sm font-semibold text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] whitespace-nowrap"
           >
             Set
           </button>
         </div>
-        {error && <p className="mt-2 text-xs text-rose-200">{error}</p>}
-        <p className="mt-2 text-[10px] text-slate-500">Paste coordinates from Google Maps</p>
+        {error && <p className="mt-2 text-xs text-[var(--solar-danger-text)]">{error}</p>}
+        <p className="mt-2 text-[10px] text-[var(--solar-text-faint)]">
+          Paste coordinates from Google Maps
+        </p>
       </div>
     </form>
   );

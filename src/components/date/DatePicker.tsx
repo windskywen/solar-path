@@ -100,7 +100,7 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
   }, []);
 
   const iconButtonClass =
-    'flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-950/45 text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-300/30 hover:bg-sky-400/10';
+    'flex h-11 w-11 items-center justify-center rounded-2xl border text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--solar-input-focus-ring)]';
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -123,13 +123,13 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
             type="date"
             value={dateISO}
             onChange={handleDateChange}
-            className="solar-date-input h-11 w-full rounded-2xl border border-white/10 bg-slate-950/45 px-4 pr-12 text-center text-sm font-semibold tracking-[0.02em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] outline-none transition-all focus:border-sky-300/35 focus:ring-2 focus:ring-sky-300/20 sm:text-base"
+            className="solar-date-input h-11 w-full rounded-2xl border px-4 pr-12 text-center text-sm font-semibold tracking-[0.02em] text-[var(--solar-text-strong)] [border-color:var(--solar-input-border)] [background:var(--solar-input-bg)] [box-shadow:var(--solar-input-shadow)] outline-none transition-all focus:[border-color:var(--solar-input-focus-border)] focus:ring-2 focus:ring-[var(--solar-input-focus-ring)] sm:text-base"
             aria-label="Select date"
           />
           <button
             type="button"
             onClick={handleOpenPicker}
-            className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-sky-100/90 transition-colors hover:bg-sky-400/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/30"
+            className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[var(--solar-accent)] transition-colors hover:bg-[var(--solar-accent-soft)] hover:text-[var(--solar-text-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--solar-input-focus-ring)]"
             aria-label="Open calendar"
           >
             <svg
@@ -158,19 +158,19 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
       </div>
 
       {/* Today button and formatted date */}
-      <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-        <span className="truncate text-xs text-slate-300 sm:text-sm">{formatDateDisplay(dateISO)}</span>
+      <div className="flex items-center justify-between gap-3 rounded-2xl border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-3 py-2.5 [box-shadow:var(--solar-surface-inset-shadow)]">
+        <span className="truncate text-xs text-[var(--solar-text)] sm:text-sm">{formatDateDisplay(dateISO)}</span>
 
         {!dateIsToday ? (
           <button
             type="button"
             onClick={handleTodayClick}
-            className="whitespace-nowrap rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[0.7rem] font-semibold text-sky-100 transition-colors hover:bg-sky-400/16 sm:text-xs"
+            className="whitespace-nowrap rounded-full border px-3 py-1 text-[0.7rem] font-semibold text-[var(--solar-accent)] transition-colors [border-color:var(--solar-input-focus-border)] [background:var(--solar-accent-soft)] hover:[background:var(--solar-row-hover)] sm:text-xs"
           >
             Go to Today
           </button>
         ) : (
-          <span className="whitespace-nowrap rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-[0.7rem] font-semibold text-emerald-100 sm:text-xs">
+          <span className="whitespace-nowrap rounded-full border px-3 py-1 text-[0.7rem] font-semibold [border-color:var(--solar-success-border)] [background:var(--solar-success-bg)] text-[var(--solar-success-text)] sm:text-xs">
             ✓ Today
           </span>
         )}
@@ -229,8 +229,8 @@ function QuickDateButton({
       onClick={() => onClick(dateISO)}
       className={`rounded-full border px-3 py-1.5 text-[0.7rem] font-semibold transition-all duration-200 sm:text-xs ${
         isActive
-          ? 'border-sky-300/24 bg-sky-400/14 text-sky-50 shadow-[0_0_24px_rgba(56,189,248,0.14)]'
-          : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/16 hover:bg-white/[0.07]'
+          ? '[border-color:var(--solar-input-focus-border)] [background:var(--solar-accent-soft)] text-[var(--solar-text-strong)] shadow-[0_0_24px_rgba(56,189,248,0.14)]'
+          : '[border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] text-[var(--solar-text)] hover:[background:var(--solar-button-hover-bg)]'
       }`}
     >
       {label}
@@ -249,7 +249,7 @@ export function DateDisplayCompact({ className = '' }: { className?: string }) {
       <span className="text-muted-foreground">Date:</span>
       <span className="font-medium text-foreground">{formatDateDisplay(dateISO)}</span>
       {isToday(dateISO) && (
-        <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2 py-0.5 text-xs text-emerald-100">
+        <span className="rounded-full border px-2 py-0.5 text-xs [border-color:var(--solar-success-border)] [background:var(--solar-success-bg)] text-[var(--solar-success-text)]">
           Today
         </span>
       )}

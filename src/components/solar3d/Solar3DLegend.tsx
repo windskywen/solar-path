@@ -22,20 +22,20 @@ export interface Solar3DLegendProps {
 export function Solar3DLegend({ className = '' }: Solar3DLegendProps) {
   return (
     <div
-      className={`rounded-[22px] border border-white/10 bg-[#071022]/74 p-2.5 shadow-[0_20px_48px_rgba(2,6,23,0.34)] backdrop-blur-xl sm:rounded-[26px] sm:p-3.5 sm:shadow-[0_24px_60px_rgba(2,6,23,0.38)] ${className}`}
+      className={`rounded-[22px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-legend-bg)] p-2.5 [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl sm:rounded-[26px] sm:p-3.5 ${className}`}
       role="complementary"
       aria-label="Color legend for sun positions"
     >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[0.56rem] font-medium uppercase tracking-[0.28em] text-cyan-200/60 sm:text-[0.62rem] sm:tracking-[0.3em]">
+          <p className="text-[0.56rem] font-medium uppercase tracking-[0.28em] text-[var(--solar-3d-kicker)] sm:text-[0.62rem] sm:tracking-[0.3em]">
             Legend
           </p>
-          <h3 className="mt-0.5 text-[0.78rem] font-semibold text-white sm:mt-1 sm:text-sm">
+          <h3 className="mt-0.5 text-[0.78rem] font-semibold text-[var(--solar-text-strong)] sm:mt-1 sm:text-sm">
             Light states
           </h3>
         </div>
-        <div className="hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-amber-200/90 sm:flex">
+        <div className="hidden h-10 w-10 items-center justify-center rounded-full border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] text-[var(--solar-warning-text)] sm:flex">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="18"
@@ -55,53 +55,57 @@ export function Solar3DLegend({ className = '' }: Solar3DLegendProps) {
       </div>
 
       <ul className="mt-2.5 grid grid-cols-2 gap-1.5 text-[0.68rem] sm:mt-3 sm:grid-cols-1 sm:gap-2 sm:text-sm">
-        <li className="rounded-[16px] border border-white/10 bg-white/[0.04] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
+        <li className="rounded-[16px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
           <div className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full shadow-[0_0_16px_rgba(255,183,77,0.45)] sm:h-3 sm:w-3"
               style={{ backgroundColor: 'rgb(255, 183, 77)' }}
               aria-hidden="true"
             />
-            <span className="font-medium text-slate-100">Golden Hour</span>
+            <span className="font-medium text-[var(--solar-text-strong)]">Golden Hour</span>
           </div>
-          <p className="mt-1 hidden text-[0.72rem] text-slate-400 sm:block">Warm, low-angle sun</p>
+          <p className="mt-1 hidden text-[0.72rem] text-[var(--solar-text-muted)] sm:block">
+            Warm, low-angle sun
+          </p>
         </li>
-        <li className="rounded-[16px] border border-white/10 bg-white/[0.04] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
+        <li className="rounded-[16px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
           <div className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full shadow-[0_0_16px_rgba(255,235,59,0.4)] sm:h-3 sm:w-3"
               style={{ backgroundColor: 'rgb(255, 235, 59)' }}
               aria-hidden="true"
             />
-            <span className="font-medium text-slate-100">Daylight</span>
+            <span className="font-medium text-[var(--solar-text-strong)]">Daylight</span>
           </div>
-          <p className="mt-1 hidden text-[0.72rem] text-slate-400 sm:block">
+          <p className="mt-1 hidden text-[0.72rem] text-[var(--solar-text-muted)] sm:block">
             Direct visible sun
           </p>
         </li>
-        <li className="rounded-[16px] border border-white/10 bg-white/[0.04] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
+        <li className="rounded-[16px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
           <div className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full shadow-[0_0_16px_rgba(255,87,34,0.4)] sm:h-3 sm:w-3"
               style={{ backgroundColor: 'rgb(255, 87, 34)' }}
               aria-hidden="true"
             />
-            <span className="font-medium text-slate-100">Selected Hour</span>
+            <span className="font-medium text-[var(--solar-text-strong)]">Selected Hour</span>
           </div>
-          <p className="mt-1 hidden text-[0.72rem] text-slate-400 sm:block">
+          <p className="mt-1 hidden text-[0.72rem] text-[var(--solar-text-muted)] sm:block">
             Focused comparison point
           </p>
         </li>
-        <li className="rounded-[16px] border border-white/10 bg-white/[0.04] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
+        <li className="rounded-[16px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-2.5 py-2 sm:rounded-[18px] sm:px-3 sm:py-2.5">
           <div className="flex items-center gap-2">
             <span
               className="h-px w-5 rounded-full shadow-[0_0_16px_rgba(255,193,7,0.35)] sm:h-1 sm:w-7"
               style={{ backgroundColor: 'rgb(255, 193, 7)' }}
               aria-hidden="true"
             />
-            <span className="font-medium text-slate-100">Sun Path</span>
+            <span className="font-medium text-[var(--solar-text-strong)]">Sun Path</span>
           </div>
-          <p className="mt-1 hidden text-[0.72rem] text-slate-400 sm:block">Daily trajectory arc</p>
+          <p className="mt-1 hidden text-[0.72rem] text-[var(--solar-text-muted)] sm:block">
+            Daily trajectory arc
+          </p>
         </li>
       </ul>
     </div>

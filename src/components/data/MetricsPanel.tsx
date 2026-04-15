@@ -19,24 +19,27 @@ import { CopyButton } from './CopyButton';
 const STATE_STYLES = {
   night: {
     shell:
-      'border-white/10 bg-[linear-gradient(135deg,rgba(30,41,59,0.72),rgba(2,6,23,0.84))] text-slate-100',
-    pill: 'border-white/10 bg-white/[0.06] text-slate-200',
+      '[border-color:var(--solar-state-night-border)] [background:var(--solar-state-night-bg)] text-[var(--solar-state-night-text)]',
+    pill:
+      '[border-color:var(--solar-state-night-pill-border)] [background:var(--solar-state-night-pill-bg)] text-[var(--solar-state-night-pill-text)]',
     icon: '🌙',
     label: 'Night',
     description: 'Sun is below the horizon',
   },
   golden: {
     shell:
-      'border-amber-300/18 bg-[linear-gradient(135deg,rgba(251,191,36,0.18),rgba(15,23,42,0.82))] text-amber-50',
-    pill: 'border-amber-300/20 bg-amber-400/10 text-amber-100',
+      '[border-color:var(--solar-state-golden-border)] [background:var(--solar-state-golden-bg)] text-[var(--solar-state-golden-text)]',
+    pill:
+      '[border-color:var(--solar-state-golden-pill-border)] [background:var(--solar-state-golden-pill-bg)] text-[var(--solar-state-golden-pill-text)]',
     icon: '🌅',
     label: 'Golden Hour',
     description: 'Warm, diffused light ideal for photography',
   },
   day: {
     shell:
-      'border-sky-300/18 bg-[linear-gradient(135deg,rgba(56,189,248,0.18),rgba(15,23,42,0.82))] text-sky-50',
-    pill: 'border-sky-300/20 bg-sky-400/10 text-sky-100',
+      '[border-color:var(--solar-state-day-border)] [background:var(--solar-state-day-bg)] text-[var(--solar-state-day-text)]',
+    pill:
+      '[border-color:var(--solar-state-day-pill-border)] [background:var(--solar-state-day-pill-bg)] text-[var(--solar-state-day-pill-text)]',
     icon: '☀️',
     label: 'Day',
     description: 'Sun is high in the sky',
@@ -147,14 +150,14 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
   // No selection state
   if (!position) {
     return (
-      <div
-        className={`flex h-full flex-col items-center justify-center rounded-[24px] border border-white/10 bg-slate-950/35 p-6 text-center ${className}`}
-      >
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/[0.05]">
+        <div
+        className={`flex h-full flex-col items-center justify-center rounded-[24px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-6 text-center ${className}`}
+        >
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)]">
           <span className="text-2xl grayscale opacity-70">☀️</span>
         </div>
-        <p className="text-sm font-semibold text-white">No hour selected</p>
-        <p className="mt-1 max-w-xs text-xs leading-5 text-slate-400">
+        <p className="text-sm font-semibold text-[var(--solar-text-strong)]">No hour selected</p>
+        <p className="mt-1 max-w-xs text-xs leading-5 text-[var(--solar-text-muted)]">
           Click on the map rays or the hourly rail to surface a focused solar metric card.
         </p>
       </div>
@@ -166,19 +169,19 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
   return (
     <div className={`flex h-full flex-col ${className}`}>
       <div
-        className={`mb-4 rounded-[24px] border p-4 shadow-[0_18px_46px_rgba(2,6,23,0.18)] backdrop-blur-xl ${stateStyle.shell}`}
+        className={`mb-4 rounded-[24px] border p-4 [box-shadow:var(--solar-surface-shadow)] backdrop-blur-xl ${stateStyle.shell}`}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="text-2xl drop-shadow-sm sm:text-3xl">{stateStyle.icon}</span>
             <div>
-              <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-slate-300/72">
+              <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-text-muted)]">
                 Selected focus
               </p>
-              <p className="mt-1 text-lg font-semibold tracking-[-0.02em] text-white sm:text-xl">
+              <p className="mt-1 text-lg font-semibold tracking-[-0.02em] text-[var(--solar-text-strong)] sm:text-xl">
                 {formatTime(position.hour)}
               </p>
-              <p className="mt-1 text-xs text-slate-300/80">{position.localTimeLabel}</p>
+              <p className="mt-1 text-xs text-[var(--solar-text-muted)]">{position.localTimeLabel}</p>
             </div>
           </div>
 
@@ -189,7 +192,7 @@ export function MetricsPanel({ position, className = '' }: MetricsPanelProps) {
           </span>
         </div>
 
-        <p className="mt-4 text-sm text-slate-200/85">{stateStyle.description}</p>
+        <p className="mt-4 text-sm text-[var(--solar-text)]">{stateStyle.description}</p>
       </div>
 
       <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
@@ -244,17 +247,17 @@ function MetricCard({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-slate-950/40 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+    <div className="relative overflow-hidden rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-4 [box-shadow:var(--solar-surface-inset-shadow)]">
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${accent}`} />
       <div className="relative flex h-full flex-col">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <p className="text-[0.64rem] font-semibold uppercase tracking-[0.24em] text-slate-400">
+            <p className="text-[0.64rem] font-semibold uppercase tracking-[0.24em] text-[var(--solar-text-muted)]">
               {label}
             </p>
             <p
               className={`mt-3 text-2xl font-semibold tracking-[-0.04em] sm:text-3xl ${
-                dimmed ? 'text-slate-300/60' : 'text-white'
+                dimmed ? 'text-[var(--solar-text-muted)] opacity-70' : 'text-[var(--solar-text-strong)]'
               }`}
             >
               {value}
@@ -263,8 +266,8 @@ function MetricCard({
           <CopyButton text={copyText} label={copyLabel} />
         </div>
 
-        <p className="text-sm font-medium text-slate-200">{meta}</p>
-        <p className="mt-1 text-xs text-slate-400">{helper}</p>
+        <p className="text-sm font-medium text-[var(--solar-text)]">{meta}</p>
+        <p className="mt-1 text-xs text-[var(--solar-text-muted)]">{helper}</p>
 
         {children && <div className="mt-auto pt-4">{children}</div>}
       </div>
@@ -278,18 +281,18 @@ function MetricCard({
 function CompassIndicator({ azimuth }: { azimuth: number }) {
   return (
     <div className="relative h-16 w-16">
-      <div className="absolute inset-0 rounded-full border border-white/10 bg-white/[0.03]" />
+      <div className="absolute inset-0 rounded-full border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)]" />
 
-      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-slate-400">
+      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-[var(--solar-text-muted)]">
         N
       </span>
-      <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-slate-400">
+      <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-[var(--solar-text-muted)]">
         S
       </span>
-      <span className="absolute top-1/2 -left-2.5 -translate-y-1/2 text-[9px] font-semibold text-slate-400">
+      <span className="absolute top-1/2 -left-2.5 -translate-y-1/2 text-[9px] font-semibold text-[var(--solar-text-muted)]">
         W
       </span>
-      <span className="absolute top-1/2 -right-2.5 -translate-y-1/2 text-[9px] font-semibold text-slate-400">
+      <span className="absolute top-1/2 -right-2.5 -translate-y-1/2 text-[9px] font-semibold text-[var(--solar-text-muted)]">
         E
       </span>
 
@@ -300,7 +303,7 @@ function CompassIndicator({ azimuth }: { azimuth: number }) {
         <div className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-sky-200 shadow-[0_0_16px_rgba(125,211,252,0.75)]" />
       </div>
 
-      <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+      <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--solar-text-strong)]" />
     </div>
   );
 }

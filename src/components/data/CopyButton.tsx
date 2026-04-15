@@ -53,9 +53,12 @@ export function CopyButton({
   };
 
   const stateClasses = {
-    idle: 'border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.06] hover:text-sky-100',
-    success: 'border-emerald-300/18 bg-emerald-400/12 text-emerald-100',
-    error: 'border-rose-300/18 bg-rose-400/12 text-rose-100',
+    idle:
+      'border-transparent text-[var(--solar-text-muted)] hover:[border-color:var(--solar-button-border)] hover:[background:var(--solar-button-bg)] hover:text-[var(--solar-accent)]',
+    success:
+      '[border-color:var(--solar-success-border)] [background:var(--solar-success-bg)] text-[var(--solar-success-text)]',
+    error:
+      '[border-color:var(--solar-danger-border)] [background:var(--solar-danger-bg)] text-[var(--solar-danger-text)]',
   };
 
   return (
