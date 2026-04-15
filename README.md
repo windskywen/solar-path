@@ -16,6 +16,7 @@ A web application that visualizes the sun's path across the sky for any location
 - **Accessibility**: Keyboard navigation, screen reader support, WCAG 2.1 AA compliant
 - **Trust Pages**: Built-in Privacy Policy and About/Contact routes for review readiness
 - **Manual Ad Slot Support**: Optional, env-gated AdSense placement below the hourly data rail
+- **SEO Foundations**: Metadata, structured data, `robots.txt`, `sitemap.xml`, and social share images
 
 ## Getting Started
 
@@ -37,12 +38,20 @@ A web application that visualizes the sun's path across the sky for any location
    npm install
    ```
 
-3. Create environment file (optional, for local overrides and AdSense scaffolding):
+3. Create environment file (optional, for local overrides, SEO metadata, and AdSense scaffolding):
    ```bash
    cp .env.example .env.local
    ```
 
-4. Optional AdSense configuration:
+4. Optional SEO site URL configuration:
+   ```bash
+   NEXT_PUBLIC_SITE_URL=https://your-production-domain.example
+   ```
+   Set this in production so canonical URLs, `robots.txt`, `sitemap.xml`, and social metadata use the correct public domain.
+
+   This repository also supports a committed `.env.production` for public, non-secret values such as the canonical site URL.
+
+5. Optional AdSense configuration:
    ```bash
    NEXT_PUBLIC_ADSENSE_ENABLED=false
    NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-0000000000000000
@@ -50,12 +59,12 @@ A web application that visualizes the sun's path across the sky for any location
    ```
    Leave `NEXT_PUBLIC_ADSENSE_ENABLED=false` until you have a real AdSense publisher ID and slot ID.
 
-5. Start the development server:
+6. Start the development server:
    ```bash
    npm run dev
    ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+7. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Available Scripts
 
