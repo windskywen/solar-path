@@ -298,6 +298,9 @@ const solarCompassGapMeters = 1;
 const solarBaseHeight = compassHeightMeters + solarCompassGapMeters;
 const cameraFocusElevation = terrainElevation + solarBaseHeight;
 const renderedPathRadiusMeters = pathRadiusMeters * viewportFitScale;
+const viewportTopPadding = isMobile
+  ? clamp(viewportHeight * 0.10, 48, 72)
+  : clamp(viewportHeight * 0.12, 72, 112);
 
 /**
  * Color palette for daylight states.

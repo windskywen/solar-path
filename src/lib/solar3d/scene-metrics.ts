@@ -9,6 +9,14 @@ const COMPACT_PATH_MIN_PIXELS = 90;
 const COMPACT_PATH_MAX_PIXELS = 130;
 const SOLAR_VIEWPORT_FIT_SAFETY_RATIO = 0.96;
 const MIN_SOLAR_VIEWPORT_SCALE = 0.05;
+const DESKTOP_VIEWPORT_EDGE_PADDING_PIXELS = 24;
+const COMPACT_VIEWPORT_EDGE_PADDING_PIXELS = 16;
+const DESKTOP_VIEWPORT_TOP_PADDING_RATIO = 0.12;
+const COMPACT_VIEWPORT_TOP_PADDING_RATIO = 0.1;
+const DESKTOP_VIEWPORT_TOP_PADDING_MIN_PIXELS = 72;
+const DESKTOP_VIEWPORT_TOP_PADDING_MAX_PIXELS = 112;
+const COMPACT_VIEWPORT_TOP_PADDING_MIN_PIXELS = 48;
+const COMPACT_VIEWPORT_TOP_PADDING_MAX_PIXELS = 72;
 
 export const COMPASS_GROUND_OFFSET_METERS = 10;
 export const SOLAR_COMPASS_GAP_METERS = 1;
@@ -73,6 +81,7 @@ export interface SolarViewportFitInput {
   viewportWidth: number;
   viewportHeight: number;
   edgePaddingPixels: number;
+  topPaddingPixels?: number;
   markerRadiusPixels: number;
 }
 
@@ -85,6 +94,11 @@ export interface SolarViewportFit {
     maxX: number;
     maxY: number;
   };
+}
+
+export interface SolarViewportPadding {
+  edgePaddingPixels: number;
+  topPaddingPixels: number;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
@@ -122,6 +136,31 @@ export function calculateSolarSceneMetrics({
     sunRadiusMeters: sunRadiusPixels * metersPerPixel,
     selectedSunRadiusPixels,
     selectedSunRadiusMeters: selectedSunRadiusPixels * metersPerPixel,
+  };
+}
+
+export function calculateSolarViewportPadding(
+  viewportHeight: number,
+  isCompact: boolean
+): SolarViewportPadding {
+  const safeViewportHeight = Math.max(1, viewportHeight);
+
+  return {
+    edgePaddingPixels: isCompact
+      ? COMPACT_VIEWPORT_EDGE_PADDING_PIXELS
+      : DESKTOP_VIEWPORT_EDGE_PADDING_PIXELS,
+    topPaddingPixels: clamp(
+      safeViewportHeight *
+        (isCompact
+          ? COMPACT_VIEWPORT_TOP_PADDING_RATIO
+          : DESKTOP_VIEWPORT_TOP_PADDING_RATIO),
+      isCompact
+        ? COMPACT_VIEWPORT_TOP_PADDING_MIN_PIXELS
+        : DESKTOP_VIEWPORT_TOP_PADDING_MIN_PIXELS,
+      isCompact
+        ? COMPACT_VIEWPORT_TOP_PADDING_MAX_PIXELS
+        : DESKTOP_VIEWPORT_TOP_PADDING_MAX_PIXELS
+    ),
   };
 }
 
@@ -192,6 +231,7 @@ export function calculateSolarViewportFit({
   viewportWidth,
   viewportHeight,
   edgePaddingPixels,
+  topPaddingPixels = edgePaddingPixels,
   markerRadiusPixels,
 }: SolarViewportFitInput): SolarViewportFit {
   const safeCurrentScale = clamp(currentScale, MIN_SOLAR_VIEWPORT_SCALE, 1);
@@ -223,7 +263,7 @@ export function calculateSolarViewportFit({
     }
   );
   const leftLimit = edgePaddingPixels;
-  const topLimit = edgePaddingPixels;
+  const topLimit = Math.max(edgePaddingPixels, topPaddingPixels);
   const rightLimit = viewportWidth - edgePaddingPixels;
   const bottomLimit = viewportHeight - edgePaddingPixels;
   const isContained =

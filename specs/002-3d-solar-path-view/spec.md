@@ -183,7 +183,7 @@ The modal MUST have access to:
 - **FR3D-049C**: The solar horizon reference MUST remain at terrain-relative `z = 11m`, independent of rendered building height and zoom. The scene MUST NOT query rendered buildings to adjust solar geometry height.
 - **FR3D-049D**: The solar path, sun spheres, and connectors MUST use the fixed `z = 11m` solar origin. Compass lines and cardinal labels MUST remain at terrain-relative `z = 10m`, creating a fixed 1m vertical gap. The location marker and shadow path MUST stay at `z = 0`, with a subtle vertical anchor joining `[0, 0, 10]` to `[0, 0, 11]`.
 - **FR3D-049E**: Camera focus elevation MUST remain at `terrainElevation + 11m`, avoiding zoom-dependent vertical drift.
-- **FR3D-049F**: After every zoom, pitch, bearing, or viewport-size change, the projected solar points and sun-marker radii MUST be measured against an inset viewport safe area. If any part is outside, the visual path radius MUST shrink iteratively until the complete path and every sun sphere are contained.
+- **FR3D-049F**: After every zoom, pitch, bearing, or viewport-size change, the projected solar points and sun-marker radii MUST be measured against an inset viewport safe area. The top safe area MUST be larger than the other edges so the highest sun remains visually separated from the map edge: 12% of map height clamped to 72–112px on desktop, and 10% clamped to 48–72px on compact screens. Other edges remain 24px on desktop and 16px on compact screens. If any part is outside, the visual path radius MUST shrink iteratively until the complete path and every sun sphere are contained.
 
 #### 3D Trajectory Rendering
 
@@ -361,7 +361,7 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
 8. Dispatch WebGL context loss and verify the text summary
 9. Confirm closing the modal removes the 3D canvas and that no 3D resource is requested before opening
 10. Confirm initial and Reset camera return to zoom 15, pitch 58 degrees, and bearing 135 degrees
-11. At every zoom from 15 through 20, confirm the measured solar bounds remain inside the viewport safe area
+11. At every zoom from 15 through 20, confirm the measured solar bounds remain inside the viewport safe area, including the larger responsive top safe area
 12. Confirm `data-solar-base-height="11.00"`, `data-compass-height-meters="10.00"`, and `data-solar-compass-gap-meters="1.00"`
 13. Confirm all three diagnostic heights remain unchanged from zoom 15 through 20
 14. Simulate 14 FPS interaction samples; confirm the scene stays `full-3d` for nine seconds and degrades only on the tenth second

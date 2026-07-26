@@ -217,6 +217,10 @@ After zoom, pitch, bearing, or viewport changes, deck.gl projects every solar
 point into screen coordinates. The scene includes the selected-sun marker radius
 and an inset edge margin, then iteratively reduces `viewportFitScale` until the
 complete solar path and every sun sphere are contained.
+The top inset is intentionally asymmetric to preserve visual breathing room:
+12% of map height clamped to 72–112px on desktop and 10% clamped to 48–72px
+on compact screens. Left, right, and bottom retain the smaller 24px/16px edge
+padding so the scene is not reduced more than necessary.
 
 The location marker and shadow remain at terrain-relative `z = 0`. Connectors
 use the fixed solar origin `[0, 0, 11]`, while compass lines and cardinal labels

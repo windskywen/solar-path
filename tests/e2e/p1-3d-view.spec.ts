@@ -497,6 +497,7 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
   test('keeps the complete solar path and spheres inside the map at every zoom level', async ({
     page,
   }) => {
+    await mockStable3DProviders(page);
     await waitForAppReady(page);
     await setKnown3DTerrainLocation(page);
     await open3DModal(page);
@@ -520,6 +521,15 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
       await expect
         .poll(() => scene.getAttribute('data-solar-viewport-contained'))
         .toBe('true');
+      const topPadding = await readMetric('data-solar-viewport-top-padding');
+      await expect
+        .poll(async () => {
+          const bounds = (await scene.getAttribute('data-solar-screen-bounds'))
+            ?.split(',')
+            .map(Number);
+          return bounds?.[1] ?? Number.NEGATIVE_INFINITY;
+        })
+        .toBeGreaterThanOrEqual(topPadding - 0.5);
       expect(await readMetric('data-path-radius-pixels')).toBeGreaterThan(0);
       expect(await readMetric('data-sun-radius-pixels')).toBe(expectedSunPixels);
       expect(await readMetric('data-compass-height-meters')).toBe(10);
@@ -532,6 +542,7 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
+    await mockStable3DProviders(page);
     await waitForAppReady(page);
     await setKnown3DTerrainLocation(page);
     await open3DModal(page);
@@ -553,6 +564,15 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
       await expect
         .poll(() => scene.getAttribute('data-solar-viewport-contained'))
         .toBe('true');
+      const topPadding = await readMetric('data-solar-viewport-top-padding');
+      await expect
+        .poll(async () => {
+          const bounds = (await scene.getAttribute('data-solar-screen-bounds'))
+            ?.split(',')
+            .map(Number);
+          return bounds?.[1] ?? Number.NEGATIVE_INFINITY;
+        })
+        .toBeGreaterThanOrEqual(topPadding - 0.5);
     }
   });
 

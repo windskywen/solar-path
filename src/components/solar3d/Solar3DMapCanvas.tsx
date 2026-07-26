@@ -46,6 +46,7 @@ import {
   buildSolarReferenceGeometry,
   calculateSolarSceneMetrics,
   calculateSolarViewportFit,
+  calculateSolarViewportPadding,
   COMPASS_GROUND_OFFSET_METERS,
   getCameraFocusElevation,
   SOLAR_BASE_HEIGHT_METERS,
@@ -358,6 +359,14 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     sceneMetrics.pathRadiusMeters * solarViewportScale;
   const effectivePathRadiusPixels =
     sceneMetrics.pathRadiusPixels * solarViewportScale;
+  const viewportPadding = useMemo(
+    () =>
+      calculateSolarViewportPadding(
+        viewportSize.height,
+        isCompactDevice
+      ),
+    [isCompactDevice, viewportSize.height]
+  );
   const adaptiveGeometry = useMemo(
     () =>
       buildAdaptiveSolarGeometry(
@@ -1040,7 +1049,8 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
         projectedPoints,
         viewportWidth: viewportSize.width,
         viewportHeight: viewportSize.height,
-        edgePaddingPixels: isCompactDevice ? 16 : 24,
+        edgePaddingPixels: viewportPadding.edgePaddingPixels,
+        topPaddingPixels: viewportPadding.topPaddingPixels,
         markerRadiusPixels: sceneMetrics.selectedSunRadiusPixels * 1.5 + 4,
       });
       setSolarViewportContained(fit.isContained);
@@ -1074,7 +1084,6 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     adaptiveGeometry,
     cameraOrientationRevision,
     coordinateOrigin,
-    isCompactDevice,
     isEmpty,
     isMapLoaded,
     sceneMetrics.selectedSunRadiusPixels,
@@ -1082,6 +1091,8 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     solarViewportScale,
     viewportSize.height,
     viewportSize.width,
+    viewportPadding.edgePaddingPixels,
+    viewportPadding.topPaddingPixels,
   ]);
 
   // Handle reset view when resetKey changes
@@ -1144,6 +1155,7 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
       data-solar-compass-gap-meters={SOLAR_COMPASS_GAP_METERS.toFixed(2)}
       data-solar-viewport-scale={solarViewportScale.toFixed(4)}
       data-solar-viewport-contained={solarViewportContained ? 'true' : 'false'}
+      data-solar-viewport-top-padding={viewportPadding.topPaddingPixels.toFixed(2)}
       data-solar-viewport-measured-zoom={
         solarViewportMeasuredZoom === null
           ? 'pending'

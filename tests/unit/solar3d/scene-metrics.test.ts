@@ -5,6 +5,7 @@ import {
   buildAdaptiveSolarGeometry,
   buildSolarReferenceGeometry,
   calculateSolarViewportFit,
+  calculateSolarViewportPadding,
   calculateMetersPerPixel,
   calculateSolarSceneMetrics,
   COMPASS_GROUND_OFFSET_METERS,
@@ -188,6 +189,39 @@ describe('adaptive solar scene metrics', () => {
     expect(fit.isContained).toBe(false);
     expect(fit.nextScale).toBeLessThan(1);
     expect(fit.nextScale).toBeGreaterThan(0);
+  });
+
+  it('keeps the complete sun sphere below the larger visual top safe area', () => {
+    const fit = calculateSolarViewportFit({
+      currentScale: 1,
+      projectedOrigin: [500, 400],
+      projectedPoints: [
+        [500, 80],
+        [650, 350],
+        [350, 520],
+      ],
+      viewportWidth: 1000,
+      viewportHeight: 800,
+      edgePaddingPixels: 24,
+      topPaddingPixels: 96,
+      markerRadiusPixels: 14,
+    });
+
+    expect(fit.isContained).toBe(false);
+    expect(fit.nextScale).toBeLessThan(1);
+  });
+
+  it('reserves a responsive visual safe area above the solar path', () => {
+    expect(calculateSolarViewportPadding(800, false)).toEqual({
+      edgePaddingPixels: 24,
+      topPaddingPixels: 96,
+    });
+    expect(calculateSolarViewportPadding(800, true)).toEqual({
+      edgePaddingPixels: 16,
+      topPaddingPixels: 72,
+    });
+    expect(calculateSolarViewportPadding(400, false).topPaddingPixels).toBe(72);
+    expect(calculateSolarViewportPadding(1_200, false).topPaddingPixels).toBe(112);
   });
 
   it('can restore the full visual radius when a previously reduced scene has room', () => {
