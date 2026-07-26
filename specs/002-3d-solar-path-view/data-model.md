@@ -263,32 +263,37 @@ export interface Solar3DCameraState {
 ```typescript
 const DEFAULT_3D_CAMERA: Solar3DCameraState = {
   center: [location.lng, location.lat],
-  zoom: 15,
-  pitch: 60,
-  bearing: 0
+  zoom: 17,
+  pitch: 58,
+  bearing: 135
 };
 ```
 
 ---
 
-### Constants
+### Responsive Scene Metrics
 
 ```typescript
 /**
- * Visual constants for 3D rendering.
+ * Camera and screen-space targets for 3D rendering.
  */
-export const SOLAR_3D_CONSTANTS = {
-  /** Radius of the sun path arc in meters */
-  PATH_RADIUS_METERS: 1200,
-  /** Height scale factor for altitude */
-  HEIGHT_SCALE: 1.0,
-  /** Point radius in pixels (normal) */
-  POINT_RADIUS: 12,
-  /** Point radius in pixels (selected) */
-  POINT_RADIUS_SELECTED: 18,
-  /** Path line width in pixels */
-  PATH_WIDTH: 4,
+export const SOLAR_SCENE_CAMERA = {
+  zoom: 17,
+  minZoom: 15,
+  maxZoom: 20,
+  pitch: 58,
+  bearing: 135,
 } as const;
+
+const metersPerPixel =
+  156543.03392 * Math.cos(latitude * Math.PI / 180) / 2 ** zoom;
+const pathRadiusPixels = clamp(
+  Math.min(viewportWidth, viewportHeight) * 0.26,
+  isMobile ? 90 : 120,
+  isMobile ? 130 : 200
+);
+const pathRadiusMeters = pathRadiusPixels * metersPerPixel;
+const solarBaseHeight = Math.max(30, highestRenderedBuilding + 15);
 
 /**
  * Color palette for daylight states.

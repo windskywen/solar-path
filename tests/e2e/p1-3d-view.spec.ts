@@ -16,18 +16,11 @@
 
 import { test, expect, type Page } from '@playwright/test';
 
-// Mock location for testing (Taipei - ensures sun is visible)
-const MOCK_LOCATION = {
-  latitude: 25.033,
-  longitude: 121.5654,
-};
-
 /**
  * Wait for the app to be fully loaded with location data
  */
 async function waitForAppReady(page: Page) {
-  await page.goto('/');
-  await page.waitForLoadState('networkidle');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   // Wait for map to load
   await page.waitForSelector('.maplibregl-map', { timeout: 10000 });
   // Wait for 3D View button to be enabled (indicates data is ready)
@@ -45,6 +38,14 @@ async function open3DModal(page: Page) {
   await button.click({ force: true });
   // Wait for modal to appear
   await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+}
+
+async function waitForInteractive3DScene(page: Page) {
+  const scene = page.getByTestId('solar-3d-map');
+  await expect(scene).toBeVisible({ timeout: 15000 });
+  await expect(scene.locator('.maplibregl-canvas')).toBeVisible({ timeout: 15000 });
+  await expect(page.getByTestId('3d-map-loading')).toBeHidden({ timeout: 15000 });
+  return scene;
 }
 
 /**
@@ -145,6 +146,37 @@ test.describe('3D Solar Path View - US1: Open/Close Modal', () => {
     const description = page.locator('#solar-3d-description');
     await expect(description).toBeAttached();
   });
+
+  test('compact header leaves most of the modal height for the 3D map', async ({ page }) => {
+    await open3DModal(page);
+    await waitForInteractive3DScene(page);
+
+    const modalBox = await page.locator('[role="dialog"]').boundingBox();
+    const headerBox = await page.getByTestId('solar-3d-header').boundingBox();
+    const canvasShellBox = await page.getByTestId('solar-3d-canvas-shell').boundingBox();
+
+    expect(modalBox).not.toBeNull();
+    expect(headerBox).not.toBeNull();
+    expect(canvasShellBox).not.toBeNull();
+    expect(headerBox!.height).toBeLessThanOrEqual(64);
+    expect(canvasShellBox!.height / modalBox!.height).toBeGreaterThan(0.7);
+  });
+
+  test('compact header fits a mobile viewport without horizontal overflow', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await open3DModal(page);
+    await waitForInteractive3DScene(page);
+
+    const header = page.getByTestId('solar-3d-header');
+    const headerBox = await header.boundingBox();
+    const hasHorizontalOverflow = await header.evaluate(
+      (element) => element.scrollWidth > element.clientWidth
+    );
+
+    expect(headerBox).not.toBeNull();
+    expect(headerBox!.height).toBeLessThanOrEqual(56);
+    expect(hasHorizontalOverflow).toBe(false);
+  });
 });
 
 test.describe('3D Solar Path View - US2: Trajectory Without Selection', () => {
@@ -235,6 +267,19 @@ test.describe('3D Solar Path View - US5: Camera Controls', () => {
     const modal = page.locator('[role="dialog"]');
     await expect(modal).toBeVisible();
   });
+
+  test('initial and Reset View camera return to zoom 17', async ({ page }) => {
+    await open3DModal(page);
+    const scene = await waitForInteractive3DScene(page);
+
+    await expect.poll(async () => Number(await scene.getAttribute('data-map-zoom'))).toBeCloseTo(17, 1);
+
+    await scene.locator('.maplibregl-ctrl-zoom-out').click();
+    await expect.poll(async () => Number(await scene.getAttribute('data-map-zoom'))).toBeLessThan(16.5);
+
+    await page.getByText('Reset View').click();
+    await expect.poll(async () => Number(await scene.getAttribute('data-map-zoom'))).toBeCloseTo(17, 1);
+  });
 });
 
 test.describe('3D Solar Path View - Performance', () => {
@@ -259,5 +304,115 @@ test.describe('3D Solar Path View - Performance', () => {
 
     const closeTime = endTime - startTime;
     expect(closeTime).toBeLessThan(500);
+  });
+});
+
+test.describe('3D Solar Path View - Free Terrain Scene', () => {
+  test.skip(({ browserName }) => browserName !== 'chromium', 'WebGL scene assertions run in Chromium');
+
+  test('does not request 3D sources until the modal opens and stops after close', async ({ page }) => {
+    const sceneRequests: string[] = [];
+    page.on('request', (request) => {
+      const url = request.url();
+      if (url.includes('tiles.mapterhorn.com') || url.includes('tiles.openfreemap.org/planet')) {
+        sceneRequests.push(url);
+      }
+    });
+
+    await waitForAppReady(page);
+    expect(sceneRequests).toHaveLength(0);
+
+    await open3DModal(page);
+    await waitForInteractive3DScene(page);
+    await expect.poll(() => sceneRequests.length, { timeout: 15000 }).toBeGreaterThan(0);
+
+    await close3DModalWithEsc(page);
+    const requestCountAfterClose = sceneRequests.length;
+    await page.waitForTimeout(1000);
+    expect(sceneRequests).toHaveLength(requestCountAfterClose);
+  });
+
+  test('loads the full terrain/building scene with required attribution', async ({ page }) => {
+    await waitForAppReady(page);
+    await open3DModal(page);
+
+    const scene = await waitForInteractive3DScene(page);
+    await expect(scene).toHaveAttribute('data-render-mode', 'full-3d');
+    await expect(scene).toHaveAttribute('data-map-provider', 'openfreemap');
+
+    const attribution = scene.locator('.maplibregl-ctrl-attrib-inner');
+    await expect(attribution).toContainText('OpenFreeMap', { timeout: 15000 });
+    await expect(attribution).toContainText('OpenMapTiles');
+    await expect(attribution).toContainText('OpenStreetMap');
+    await expect(attribution).toContainText('Mapterhorn');
+  });
+
+  test('keeps solar path and spheres at stable screen size while zoom changes', async ({ page }) => {
+    await waitForAppReady(page);
+    await open3DModal(page);
+
+    const scene = await waitForInteractive3DScene(page);
+    const readMetric = async (attribute: string) =>
+      Number(await scene.getAttribute(attribute));
+
+    await expect.poll(() => readMetric('data-map-zoom')).toBeCloseTo(17, 1);
+    const pathPixelsAt17 = await readMetric('data-path-radius-pixels');
+    const pathMetersAt17 = await readMetric('data-path-radius-meters');
+    const sunPixelsAt17 = await readMetric('data-sun-radius-pixels');
+
+    const zoomIn = scene.locator('.maplibregl-ctrl-zoom-in');
+    await zoomIn.click();
+    await expect.poll(() => readMetric('data-map-zoom')).toBeCloseTo(18, 1);
+    await zoomIn.click();
+    await expect.poll(() => readMetric('data-map-zoom')).toBeCloseTo(19, 1);
+
+    const pathPixelsAt19 = await readMetric('data-path-radius-pixels');
+    const pathMetersAt19 = await readMetric('data-path-radius-meters');
+    const sunPixelsAt19 = await readMetric('data-sun-radius-pixels');
+    const solarBaseHeight = await readMetric('data-solar-base-height');
+
+    expect(pathPixelsAt19).toBeCloseTo(pathPixelsAt17, 1);
+    expect(sunPixelsAt19).toBeCloseTo(sunPixelsAt17, 1);
+    expect(pathMetersAt19 / pathMetersAt17).toBeCloseTo(0.25, 1);
+    expect(solarBaseHeight).toBeGreaterThanOrEqual(30);
+  });
+
+  test('falls back to the lightweight flat map after the free style retry fails', async ({
+    page,
+  }) => {
+    await page.route('https://tiles.openfreemap.org/styles/bright**', (route) => route.abort());
+    await waitForAppReady(page);
+    await open3DModal(page);
+
+    const scene = await waitForInteractive3DScene(page);
+    await expect(scene).toHaveAttribute('data-map-provider', 'fallback', { timeout: 15000 });
+    await expect(scene).toHaveAttribute('data-render-mode', 'flat');
+  });
+
+  test('falls back after critical terrain and vector sources fail their retry', async ({
+    page,
+  }) => {
+    await waitForAppReady(page);
+    await page.route('https://tiles.mapterhorn.com/tilejson.json**', (route) => route.abort());
+    await page.route('https://tiles.openfreemap.org/planet**', (route) => route.abort());
+    await open3DModal(page);
+
+    const scene = await waitForInteractive3DScene(page);
+    await expect(scene).toHaveAttribute('data-map-provider', 'fallback', { timeout: 15000 });
+    await expect(scene).toHaveAttribute('data-render-mode', 'flat');
+  });
+
+  test('shows the accessible summary after WebGL context loss', async ({ page }) => {
+    await waitForAppReady(page);
+    await open3DModal(page);
+
+    const scene = await waitForInteractive3DScene(page);
+    await scene.locator('.maplibregl-canvas').evaluate((canvas) => {
+      canvas.dispatchEvent(new Event('webglcontextlost', { cancelable: true }));
+    });
+
+    const summary = page.getByTestId('solar-3d-summary');
+    await expect(summary).toBeVisible();
+    await expect(summary.getByRole('heading', { name: 'Solar Path Summary' })).toBeVisible();
   });
 });
