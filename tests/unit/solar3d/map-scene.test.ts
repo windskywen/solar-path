@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  advancePerformanceGovernor,
+  createPerformanceGovernorState,
   ensureSolar3DMapScene,
   getNextPerformanceMode,
+  getPreviousPerformanceMode,
   getSceneVisibility,
   getSolarCoordinateOrigin,
   MAPTERHORN_TERRAIN,
@@ -12,6 +15,13 @@ import {
   OPENFREEMAP_BUILDING_LAYER_ID,
   OPENFREEMAP_BUILDING_SOURCE_ID,
   OPENFREEMAP_STYLE_URL,
+  PERFORMANCE_DEGRADE_DURATION_MS,
+  PERFORMANCE_DEGRADE_FPS_THRESHOLD,
+  PERFORMANCE_RECOVERY_DURATION_MS,
+  PERFORMANCE_RECOVERY_FPS_THRESHOLD,
+  PERFORMANCE_SAMPLE_WINDOW_MS,
+  type PerformanceGovernorResult,
+  type PerformanceSamplePhase,
 } from '@/lib/solar3d/map-scene';
 
 function createSceneMapMock() {
@@ -45,6 +55,26 @@ function createSceneMapMock() {
   };
 
   return map;
+}
+
+function samplePerformance(
+  current: PerformanceGovernorResult,
+  phase: PerformanceSamplePhase,
+  fps: number,
+  options: {
+    canRecover?: boolean;
+    elapsedMs?: number;
+    isDocumentVisible?: boolean;
+  } = {}
+): PerformanceGovernorResult {
+  return advancePerformanceGovernor({
+    ...current,
+    phase,
+    fps,
+    elapsedMs: options.elapsedMs ?? PERFORMANCE_SAMPLE_WINDOW_MS,
+    canRecover: options.canRecover ?? true,
+    isDocumentVisible: options.isDocumentVisible ?? true,
+  });
 }
 
 describe('free 3D map scene configuration', () => {
@@ -118,6 +148,125 @@ describe('free 3D map scene configuration', () => {
     expect(getSceneVisibility('full-3d')).toEqual({ buildings: true, terrain: true });
     expect(getSceneVisibility('terrain-only')).toEqual({ buildings: false, terrain: true });
     expect(getSceneVisibility('flat')).toEqual({ buildings: false, terrain: false });
+  });
+
+  it('uses tolerant degradation and recovery windows', () => {
+    expect(PERFORMANCE_SAMPLE_WINDOW_MS).toBe(1_000);
+    expect(PERFORMANCE_DEGRADE_FPS_THRESHOLD).toBe(15);
+    expect(PERFORMANCE_DEGRADE_DURATION_MS).toBe(10_000);
+    expect(PERFORMANCE_RECOVERY_FPS_THRESHOLD).toBe(30);
+    expect(PERFORMANCE_RECOVERY_DURATION_MS).toBe(5_000);
+  });
+
+  it('requires ten continuous low-FPS samples for each degradation step', () => {
+    let current: PerformanceGovernorResult = {
+      mode: 'full-3d',
+      state: createPerformanceGovernorState(),
+    };
+
+    for (let index = 0; index < 9; index += 1) {
+      current = samplePerformance(current, 'interaction', 14);
+    }
+    expect(current).toEqual({
+      mode: 'full-3d',
+      state: { healthyFpsDurationMs: 0, lowFpsDurationMs: 9_000 },
+    });
+
+    current = samplePerformance(current, 'interaction', 14);
+    expect(current).toEqual({
+      mode: 'terrain-only',
+      state: createPerformanceGovernorState(),
+    });
+
+    for (let index = 0; index < 10; index += 1) {
+      current = samplePerformance(current, 'interaction', 14);
+    }
+    expect(current.mode).toBe('flat');
+  });
+
+  it('clears the low-FPS duration when a sample reaches the threshold', () => {
+    let current: PerformanceGovernorResult = {
+      mode: 'full-3d',
+      state: createPerformanceGovernorState(),
+    };
+
+    for (let index = 0; index < 8; index += 1) {
+      current = samplePerformance(current, 'interaction', 14);
+    }
+    current = samplePerformance(current, 'interaction', 15);
+
+    expect(current).toEqual({
+      mode: 'full-3d',
+      state: createPerformanceGovernorState(),
+    });
+  });
+
+  it('restores one performance level for each fresh five-second healthy window', () => {
+    let current: PerformanceGovernorResult = {
+      mode: 'flat',
+      state: createPerformanceGovernorState(),
+    };
+
+    for (let index = 0; index < 5; index += 1) {
+      current = samplePerformance(current, 'idle', 30);
+    }
+    expect(current).toEqual({
+      mode: 'terrain-only',
+      state: createPerformanceGovernorState(),
+    });
+
+    for (let index = 0; index < 4; index += 1) {
+      current = samplePerformance(current, 'idle', 60);
+    }
+    expect(current.mode).toBe('terrain-only');
+
+    current = samplePerformance(current, 'idle', 60);
+    expect(current.mode).toBe('full-3d');
+    expect(getPreviousPerformanceMode('summary')).toBe('summary');
+  });
+
+  it('resets unhealthy recovery and pauses accumulation in a hidden tab', () => {
+    let current: PerformanceGovernorResult = {
+      mode: 'terrain-only',
+      state: createPerformanceGovernorState(),
+    };
+
+    for (let index = 0; index < 4; index += 1) {
+      current = samplePerformance(current, 'idle', 30);
+    }
+    current = samplePerformance(current, 'idle', 29);
+    expect(current.state.healthyFpsDurationMs).toBe(0);
+
+    for (let index = 0; index < 3; index += 1) {
+      current = samplePerformance(current, 'idle', 30);
+    }
+    current = samplePerformance(current, 'idle', 60, {
+      elapsedMs: 10_000,
+      isDocumentVisible: false,
+    });
+    expect(current.state.healthyFpsDurationMs).toBe(3_000);
+
+    current = samplePerformance(current, 'idle', 30);
+    current = samplePerformance(current, 'idle', 30);
+    expect(current.mode).toBe('full-3d');
+  });
+
+  it('never recovers source fallback or WebGL summary modes', () => {
+    const fallback = samplePerformance(
+      { mode: 'flat', state: createPerformanceGovernorState() },
+      'idle',
+      60,
+      { canRecover: false, elapsedMs: PERFORMANCE_RECOVERY_DURATION_MS }
+    );
+    const summary = samplePerformance(
+      { mode: 'summary', state: createPerformanceGovernorState() },
+      'idle',
+      60,
+      { elapsedMs: PERFORMANCE_RECOVERY_DURATION_MS }
+    );
+
+    expect(fallback.mode).toBe('flat');
+    expect(summary.mode).toBe('summary');
   });
 
   it('does not duplicate sources or the building layer after a style sync', () => {

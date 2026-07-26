@@ -293,8 +293,8 @@ const pathRadiusPixels = clamp(
   isMobile ? 130 : 200
 );
 const pathRadiusMeters = pathRadiusPixels * metersPerPixel;
-const compassHeightMeters = 2;
-const solarCompassGapMeters = 2;
+const compassHeightMeters = 10;
+const solarCompassGapMeters = 1;
 const solarBaseHeight = compassHeightMeters + solarCompassGapMeters;
 const cameraFocusElevation = terrainElevation + solarBaseHeight;
 const renderedPathRadiusMeters = pathRadiusMeters * viewportFitScale;
@@ -317,6 +317,26 @@ export const SOLAR_3D_COLORS = {
 ---
 
 ## State Transitions
+
+### Performance Governor
+
+```typescript
+type Solar3DPerformanceMode =
+  | 'full-3d'
+  | 'terrain-only'
+  | 'flat'
+  | 'summary';
+
+interface PerformanceGovernorState {
+  lowFpsDurationMs: number;
+  healthyFpsDurationMs: number;
+}
+```
+
+- Interaction samples below 15 FPS accumulate toward a 10-second, one-level degradation.
+- Idle visible-tab samples at or above 30 FPS accumulate toward a five-second, one-level recovery.
+- Every mode transition resets the relevant accumulator, so a second level always requires a fresh window.
+- Source-fallback `flat` and WebGL-loss `summary` modes are terminal for the current modal session.
 
 ### Modal State Machine
 

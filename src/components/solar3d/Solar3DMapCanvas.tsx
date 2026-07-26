@@ -29,13 +29,16 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Solar3DViewData, Solar3DTooltipData, Solar3DPoint } from '@/types/solar3d';
 import { SOLAR_3D_COLORS } from '@/lib/solar3d/geometry';
 import {
+  advancePerformanceGovernor,
+  createPerformanceGovernorState,
   ensureSolar3DMapScene,
-  getNextPerformanceMode,
   getSceneVisibility,
   getSolarCoordinateOrigin,
   MAPTERHORN_TERRAIN_SOURCE_ID,
   OPENFREEMAP_BUILDING_SOURCE_ID,
   OPENFREEMAP_STYLE_URL,
+  PERFORMANCE_SAMPLE_WINDOW_MS,
+  type PerformanceSamplePhase,
   type Solar3DPerformanceMode,
 } from '@/lib/solar3d/map-scene';
 import {
@@ -94,12 +97,15 @@ const FALLBACK_MAP_STYLE = {
 };
 
 const MAP_LOAD_TIMEOUT_MS = 10_000;
-const LOW_FPS_THRESHOLD = 30;
-const LOW_FPS_WINDOW_MS = 3_000;
 const INITIAL_SOLAR_VIEWPORT_SCALE = 0.7;
 
 type MapboxOverlayWithDeck = {
   _deck?: Deck;
+};
+
+type Solar3DPerformanceDebugElement = HTMLElement & {
+  __solar3DPerformanceMap?: ReturnType<MapRef['getMap']>;
+  __solar3DPerformanceSample?: (fps: number, elapsedMs: number) => void;
 };
 
 function getSolarProjectionViewport(
@@ -290,6 +296,7 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
   const [mapProvider, setMapProvider] = useState<'openfreemap' | 'fallback'>('openfreemap');
   const [performanceMode, setPerformanceMode] =
     useState<Solar3DPerformanceMode>('full-3d');
+  const performanceModeRef = useRef<Solar3DPerformanceMode>('full-3d');
   const [terrainElevation, setTerrainElevation] = useState(0);
   const [sceneZoom, setSceneZoom] = useState<number>(SOLAR_SCENE_CAMERA.zoom);
   const [viewportSize, setViewportSize] = useState(() => ({
@@ -313,6 +320,10 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     if (typeof window === 'undefined') return false;
     return window.matchMedia('(max-width: 767px)').matches;
   }, []);
+
+  useEffect(() => {
+    performanceModeRef.current = performanceMode;
+  }, [performanceMode]);
 
   // Create sphere geometry for 3D sun points
   const sphereGeometry = useMemo(
@@ -641,16 +652,77 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
   ]);
 
   useEffect(() => {
-    if (!isMapLoaded || !mapRef.current) return;
+    if (
+      !hasWebGL ||
+      !isMapLoaded ||
+      !mapRef.current ||
+      mapProvider !== 'openfreemap'
+    ) {
+      return;
+    }
 
     const map = mapRef.current.getMap();
+    const sceneElement = map
+      .getContainer()
+      .closest<Solar3DPerformanceDebugElement>('[data-testid="solar-3d-map"]');
     let animationFrameId: number | null = null;
-    let isInteracting = false;
+    let monitoringGeneration = 0;
+    let phase: PerformanceSamplePhase | null = null;
+    let governorState = createPerformanceGovernorState();
     let sampleStartedAt = 0;
     let frameCount = 0;
 
-    const sampleFrameRate = (timestamp: number) => {
-      if (!isInteracting) return;
+    const stopFrameLoop = () => {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    };
+
+    const stopMonitoring = () => {
+      stopFrameLoop();
+      monitoringGeneration += 1;
+      phase = null;
+      governorState = createPerformanceGovernorState();
+      sampleStartedAt = 0;
+      frameCount = 0;
+    };
+
+    const applyGovernorSample = (fps: number, elapsedMs: number) => {
+      if (phase === null) return;
+
+      const result = advancePerformanceGovernor({
+        mode: performanceModeRef.current,
+        state: governorState,
+        phase,
+        fps,
+        elapsedMs,
+        canRecover: true,
+        isDocumentVisible: document.visibilityState === 'visible',
+      });
+      governorState = result.state;
+
+      if (result.mode !== performanceModeRef.current) {
+        performanceModeRef.current = result.mode;
+        setPerformanceMode(result.mode);
+      }
+
+      if (phase === 'idle' && result.mode === 'full-3d') {
+        stopMonitoring();
+      }
+    };
+
+    const scheduleFrameLoop = () => {
+      const scheduledGeneration = monitoringGeneration;
+      animationFrameId = requestAnimationFrame((timestamp) =>
+        sampleFrameRate(timestamp, scheduledGeneration)
+      );
+    };
+
+    const sampleFrameRate = (timestamp: number, scheduledGeneration: number) => {
+      if (scheduledGeneration !== monitoringGeneration) return;
+      animationFrameId = null;
+      if (phase === null) return;
 
       if (sampleStartedAt === 0) {
         sampleStartedAt = timestamp;
@@ -658,45 +730,66 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
       frameCount += 1;
 
       const elapsed = timestamp - sampleStartedAt;
-      if (elapsed >= LOW_FPS_WINDOW_MS) {
-        const fps = (frameCount * 1000) / elapsed;
-        if (fps < LOW_FPS_THRESHOLD) {
-          setPerformanceMode((current) => getNextPerformanceMode(current));
+      if (elapsed >= PERFORMANCE_SAMPLE_WINDOW_MS) {
+        const fps = (Math.max(0, frameCount - 1) * 1000) / elapsed;
+        applyGovernorSample(fps, elapsed);
+        if (phase !== null) {
+          sampleStartedAt = timestamp;
+          // The current frame is the baseline for the next interval.
+          frameCount = 1;
         }
-        sampleStartedAt = timestamp;
-        frameCount = 0;
       }
 
-      animationFrameId = requestAnimationFrame(sampleFrameRate);
-    };
-
-    const startMonitoring = () => {
-      if (isInteracting) return;
-      isInteracting = true;
-      sampleStartedAt = 0;
-      frameCount = 0;
-      animationFrameId = requestAnimationFrame(sampleFrameRate);
-    };
-
-    const stopMonitoring = () => {
-      isInteracting = false;
-      sampleStartedAt = 0;
-      frameCount = 0;
-      if (animationFrameId !== null) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
+      if (phase !== null && animationFrameId === null) {
+        scheduleFrameLoop();
       }
     };
 
-    map.on('movestart', startMonitoring);
-    map.on('moveend', stopMonitoring);
+    const startMonitoring = (nextPhase: PerformanceSamplePhase) => {
+      if (phase === nextPhase) return;
+
+      monitoringGeneration += 1;
+      phase = nextPhase;
+      governorState = createPerformanceGovernorState();
+      sampleStartedAt = 0;
+      frameCount = 0;
+      scheduleFrameLoop();
+    };
+
+    const startInteractionMonitoring = () => {
+      startMonitoring('interaction');
+    };
+
+    const startRecoveryMonitoring = () => {
+      if (
+        performanceModeRef.current === 'full-3d' ||
+        performanceModeRef.current === 'summary'
+      ) {
+        stopMonitoring();
+        return;
+      }
+
+      startMonitoring('idle');
+    };
+
+    if (process.env.NODE_ENV !== 'production' && sceneElement) {
+      sceneElement.__solar3DPerformanceMap = map;
+      sceneElement.__solar3DPerformanceSample = applyGovernorSample;
+    }
+
+    map.on('movestart', startInteractionMonitoring);
+    map.on('moveend', startRecoveryMonitoring);
 
     return () => {
       stopMonitoring();
-      map.off('movestart', startMonitoring);
-      map.off('moveend', stopMonitoring);
+      map.off('movestart', startInteractionMonitoring);
+      map.off('moveend', startRecoveryMonitoring);
+      if (sceneElement?.__solar3DPerformanceMap === map) {
+        delete sceneElement.__solar3DPerformanceMap;
+      }
+      delete sceneElement?.__solar3DPerformanceSample;
     };
-  }, [isMapLoaded]);
+  }, [hasWebGL, isMapLoaded, mapProvider]);
 
   useEffect(() => {
     if (!isMapLoaded || !mapRef.current || performanceMode === 'summary') return;
@@ -1129,7 +1222,7 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
         </div>
       </div>
 
-      {isInitializing && (
+      {isInitializing && !isMapLoaded && (
         <div
           className="absolute inset-0 z-30 flex items-center justify-center [background:var(--solar-3d-root-bg)] transition-opacity duration-500 backdrop-blur-sm"
           style={{ opacity: isMapLoaded ? 0.5 : 1 }}

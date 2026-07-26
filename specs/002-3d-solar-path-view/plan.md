@@ -38,7 +38,7 @@ Add a **"3D View"** button on the main map panel that opens a near-fullscreen mo
 - Unit Tests: Coverage for geometry utilities, visibility filtering, selectedHour rules
 - E2E Tests: Modal open/close, tooltip, highlight, camera preservation
 - Code Review: Required before merge
-- Performance: Runtime interaction FPS monitoring and automatic scene degradation
+- Performance: Runtime interaction FPS monitoring with progressive degradation and idle-time automatic recovery
 
 ## Project Structure
 
@@ -146,7 +146,7 @@ useSolar3DData hook transforms:
 deck.gl layers render:
         │  - SimpleMeshLayer (zoom-responsive sun spheres)
         │  - PathLayer (zoom-responsive visible-point polyline)
-        │  - LineLayer (4m solar connectors + 2m compass + vertical anchor)
+        │  - LineLayer (11m solar connectors + 10m compass + vertical anchor)
         │
         ▼
 Interactions:
@@ -168,7 +168,7 @@ Interactions:
 | Tile Source | Fastest available | Per clarification: prioritize latency over style match |
 | Default Camera | zoom 15, pitch 58°, bearing 135° | Starts at the full building extrusion threshold without fitting the old 1200m arc |
 | Visual Scale | Screen-space target converted with meters-per-pixel | Preserves readable path/sun size across zoom 15–20 |
-| Vertical References | Compass at 2m, solar horizon at 4m | Keeps a deterministic 2m separation independent of building height |
+| Vertical References | Compass at 10m, solar horizon at 11m | Keeps a deterministic 1m separation independent of building height |
 
 ---
 
@@ -219,9 +219,9 @@ and an inset edge margin, then iteratively reduces `viewportFitScale` until the
 complete solar path and every sun sphere are contained.
 
 The location marker and shadow remain at terrain-relative `z = 0`. Connectors
-use the fixed solar origin `[0, 0, 4]`, while compass lines and cardinal labels
-use `[0, 0, 2]`. A subtle vertical anchor connects those two planes. Camera
-focus elevation is the zoom-stable `terrainElevation + 4`; screen-space fitting
+use the fixed solar origin `[0, 0, 11]`, while compass lines and cardinal labels
+use `[0, 0, 10]`. A subtle vertical anchor connects those two planes. Camera
+focus elevation is the zoom-stable `terrainElevation + 11`; screen-space fitting
 controls the arc size separately.
 
 ### Direction Verification (Unit Test Cases)
@@ -255,7 +255,7 @@ controls the arc size separately.
 | Risk | Mitigation |
 |------|------------|
 | WebGL unsupported or context lost | NFR3D-005: Accessible text summary |
-| FPS drops on desktop/mobile | Hide buildings after 3s below 30 FPS, then disable terrain after another 3s |
+| FPS drops on desktop/mobile | During interaction, hide buildings after 10s below 15 FPS and disable terrain only after a fresh 10s window; after `moveend`, restore one level per fresh 5s window at 30+ FPS |
 | Public style/source unavailable | Retry once, then use the existing lightweight flat map |
 | Excessive mobile GPU fill rate | Cap device pixel ratio at 1 and reduce sphere subdivision |
 | Public services have no SLA | Preserve fallback map; self-hosting remains a future option |
@@ -263,7 +263,7 @@ controls the arc size separately.
 | Memory leaks | Cleanup map.remove() and overlay on unmount |
 | Bundle size increase | Dynamic import for modal keeps initial load fast |
 | Zoom causes geometry churn | Sample zoom through one requestAnimationFrame callback and ignore pan/pitch/bearing |
-| Nearby tall buildings obscure the low 4m arc | Accept occlusion to preserve the explicit fixed-height reference planes |
+| Nearby tall buildings obscure the low 11m arc | Accept occlusion to preserve the explicit fixed-height reference planes |
 
 ---
 

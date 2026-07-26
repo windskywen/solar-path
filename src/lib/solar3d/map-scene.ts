@@ -7,6 +7,31 @@ import type {
 } from 'maplibre-gl';
 
 export type Solar3DPerformanceMode = 'full-3d' | 'terrain-only' | 'flat' | 'summary';
+export type PerformanceSamplePhase = 'interaction' | 'idle';
+
+export interface PerformanceGovernorState {
+  lowFpsDurationMs: number;
+  healthyFpsDurationMs: number;
+}
+
+export interface PerformanceGovernorResult {
+  mode: Solar3DPerformanceMode;
+  state: PerformanceGovernorState;
+}
+
+export interface PerformanceGovernorSample extends PerformanceGovernorResult {
+  phase: PerformanceSamplePhase;
+  fps: number;
+  elapsedMs: number;
+  canRecover: boolean;
+  isDocumentVisible: boolean;
+}
+
+export const PERFORMANCE_SAMPLE_WINDOW_MS = 1_000;
+export const PERFORMANCE_DEGRADE_FPS_THRESHOLD = 15;
+export const PERFORMANCE_DEGRADE_DURATION_MS = 10_000;
+export const PERFORMANCE_RECOVERY_FPS_THRESHOLD = 30;
+export const PERFORMANCE_RECOVERY_DURATION_MS = 5_000;
 
 export const OPENFREEMAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/bright';
 export const OPENFREEMAP_BUILDING_SOURCE_ID = 'solar-3d-openfreemap';
@@ -112,6 +137,92 @@ export function getNextPerformanceMode(mode: Solar3DPerformanceMode): Solar3DPer
     default:
       return mode;
   }
+}
+
+export function getPreviousPerformanceMode(
+  mode: Solar3DPerformanceMode
+): Solar3DPerformanceMode {
+  switch (mode) {
+    case 'flat':
+      return 'terrain-only';
+    case 'terrain-only':
+      return 'full-3d';
+    default:
+      return mode;
+  }
+}
+
+export function createPerformanceGovernorState(): PerformanceGovernorState {
+  return {
+    lowFpsDurationMs: 0,
+    healthyFpsDurationMs: 0,
+  };
+}
+
+export function advancePerformanceGovernor({
+  mode,
+  state,
+  phase,
+  fps,
+  elapsedMs,
+  canRecover,
+  isDocumentVisible,
+}: PerformanceGovernorSample): PerformanceGovernorResult {
+  const safeElapsedMs =
+    Number.isFinite(elapsedMs) && elapsedMs > 0 ? elapsedMs : 0;
+
+  if (!isDocumentVisible) {
+    return { mode, state };
+  }
+
+  if (phase === 'interaction') {
+    const lowFpsDurationMs =
+      Number.isFinite(fps) && fps < PERFORMANCE_DEGRADE_FPS_THRESHOLD
+        ? state.lowFpsDurationMs + safeElapsedMs
+        : 0;
+
+    if (lowFpsDurationMs >= PERFORMANCE_DEGRADE_DURATION_MS) {
+      return {
+        mode: getNextPerformanceMode(mode),
+        state: createPerformanceGovernorState(),
+      };
+    }
+
+    return {
+      mode,
+      state: {
+        lowFpsDurationMs,
+        healthyFpsDurationMs: 0,
+      },
+    };
+  }
+
+  if (!canRecover || mode === 'full-3d' || mode === 'summary') {
+    return {
+      mode,
+      state: createPerformanceGovernorState(),
+    };
+  }
+
+  const healthyFpsDurationMs =
+    Number.isFinite(fps) && fps >= PERFORMANCE_RECOVERY_FPS_THRESHOLD
+      ? state.healthyFpsDurationMs + safeElapsedMs
+      : 0;
+
+  if (healthyFpsDurationMs >= PERFORMANCE_RECOVERY_DURATION_MS) {
+    return {
+      mode: getPreviousPerformanceMode(mode),
+      state: createPerformanceGovernorState(),
+    };
+  }
+
+  return {
+    mode,
+    state: {
+      lowFpsDurationMs: 0,
+      healthyFpsDurationMs,
+    },
+  };
 }
 
 export function getSolarCoordinateOrigin(

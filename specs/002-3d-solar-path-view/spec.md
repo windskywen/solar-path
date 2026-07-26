@@ -180,9 +180,9 @@ The modal MUST have access to:
 - **FR3D-049**: Initial view and "Reset View" MUST use zoom 15, pitch 58 degrees, and bearing 135 degrees. The modal MUST constrain navigation to zoom 15–20 and MUST NOT use solar-path bounds to reduce the initial zoom below the building extrusion range.
 - **FR3D-049A**: The solar trajectory MUST target 35% of the viewport short side, clamped to 120–200px on desktop and 90–130px on mobile. The corresponding meter radius MUST be recalculated from `156543.03392 × cos(latitude) ÷ 2^zoom`.
 - **FR3D-049B**: Normal/selected sun spheres MUST target 8px/11px radii on desktop and 7px/10px on mobile. Path and shadow widths MUST use pixel units.
-- **FR3D-049C**: The solar horizon reference MUST remain at terrain-relative `z = 4m`, independent of rendered building height and zoom. The scene MUST NOT query rendered buildings to adjust solar geometry height.
-- **FR3D-049D**: The solar path, sun spheres, and connectors MUST use the fixed `z = 4m` solar origin. Compass lines and cardinal labels MUST remain at terrain-relative `z = 2m`, creating a fixed 2m vertical gap. The location marker and shadow path MUST stay at `z = 0`, with a subtle vertical anchor joining `[0, 0, 2]` to `[0, 0, 4]`.
-- **FR3D-049E**: Camera focus elevation MUST remain at `terrainElevation + 4m`, avoiding zoom-dependent vertical drift.
+- **FR3D-049C**: The solar horizon reference MUST remain at terrain-relative `z = 11m`, independent of rendered building height and zoom. The scene MUST NOT query rendered buildings to adjust solar geometry height.
+- **FR3D-049D**: The solar path, sun spheres, and connectors MUST use the fixed `z = 11m` solar origin. Compass lines and cardinal labels MUST remain at terrain-relative `z = 10m`, creating a fixed 1m vertical gap. The location marker and shadow path MUST stay at `z = 0`, with a subtle vertical anchor joining `[0, 0, 10]` to `[0, 0, 11]`.
+- **FR3D-049E**: Camera focus elevation MUST remain at `terrainElevation + 11m`, avoiding zoom-dependent vertical drift.
 - **FR3D-049F**: After every zoom, pitch, bearing, or viewport-size change, the projected solar points and sun-marker radii MUST be measured against an inset viewport safe area. If any part is outside, the visual path radius MUST shrink iteratively until the complete path and every sun sphere are contained.
 
 #### 3D Trajectory Rendering
@@ -230,9 +230,9 @@ Let:
 - `mpp = 156543.03392 × cos(latitude) ÷ 2^zoom`
 - `Rpx = clamp(shortViewportSide × 0.35, deviceMinimum, deviceMaximum) × viewportFitScale`
 - `R = Rpx × mpp` (zoom-responsive visual radius in meters)
-- `C = 2m` (fixed terrain-relative compass and cardinal-label height)
-- `G = 2m` (fixed vertical gap between compass and solar reference planes)
-- `B = C + G = 4m` (fixed solar horizon reference height)
+- `C = 10m` (fixed terrain-relative compass and cardinal-label height)
+- `G = 1m` (fixed vertical gap between compass and solar reference planes)
+- `B = C + G = 11m` (fixed solar horizon reference height)
 
 For each hour `H`:
 - If `altitudeDeg < 0`, omit
@@ -286,8 +286,13 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
   - Text-based accessible summary of visible hours (list with hour, azimuth, altitude, daylight state) for screen reader users
 - **NFR3D-005**: Graceful degradation MUST be progressive:
   - WebGL capability MUST be checked before attempting to render deck.gl layers.
-  - During camera interaction, 3 continuous seconds below 30 FPS MUST change `full-3d` to `terrain-only`.
-  - A further 3 continuous seconds below 30 FPS MUST change `terrain-only` to `flat`.
+  - FPS MUST be sampled in one-second windows while the camera is moving.
+  - During camera interaction, 10 continuous seconds below 15 FPS MUST change `full-3d` to `terrain-only`.
+  - A fresh 10-second window below 15 FPS MUST change `terrain-only` to `flat`; any interaction sample at or above 15 FPS MUST clear the low-FPS accumulator.
+  - After `moveend`, 5 continuous visible-tab seconds at or above 30 FPS MUST restore exactly one level: `flat` to `terrain-only`, then `terrain-only` to `full-3d`.
+  - Each recovery level MUST require a fresh five-second window. A new interaction or an idle sample below 30 FPS MUST clear the healthy-FPS accumulator.
+  - Automatic recovery MUST only run for a healthy OpenFreeMap/WebGL scene. A source-fallback `flat` scene and a WebGL-loss `summary` scene MUST NOT recover automatically.
+  - A background tab MUST pause healthy-time accumulation.
   - WebGL context loss MUST change the scene to `summary`.
   - The summary MUST be a styled text component; no pre-rendered image is required.
 - **NFR3D-006**: Mobile rendering MUST cap MapLibre device pixel ratio at 1 and use lower sun-sphere subdivision. Desktop MUST retain the higher-detail spheres.
@@ -333,13 +338,16 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
   - building layer uses height/base properties, zoom interpolation, and `hide_3d` filter
   - terrain elevation is included in the shared solar geometry origin
   - style reload does not duplicate sources or layers
-  - performance mode degrades in the required order
+  - performance mode degrades and recovers one level at a time with fresh threshold windows
+  - 14 FPS does not degrade before 10 seconds; 15 FPS clears the low-FPS accumulator
+  - idle 30+ FPS recovers one level after five seconds; low idle FPS, renewed interaction, and background tabs reset or pause recovery as specified
+  - fallback `flat` and WebGL-loss `summary` modes never auto-recover
   - meters-per-pixel halves for each additional zoom level while the target pixel radius stays constant
   - East/North/Up use the same adaptive radius and preserve solar angles
   - normal/selected sun spheres retain their required pixel radii at zoom 15, 17, and 19
-  - solar origin remains at terrain-relative `z = 4m` without querying building height
-  - compass lines and labels remain at `z = 2m`, exactly 2m below the solar origin
-  - anchor connects `z = 2m` to `z = 4m`, and shadow/location remain at `z = 0`
+  - solar origin remains at terrain-relative `z = 11m` without querying building height
+  - compass lines and labels remain at `z = 10m`, exactly 1m below the solar origin
+  - anchor connects `z = 10m` to `z = 11m`, and shadow/location remain at `z = 0`
 
 ### E2E (Playwright)
 
@@ -354,8 +362,11 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
 9. Confirm closing the modal removes the 3D canvas and that no 3D resource is requested before opening
 10. Confirm initial and Reset camera return to zoom 15, pitch 58 degrees, and bearing 135 degrees
 11. At every zoom from 15 through 20, confirm the measured solar bounds remain inside the viewport safe area
-12. Confirm `data-solar-base-height="4.00"`, `data-compass-height-meters="2.00"`, and `data-solar-compass-gap-meters="2.00"`
+12. Confirm `data-solar-base-height="11.00"`, `data-compass-height-meters="10.00"`, and `data-solar-compass-gap-meters="1.00"`
 13. Confirm all three diagnostic heights remain unchanged from zoom 15 through 20
+14. Simulate 14 FPS interaction samples; confirm the scene stays `full-3d` for nine seconds and degrades only on the tenth second
+15. Simulate idle 30+ FPS samples; confirm each recovery level requires a fresh five-second window
+16. Confirm source fallback `flat`, WebGL-loss `summary`, renewed interaction, and hidden-tab samples cannot incorrectly recover the scene
 
 ---
 

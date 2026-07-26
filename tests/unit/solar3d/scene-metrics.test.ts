@@ -102,9 +102,9 @@ describe('adaptive solar scene metrics', () => {
   });
 
   it('keeps the compass and solar reference planes at fixed terrain offsets', () => {
-    expect(COMPASS_GROUND_OFFSET_METERS).toBe(2);
-    expect(SOLAR_COMPASS_GAP_METERS).toBe(2);
-    expect(SOLAR_BASE_HEIGHT_METERS).toBe(4);
+    expect(COMPASS_GROUND_OFFSET_METERS).toBe(10);
+    expect(SOLAR_COMPASS_GAP_METERS).toBe(1);
+    expect(SOLAR_BASE_HEIGHT_METERS).toBe(11);
     expect(SOLAR_BASE_HEIGHT_METERS - COMPASS_GROUND_OFFSET_METERS).toBe(
       SOLAR_COMPASS_GAP_METERS
     );
@@ -138,7 +138,7 @@ describe('adaptive solar scene metrics', () => {
     });
   });
 
-  it('keeps compass references two metres above terrain and two metres below the solar origin', () => {
+  it('keeps compass references ten metres above terrain and one metre below the solar origin', () => {
     const reference = buildSolarReferenceGeometry(
       160,
       SOLAR_BASE_HEIGHT_METERS,
@@ -167,7 +167,7 @@ describe('adaptive solar scene metrics', () => {
   });
 
   it('keeps camera focus on the elevated solar origin without zoom-dependent drift', () => {
-    expect(getCameraFocusElevation(42, SOLAR_BASE_HEIGHT_METERS)).toBeCloseTo(46);
+    expect(getCameraFocusElevation(42, SOLAR_BASE_HEIGHT_METERS)).toBeCloseTo(53);
   });
 
   it('shrinks a projected solar scene until markers stay inside the viewport safe area', () => {
