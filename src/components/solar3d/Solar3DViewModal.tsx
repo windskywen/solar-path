@@ -155,13 +155,13 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
       : null;
 
   const actionButtonClassName =
-    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.72rem] font-medium text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:[--tw-ring-color:var(--solar-switch-ring)] sm:gap-2 sm:px-4 sm:py-2 sm:text-sm';
+    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.72rem] font-medium text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:[--tw-ring-color:var(--solar-switch-ring)] sm:text-xs';
 
   const iconButtonClassName =
-    'inline-flex size-8 items-center justify-center rounded-full border text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:[--tw-ring-color:var(--solar-switch-ring)] sm:size-10';
+    'inline-flex size-8 items-center justify-center rounded-full border text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:[--tw-ring-color:var(--solar-switch-ring)] sm:size-9';
 
   const detailPillClassName =
-    'inline-flex items-center gap-1.5 rounded-full border [border-color:var(--solar-pill-border)] [background:var(--solar-pill-bg)] px-3 py-1.5 text-[0.72rem] font-medium text-[var(--solar-pill-text)] [box-shadow:var(--solar-surface-shadow)] backdrop-blur-xl sm:gap-2 sm:px-3.5 sm:py-2 sm:text-xs';
+    'inline-flex min-w-0 items-center gap-1.5 rounded-full border [border-color:var(--solar-pill-border)] [background:var(--solar-pill-bg)] px-2.5 py-1 text-[0.68rem] font-medium text-[var(--solar-pill-text)] [box-shadow:var(--solar-surface-shadow)] backdrop-blur-xl';
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -192,23 +192,44 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
           </div>
 
           <div className="relative flex h-full flex-col">
-            <header className="relative z-20 border-b [border-color:var(--solar-divider)] [background:var(--solar-3d-header-bg)] px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur-xl sm:px-5 sm:pb-4 sm:pt-4">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <span className="hidden items-center gap-2 rounded-full border border-cyan-300/20 [background:var(--solar-pill-bg)] px-2.5 py-0.5 text-[0.6rem] font-medium uppercase tracking-[0.26em] text-[var(--solar-3d-kicker)] shadow-[0_8px_30px_rgba(14,165,233,0.14)] sm:inline-flex">
+            <header
+              className="relative z-20 border-b [border-color:var(--solar-divider)] [background:var(--solar-3d-header-bg)] px-4 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] backdrop-blur-xl sm:px-4 sm:py-2"
+              data-testid="solar-3d-header"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="min-w-0">
+                    <span className="hidden text-[0.55rem] font-medium uppercase tracking-[0.24em] text-[var(--solar-3d-kicker)] sm:block">
                       Immersive viewer
                     </span>
-                    <Dialog.Title className="text-[clamp(1.15rem,1.02rem+0.9vw,1.8rem)] font-semibold tracking-[-0.04em] text-[var(--solar-text-strong)] sm:mt-2">
+                    <Dialog.Title className="truncate text-[clamp(1.05rem,0.98rem+0.55vw,1.45rem)] font-semibold leading-tight tracking-[-0.04em] text-[var(--solar-text-strong)] sm:mt-0.5">
                       3D Solar Path View
                     </Dialog.Title>
-                    <p className="mt-1 hidden max-w-xl text-[0.82rem] leading-5 text-[var(--solar-text)] md:block">
-                      Trace the sun across the sky with daylight markers, golden hour cues, and a
-                      focused scene summary.
-                    </p>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-2">
+                  {viewData && (
+                    <div className="hidden min-w-0 items-center gap-1.5 lg:flex">
+                      <div className={`${detailPillClassName} max-w-56`}>
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.9)]" />
+                        <span className="truncate">{locationLabel}</span>
+                      </div>
+                      {visibleHoursLabel && (
+                        <div className={`${detailPillClassName} shrink-0`}>
+                          <span className="text-[var(--solar-3d-kicker)]">Visible</span>
+                          <span>{visibleHoursLabel}</span>
+                        </div>
+                      )}
+                      {selectedHourLabel && (
+                        <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full border [border-color:var(--solar-warning-border)] [background:var(--solar-warning-bg)] px-2.5 py-1 text-[0.68rem] font-medium text-[var(--solar-warning-text)] shadow-[0_10px_28px_rgba(251,191,36,0.12)] backdrop-blur-xl">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-300 shadow-[0_0_16px_rgba(252,211,77,0.75)]" />
+                          <span>Selected {selectedHourLabel}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
                     <button
                       type="button"
                       onClick={handleResetView}
@@ -259,28 +280,6 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
                       </button>
                     </Dialog.Close>
                   </div>
-                </div>
-
-                {viewData && (
-                  <div className="hidden flex-wrap gap-2 sm:flex">
-                    <div className={detailPillClassName}>
-                      <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.9)]" />
-                      <span className="truncate">{locationLabel}</span>
-                    </div>
-                    {visibleHoursLabel && (
-                      <div className={detailPillClassName}>
-                        <span className="text-[var(--solar-3d-kicker)]">Visible</span>
-                        <span>{visibleHoursLabel}</span>
-                      </div>
-                    )}
-                    {selectedHourLabel && (
-                      <div className="inline-flex items-center gap-1.5 rounded-full border [border-color:var(--solar-warning-border)] [background:var(--solar-warning-bg)] px-3 py-1.5 text-[0.72rem] font-medium text-[var(--solar-warning-text)] shadow-[0_10px_28px_rgba(251,191,36,0.12)] backdrop-blur-xl sm:gap-2 sm:px-3.5 sm:py-2 sm:text-xs">
-                        <span className="h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_16px_rgba(252,211,77,0.75)]" />
-                        <span>Selected {selectedHourLabel}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </header>
 
@@ -294,7 +293,10 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
 
             {viewData && <Solar3DAccessibleSummary viewData={viewData} />}
 
-            <div className="relative min-h-0 flex-1 px-2.5 pb-2.5 pt-2 sm:px-4 sm:pb-4 sm:pt-3">
+            <div
+              className="relative min-h-0 flex-1 px-2.5 pb-2.5 pt-2 sm:px-4 sm:pb-4 sm:pt-3"
+              data-testid="solar-3d-canvas-shell"
+            >
               <div className="relative h-full overflow-hidden rounded-[26px] border [border-color:var(--solar-3d-canvas-border)] [background:var(--solar-3d-canvas-bg)] [box-shadow:var(--solar-3d-canvas-shadow)]">
                 <div className="absolute inset-0">
                   {viewData ? (

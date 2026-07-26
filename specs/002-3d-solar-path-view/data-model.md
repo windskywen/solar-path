@@ -264,31 +264,43 @@ export interface Solar3DCameraState {
 const DEFAULT_3D_CAMERA: Solar3DCameraState = {
   center: [location.lng, location.lat],
   zoom: 15,
-  pitch: 60,
-  bearing: 0
+  pitch: 58,
+  bearing: 135
 };
 ```
 
 ---
 
-### Constants
+### Responsive Scene Metrics
 
 ```typescript
 /**
- * Visual constants for 3D rendering.
+ * Camera and screen-space targets for 3D rendering.
  */
-export const SOLAR_3D_CONSTANTS = {
-  /** Radius of the sun path arc in meters */
-  PATH_RADIUS_METERS: 1200,
-  /** Height scale factor for altitude */
-  HEIGHT_SCALE: 1.0,
-  /** Point radius in pixels (normal) */
-  POINT_RADIUS: 12,
-  /** Point radius in pixels (selected) */
-  POINT_RADIUS_SELECTED: 18,
-  /** Path line width in pixels */
-  PATH_WIDTH: 4,
+export const SOLAR_SCENE_CAMERA = {
+  zoom: 15,
+  minZoom: 15,
+  maxZoom: 20,
+  pitch: 58,
+  bearing: 135,
 } as const;
+
+const metersPerPixel =
+  156543.03392 * Math.cos(latitude * Math.PI / 180) / 2 ** zoom;
+const pathRadiusPixels = clamp(
+  Math.min(viewportWidth, viewportHeight) * 0.35,
+  isMobile ? 90 : 120,
+  isMobile ? 130 : 200
+);
+const pathRadiusMeters = pathRadiusPixels * metersPerPixel;
+const compassHeightMeters = 10;
+const solarCompassGapMeters = 1;
+const solarBaseHeight = compassHeightMeters + solarCompassGapMeters;
+const cameraFocusElevation = terrainElevation + solarBaseHeight;
+const renderedPathRadiusMeters = pathRadiusMeters * viewportFitScale;
+const viewportTopPadding = isMobile
+  ? clamp(viewportHeight * 0.10, 48, 72)
+  : clamp(viewportHeight * 0.12, 72, 112);
 
 /**
  * Color palette for daylight states.
@@ -308,6 +320,26 @@ export const SOLAR_3D_COLORS = {
 ---
 
 ## State Transitions
+
+### Performance Governor
+
+```typescript
+type Solar3DPerformanceMode =
+  | 'full-3d'
+  | 'terrain-only'
+  | 'flat'
+  | 'summary';
+
+interface PerformanceGovernorState {
+  lowFpsDurationMs: number;
+  healthyFpsDurationMs: number;
+}
+```
+
+- Interaction samples below 15 FPS accumulate toward a 10-second, one-level degradation.
+- Idle visible-tab samples at or above 30 FPS accumulate toward a five-second, one-level recovery.
+- Every mode transition resets the relevant accumulator, so a second level always requires a fresh window.
+- Source-fallback `flat` and WebGL-loss `summary` modes are terminal for the current modal session.
 
 ### Modal State Machine
 

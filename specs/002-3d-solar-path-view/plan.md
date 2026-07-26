@@ -5,7 +5,7 @@
 
 ## Summary
 
-Add a **"3D View"** button on the main map panel that opens a near-fullscreen modal displaying a 3D-perspective map with the sun trajectory for 24 hourly points positioned by azimuth + altitude. The modal supports optional `selectedHour` highlighting, hover tooltips, and preserves main map camera state on close. Implementation uses **deck.gl** overlays on **MapLibre GL JS** for GPU-accelerated 3D rendering, with **Radix UI Dialog** for accessible modal behavior.
+Add a prominent **"Open 3D View"** button to the map section header, replacing the former Active Focus card, that opens a near-fullscreen modal displaying OpenFreeMap vector cartography, Mapterhorn terrain, OpenStreetMap building extrusions, and the sun trajectory for 24 hourly points positioned by azimuth + altitude. The button remains outside the map canvas so it is never obscured by map controls or overlays. The modal supports optional `selectedHour` highlighting, hover tooltips, progressive performance degradation, and preserves main map camera state on close. Implementation uses **deck.gl** overlays on **MapLibre GL JS** for GPU-accelerated 3D rendering, with **Radix UI Dialog** for accessible modal behavior.
 
 ## Technical Context
 
@@ -18,7 +18,7 @@ Add a **"3D View"** button on the main map panel that opens a near-fullscreen mo
 **Target Platform**: Web (modern browsers with WebGL support)
 **Project Type**: Web application (Next.js App Router)
 **Performance Goals**: 30-60 FPS during map interactions, <2s modal open time
-**Constraints**: No paid APIs, graceful degradation for non-WebGL devices
+**Constraints**: No paid APIs or API keys; public tile services have no SLA; progressive `full-3d` → `terrain-only` → `flat` → `summary` degradation
 **Scale/Scope**: Single modal feature, 24 data points max
 
 ## Constitution Check
@@ -30,7 +30,7 @@ Add a **"3D View"** button on the main map panel that opens a near-fullscreen mo
 | **I. Code Quality** | ✅ PASS | Single-responsibility components, TypeScript strict mode, follows existing patterns |
 | **II. Testing Standards** | ✅ PASS | Unit tests for geometry mapping, E2E tests for modal behavior defined in spec |
 | **III. User Experience Consistency** | ✅ PASS | Uses existing design system, WCAG 2.1 AA compliance via Radix UI + text summary |
-| **IV. Performance Requirements** | ✅ PASS | 30-60 FPS target, graceful degradation to static fallback (NFR3D-005) |
+| **IV. Performance Requirements** | ✅ PASS | 30-60 FPS target, mobile pixel-ratio/detail limits, and progressive degradation (NFR3D-005/006) |
 
 **Quality Gates Compliance**:
 - Lint: Will follow existing ESLint config
@@ -38,7 +38,7 @@ Add a **"3D View"** button on the main map panel that opens a near-fullscreen mo
 - Unit Tests: Coverage for geometry utilities, visibility filtering, selectedHour rules
 - E2E Tests: Modal open/close, tooltip, highlight, camera preservation
 - Code Review: Required before merge
-- Performance: FPS monitoring during development
+- Performance: Runtime interaction FPS monitoring with progressive degradation and idle-time automatic recovery
 
 ## Project Structure
 
@@ -61,7 +61,9 @@ specs/002-3d-solar-path-view/
 src/
 ├── components/
 │   ├── map/
-│   │   └── MapPanel.tsx           # MODIFY: Add 3D View button
+│   │   └── MapPanel.tsx           # MODIFY: Keep map canvas free of the 3D trigger
+│   ├── home/
+│   │   └── HomePage.tsx           # MODIFY: Header 3D CTA + modal ownership
 │   └── solar3d/                   # NEW: 3D view components
 │       ├── index.ts               # Barrel export
 │       ├── Solar3DViewModal.tsx   # Radix Dialog wrapper
@@ -102,8 +104,8 @@ No Constitution violations requiring justification.
 ### Component Hierarchy
 
 ```text
-MapPanel (existing)
-└── [3D View Button] ─────────────────────────────────────────┐
+HomePage map header
+└── [Open 3D View Button] ────────────────────────────────────┐
                                                               │
 Solar3DViewModal (Radix Dialog)                               │
 ├── Header                                                    │
@@ -144,8 +146,9 @@ useSolar3DData hook transforms:
         │
         ▼
 deck.gl layers render:
-        │  - ScatterplotLayer (points with conditional highlight)
-        │  - PathLayer (polyline connecting visible points)
+        │  - SimpleMeshLayer (zoom-responsive sun spheres)
+        │  - PathLayer (zoom-responsive visible-point polyline)
+        │  - LineLayer (11m solar connectors + 10m compass + vertical anchor)
         │
         ▼
 Interactions:
@@ -165,6 +168,9 @@ Interactions:
 | SSR Strategy | `dynamic({ ssr: false })` | MapLibre/deck.gl require browser APIs |
 | Data Binding | Static snapshot | Simpler than live sync, matches "read-only" principle |
 | Tile Source | Fastest available | Per clarification: prioritize latency over style match |
+| Default Camera | zoom 15, pitch 58°, bearing 135° | Starts at the full building extrusion threshold without fitting the old 1200m arc |
+| Visual Scale | Screen-space target converted with meters-per-pixel | Preserves readable path/sun size across zoom 15–20 |
+| Vertical References | Compass at 10m, solar horizon at 11m | Keeps a deterministic 1m separation independent of building height |
 
 ---
 
@@ -183,8 +189,13 @@ For deck.gl `METER_OFFSETS`:
 Input:
   azimuthDeg: 0-360° (0° = North, 90° = East)
   altitudeDeg: ≥0° (visible hours only)
-  R: pathRadiusMeters (e.g., 1200)
-  heightScale: 1.0 (tunable)
+  mpp: 156543.03392 × cos(latitude) ÷ 2^zoom
+  targetRpx: clamp(shortViewportSide × 0.35, deviceMin, deviceMax)
+  Rpx: targetRpx × viewportFitScale
+  R: Rpx × mpp
+  C: 2 (compass plane)
+  G: 2 (vertical gap)
+  B: C + G = 4 (solar horizon plane)
 
 Conversion:
   a = degToRad(azimuthDeg)
@@ -193,10 +204,31 @@ Conversion:
 Output (position):
   east  = R × cos(h) × sin(a)
   north = R × cos(h) × cos(a)
-  up    = R × sin(h) × heightScale
+  up    = B + R × sin(h)
 
 deck.gl position: [east, north, up]
 ```
+
+`Rpx` is clamped to 120–200px on desktop and 90–130px on mobile. Normal and
+selected sun spheres target 8px/11px on desktop and 7px/10px on mobile; their
+meter scale is recalculated from the same `mpp`. Zoom updates are
+requestAnimationFrame-throttled. Pan does not rebuild geometry; completed pitch
+and bearing changes trigger one projected-bounds fit check.
+
+After zoom, pitch, bearing, or viewport changes, deck.gl projects every solar
+point into screen coordinates. The scene includes the selected-sun marker radius
+and an inset edge margin, then iteratively reduces `viewportFitScale` until the
+complete solar path and every sun sphere are contained.
+The top inset is intentionally asymmetric to preserve visual breathing room:
+12% of map height clamped to 72–112px on desktop and 10% clamped to 48–72px
+on compact screens. Left, right, and bottom retain the smaller 24px/16px edge
+padding so the scene is not reduced more than necessary.
+
+The location marker and shadow remain at terrain-relative `z = 0`. Connectors
+use the fixed solar origin `[0, 0, 11]`, while compass lines and cardinal labels
+use `[0, 0, 10]`. A subtle vertical anchor connects those two planes. Camera
+focus elevation is the zoom-stable `terrainElevation + 11`; screen-space fitting
+controls the arc size separately.
 
 ### Direction Verification (Unit Test Cases)
 
@@ -228,11 +260,16 @@ deck.gl position: [east, north, up]
 
 | Risk | Mitigation |
 |------|------------|
-| WebGL not supported | NFR3D-005: Static 2D fallback image |
-| FPS drops on mobile | Reduce pathRadius, disable antialiasing |
+| WebGL unsupported or context lost | NFR3D-005: Accessible text summary |
+| FPS drops on desktop/mobile | During interaction, hide buildings after 10s below 15 FPS and disable terrain only after a fresh 10s window; after `moveend`, restore one level per fresh 5s window at 30+ FPS |
+| Public style/source unavailable | Retry once, then use the existing lightweight flat map |
+| Excessive mobile GPU fill rate | Cap device pixel ratio at 1 and reduce sphere subdivision |
+| Public services have no SLA | Preserve fallback map; self-hosting remains a future option |
 | deck.gl/MapLibre version conflict | Pin compatible versions per deck.gl docs |
 | Memory leaks | Cleanup map.remove() and overlay on unmount |
 | Bundle size increase | Dynamic import for modal keeps initial load fast |
+| Zoom causes geometry churn | Sample zoom through one requestAnimationFrame callback and ignore pan/pitch/bearing |
+| Nearby tall buildings obscure the low 11m arc | Accept occlusion to preserve the explicit fixed-height reference planes |
 
 ---
 
@@ -245,3 +282,5 @@ deck.gl position: [east, north, up]
 - SC-005: Main map camera unchanged after close
 - SC-006: Empty state for polar night scenarios
 - SC-007: Maintain 30+ FPS during interactions
+- SC-008: Terrain, buildings, solar path, and required attribution are present in full mode
+- SC-009: No terrain/building requests before the modal opens

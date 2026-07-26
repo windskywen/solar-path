@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { MapPanel } from '@/components/map/MapPanel';
 import { SolarRaysLayer, SolarRaysLegend } from '@/components/map/SolarRaysLayer';
+import { Solar3DViewModal } from '@/components/solar3d';
 import { LocationInput } from '@/components/location/LocationInput';
 import { DatePicker } from '@/components/date';
 import { SunEventsPanel, InsightsPanel } from '@/components/insights';
@@ -70,6 +71,77 @@ function DataSkeleton() {
   );
 }
 
+interface Solar3DViewButtonProps {
+  disabled: boolean;
+  onClick: () => void;
+}
+
+function Solar3DViewButton({ disabled, onClick }: Solar3DViewButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="group relative flex min-h-20 w-full items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-3 text-left text-[var(--solar-cta-text)] [border-color:var(--solar-cta-border)] [background:var(--solar-cta-bg)] [box-shadow:var(--solar-cta-shadow)] transition-all duration-300 hover:-translate-y-0.5 hover:[background:var(--solar-cta-hover-bg)] hover:[box-shadow:var(--solar-cta-hover-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--solar-bg)] disabled:cursor-not-allowed disabled:[border-color:var(--solar-cta-disabled-border)] disabled:[background:var(--solar-cta-disabled-bg)] disabled:text-[var(--solar-cta-disabled-text)] disabled:shadow-none disabled:hover:translate-y-0 sm:w-[19rem] sm:px-4"
+      aria-label="Open 3D solar path view"
+      title={disabled ? 'Select a location to enable 3D view' : 'Open 3D View'}
+      data-testid="3d-view-button"
+    >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-0 w-28 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.18),transparent_70%)] opacity-80 transition-opacity group-hover:opacity-100"
+      />
+      <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl [background:var(--solar-cta-icon-bg)] text-[var(--solar-cta-icon-text)] shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
+          <path d="m4.3 7.7 7.7 4.4 7.7-4.4M12 12.1V21" />
+          <path d="M8.5 5 16 9.3" />
+        </svg>
+      </span>
+      <span className="relative min-w-0 flex-1">
+        <span className="block text-[0.62rem] font-semibold uppercase tracking-[0.25em] text-[var(--solar-cta-kicker)]">
+          Explore in depth
+        </span>
+        <span className="mt-1 block text-base font-semibold tracking-[-0.01em]">
+          Open 3D View
+        </span>
+        <span className="mt-1 block text-xs text-[var(--solar-text-muted)]">
+          Terrain, buildings and the full sun path
+        </span>
+      </span>
+      <span
+        aria-hidden="true"
+        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-transform duration-300 group-hover:translate-x-0.5"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </span>
+    </button>
+  );
+}
+
 /**
  * Main application page
  */
@@ -79,6 +151,7 @@ export default function HomePage() {
   const dateISO = useDateISO();
   const selectedHour = useSelectedHour();
   const { setLocation, setSelectedHour, setTimezone } = useSolarActions();
+  const [is3DViewOpen, setIs3DViewOpen] = useState(false);
 
   // Get initial location from IP
   const { location: ipLocation, isLoading: ipLoading } = useIpGeo();
@@ -100,6 +173,7 @@ export default function HomePage() {
 
   // Compute solar data
   const solarData = useSolarData();
+  const can3DViewOpen = location !== null && solarData.hourly.length > 0;
 
   // Get selected hour's position for metrics panel
   const selectedPosition = useSolarPositionForHour(selectedHour);
@@ -297,19 +371,10 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] px-4 py-3 text-sm text-[var(--solar-text)] [box-shadow:var(--solar-surface-inset-shadow)]">
-                <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-kicker)]">
-                  Active focus
-                </p>
-                <p className="mt-2 font-medium text-[var(--solar-text-strong)]">
-                  {selectedPosition ? selectedPosition.localTimeLabel : 'Map ready for exploration'}
-                </p>
-                <p className="mt-1 text-xs text-[var(--solar-text-muted)]">
-                  {selectedPosition
-                    ? `${selectedPosition.daylightState} · ${selectedPosition.azimuthDeg.toFixed(0)}° azimuth`
-                    : 'Select a visible ray to surface detailed solar metrics'}
-                </p>
-              </div>
+              <Solar3DViewButton
+                disabled={!can3DViewOpen}
+                onClick={() => setIs3DViewOpen(true)}
+              />
             </div>
 
             <div className="relative flex-1 overflow-hidden rounded-[26px] border [border-color:var(--solar-map-frame-border)] [background:var(--solar-map-frame-bg)] [box-shadow:var(--solar-map-frame-shadow)]">
@@ -327,6 +392,7 @@ export default function HomePage() {
                 <SolarRaysLegend className="absolute bottom-2 left-2 z-10 sm:bottom-5 sm:left-5" />
               </Suspense>
             </div>
+            <Solar3DViewModal open={is3DViewOpen} onOpenChange={setIs3DViewOpen} />
           </section>
 
           {/* Data rail */}

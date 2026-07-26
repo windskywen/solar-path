@@ -11,7 +11,7 @@
 
 Add a **"3D View"** button on the main map UI. When clicked, a **near-fullscreen modal** opens displaying:
 
-1. A **3D-perspective map** (pitched camera only; no terrain/buildings required)
+1. A **3D-perspective map** with real terrain elevation and OpenStreetMap building extrusion
 2. A **3D sun trajectory** for the current location/date/timezone:
    - **24 hourly points (00–23)** positioned by azimuth + altitude
    - A **polyline** connecting **only visible points** (hours where altitude ≥ 0) in time order
@@ -23,12 +23,15 @@ This 3D view is **read-only**: it reflects the current state and does not allow 
 
 - Provide an intuitive 3D visualization of hourly azimuth + altitude
 - Keep it deterministic, reproducible, and free (no paid APIs)
+- Use public, keyless OpenFreeMap and Mapterhorn services with visible attribution
+- Maintain an interactive frame rate by progressively reducing scene complexity
 - Preserve existing behavior: closing modal does not change the main map's camera
 - Support optional selection highlighting without requiring `selectedHour`
 
 ### Non-Goals
 
-- 3D terrain or 3D building extrusion
+- Satellite or aerial photography
+- Guaranteed third-party tile availability or SLA
 - Editing date/location/timezone inside the modal
 - Shadow simulation, irradiance/energy modeling, or AI-generated insights
 - Replacing existing 2D visualization
@@ -149,7 +152,7 @@ The modal MUST have access to:
 
 #### Entry Point & Modal
 
-- **FR3D-001**: System MUST show a "3D View" button on the main map UI; button MUST be disabled when required data (location, date, hourly) is not available, and enabled only when all required data exists.
+- **FR3D-001**: System MUST show a prominent "Open 3D View" button in the map section header, replacing the former Active Focus card. The button MUST NOT overlay the map canvas, MUST be disabled when required data (location, date, hourly) is not available, and MUST be enabled only when all required data exists.
 - **FR3D-002**: Clicking MUST open a near-fullscreen modal:
   - Desktop: ~90–95% viewport
   - Mobile: full-screen
@@ -163,12 +166,24 @@ The modal MUST have access to:
 - **FR3D-012**: Missing/invalid required data MUST show a safe error state (no crash).
 - **FR3D-013**: Modal MUST capture a static snapshot of data at open time; changes in main view do NOT propagate until modal is reopened.
 
-#### 3D Map (Perspective Only)
+#### 3D Map Scene
 
 - **FR3D-040**: Map MUST render in a 3D perspective (pitched camera).
-- **FR3D-041**: Terrain/buildings MUST NOT be required.
+- **FR3D-041**: The full scene MUST use OpenFreeMap Bright as its vector basemap and MUST extrude the OpenFreeMap `building` source layer from `render_height` and `render_min_height`, excluding features where `hide_3d` is true.
 - **FR3D-042**: Initial camera MUST center on selected location.
-- **FR3D-043**: Tile source MUST prioritize lowest latency/fastest loading; visual consistency with 2D map is NOT required.
+- **FR3D-043**: Building extrusion MUST transition from zero height at zoom 14 to full height at zoom 15 and MUST remain below the first text-label layer.
+- **FR3D-044**: The full scene MUST use the Mapterhorn raster DEM TileJSON with Terrarium encoding, 512px tiles, and terrain exaggeration 1.
+- **FR3D-045**: Once terrain data is available, the selected location elevation MUST be applied to the shared deck.gl coordinate origin for the solar path, sun points, connectors, compass, labels, shadow path, and location marker.
+- **FR3D-046**: The large translucent ground plane MUST NOT be rendered; the center marker, low-interference compass lines, and N/E/S/W labels MUST remain.
+- **FR3D-047**: The initial pitch MUST be approximately 55–60 degrees and maximum pitch MUST be 75 degrees.
+- **FR3D-048**: Style or critical 3D source loading MUST retry once. A second failure MUST fall back to the existing lightweight flat map, and a final rendering failure MUST show the text summary.
+- **FR3D-049**: Initial view and "Reset View" MUST use zoom 15, pitch 58 degrees, and bearing 135 degrees. The modal MUST constrain navigation to zoom 15–20 and MUST NOT use solar-path bounds to reduce the initial zoom below the building extrusion range.
+- **FR3D-049A**: The solar trajectory MUST target 35% of the viewport short side, clamped to 120–200px on desktop and 90–130px on mobile. The corresponding meter radius MUST be recalculated from `156543.03392 × cos(latitude) ÷ 2^zoom`.
+- **FR3D-049B**: Normal/selected sun spheres MUST target 8px/11px radii on desktop and 7px/10px on mobile. Path and shadow widths MUST use pixel units.
+- **FR3D-049C**: The solar horizon reference MUST remain at terrain-relative `z = 11m`, independent of rendered building height and zoom. The scene MUST NOT query rendered buildings to adjust solar geometry height.
+- **FR3D-049D**: The solar path, sun spheres, and connectors MUST use the fixed `z = 11m` solar origin. Compass lines and cardinal labels MUST remain at terrain-relative `z = 10m`, creating a fixed 1m vertical gap. The location marker and shadow path MUST stay at `z = 0`, with a subtle vertical anchor joining `[0, 0, 10]` to `[0, 0, 11]`.
+- **FR3D-049E**: Camera focus elevation MUST remain at `terrainElevation + 11m`, avoiding zoom-dependent vertical drift.
+- **FR3D-049F**: After every zoom, pitch, bearing, or viewport-size change, the projected solar points and sun-marker radii MUST be measured against an inset viewport safe area. The top safe area MUST be larger than the other edges so the highest sun remains visually separated from the map edge: 12% of map height clamped to 72–112px on desktop, and 10% clamped to 48–72px on compact screens. Other edges remain 24px on desktop and 16px on compact screens. If any part is outside, the visual path radius MUST shrink iteratively until the complete path and every sun sphere are contained.
 
 #### 3D Trajectory Rendering
 
@@ -193,6 +208,7 @@ The modal MUST have access to:
 - **HourlyDataPoint**: Represents one hour's solar position with `hour` (0-23), `azimuthDeg`, `altitudeDeg`, `daylightState`
 - **3DPoint**: Computed local coordinate (x, y, z) derived from azimuth/altitude for rendering
 - **SunTrajectory**: Collection of visible 3DPoints connected as a polyline in hour order
+- **PerformanceMode**: Internal scene state: `full-3d`, `terrain-only`, `flat`, or `summary`
 
 ---
 
@@ -211,21 +227,32 @@ Use deck.gl `METER_OFFSETS` coordinate system (ENU convention):
 Let:
 - `a = degToRad(azimuthDeg)` where azimuth is 0°=North, 90°=East
 - `h = degToRad(altitudeDeg)`
-- `R = pathRadius` (visual scale constant)
+- `mpp = 156543.03392 × cos(latitude) ÷ 2^zoom`
+- `Rpx = clamp(shortViewportSide × 0.35, deviceMinimum, deviceMaximum) × viewportFitScale`
+- `R = Rpx × mpp` (zoom-responsive visual radius in meters)
+- `C = 10m` (fixed terrain-relative compass and cardinal-label height)
+- `G = 1m` (fixed vertical gap between compass and solar reference planes)
+- `B = C + G = 11m` (fixed solar horizon reference height)
 
 For each hour `H`:
 - If `altitudeDeg < 0`, omit
 - Else compute:
   - `x = R * cos(h) * sin(a)`  (East)
-  - `z = R * cos(h) * cos(a)`  (North)
-  - `y = R * sin(h)`           (Up)
+  - `y = R * cos(h) * cos(a)`  (North)
+  - `z = B + R * sin(h)`       (Up)
 
 Polyline: Connect the sequence of computed points (visible subset) in ascending hour order.
 
 ### Visual Scale
 
 - MUST prioritize interpretability over physical scale accuracy
-- `R` (and optional `heightScale`) may be tuned to clearly show the arc
+- East, North, and Up MUST use the same `R`, preserving azimuth and altitude without axis distortion
+- Desktop target `Rpx`: 35% of viewport short side, clamped to 120–200px
+- Mobile target `Rpx`: 35% of viewport short side, clamped to 90–130px
+- `viewportFitScale` MUST dynamically reduce the target radius when projected points or sun-marker extents approach a viewport edge
+- Normal/selected sun radius: desktop 8px/11px; mobile 7px/10px
+- Zoom updates MUST be requestAnimationFrame-throttled; pan, pitch, and bearing changes MUST NOT rebuild solar geometry
+- The path radius is a visual celestial sphere, not a physical distance to the Sun
 
 ---
 
@@ -257,10 +284,22 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
   - ARIA labels
   - Keyboard navigable close/reset controls
   - Text-based accessible summary of visible hours (list with hour, azimuth, altitude, daylight state) for screen reader users
-- **NFR3D-005**: Graceful degradation: If device cannot sustain acceptable FPS (<30 FPS for 3+ seconds) or lacks WebGL support, display a fallback state:
-  - **Fallback content**: A static message card with text "Interactive 3D view is not available on this device" and a link/button to return to the main view
-  - **Detection timing**: WebGL capability MUST be checked before attempting to render deck.gl layers
-  - **No pre-rendered image required**: Fallback is a styled component, not a generated image
+- **NFR3D-005**: Graceful degradation MUST be progressive:
+  - WebGL capability MUST be checked before attempting to render deck.gl layers.
+  - FPS MUST be sampled in one-second windows while the camera is moving.
+  - During camera interaction, 10 continuous seconds below 15 FPS MUST change `full-3d` to `terrain-only`.
+  - A fresh 10-second window below 15 FPS MUST change `terrain-only` to `flat`; any interaction sample at or above 15 FPS MUST clear the low-FPS accumulator.
+  - After `moveend`, 5 continuous visible-tab seconds at or above 30 FPS MUST restore exactly one level: `flat` to `terrain-only`, then `terrain-only` to `full-3d`.
+  - Each recovery level MUST require a fresh five-second window. A new interaction or an idle sample below 30 FPS MUST clear the healthy-FPS accumulator.
+  - Automatic recovery MUST only run for a healthy OpenFreeMap/WebGL scene. A source-fallback `flat` scene and a WebGL-loss `summary` scene MUST NOT recover automatically.
+  - A background tab MUST pause healthy-time accumulation.
+  - WebGL context loss MUST change the scene to `summary`.
+  - The summary MUST be a styled text component; no pre-rendered image is required.
+- **NFR3D-006**: Mobile rendering MUST cap MapLibre device pixel ratio at 1 and use lower sun-sphere subdivision. Desktop MUST retain the higher-detail spheres.
+- **NFR3D-007**: The 3D canvas MUST remain client-only and lazily imported. Before opening the modal, the main page MUST NOT request OpenFreeMap building or Mapterhorn terrain resources.
+- **NFR3D-008**: Closing the modal MUST destroy the 3D map, stop terrain requests, remove FPS/WebGL listeners, and clear hover state.
+- **NFR3D-009**: Source configuration and static deck.gl inputs MUST use stable references. Pan, pitch, and bearing MUST NOT rebuild solar geometry; zoom and viewport size MAY update responsive geometry through requestAnimationFrame-throttled state.
+- **NFR3D-010**: Attribution for OpenFreeMap, OpenMapTiles, OpenStreetMap contributors, and Mapterhorn terrain MUST remain visible.
 
 ---
 
@@ -275,6 +314,8 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
 - **SC-005**: Main map camera state remains unchanged after modal close in 100% of cases
 - **SC-006**: Empty state message displays correctly when all hours are night (polar scenarios)
 - **SC-007**: Modal maintains 30+ FPS during camera pan/zoom/pitch interactions
+- **SC-008**: Full scene displays terrain, the 3D building layer, the solar trajectory, and all required attribution
+- **SC-009**: Opening the main page without opening the modal causes zero Mapterhorn DEM and OpenFreeMap building-source requests
 
 ---
 
@@ -292,6 +333,21 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
   - night selectedHour -> no highlight, no error
 - Polyline rule:
   - only visible points included and connected in hour order
+- Free map scene:
+  - Mapterhorn source uses the expected TileJSON, Terrarium encoding, 512px tiles, and exaggeration 1
+  - building layer uses height/base properties, zoom interpolation, and `hide_3d` filter
+  - terrain elevation is included in the shared solar geometry origin
+  - style reload does not duplicate sources or layers
+  - performance mode degrades and recovers one level at a time with fresh threshold windows
+  - 14 FPS does not degrade before 10 seconds; 15 FPS clears the low-FPS accumulator
+  - idle 30+ FPS recovers one level after five seconds; low idle FPS, renewed interaction, and background tabs reset or pause recovery as specified
+  - fallback `flat` and WebGL-loss `summary` modes never auto-recover
+  - meters-per-pixel halves for each additional zoom level while the target pixel radius stays constant
+  - East/North/Up use the same adaptive radius and preserve solar angles
+  - normal/selected sun spheres retain their required pixel radii at zoom 15, 17, and 19
+  - solar origin remains at terrain-relative `z = 11m` without querying building height
+  - compass lines and labels remain at `z = 10m`, exactly 1m below the solar origin
+  - anchor connects `z = 10m` to `z = 11m`, and shadow/location remain at `z = 0`
 
 ### E2E (Playwright)
 
@@ -300,6 +356,17 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
 3. Open modal with visible `selectedHour`; confirm highlight visible
 4. Hover a point; confirm tooltip contains hour/azimuth/altitude/state
 5. Scenario where all hours are night; confirm empty-state message shown and no crash
+6. Confirm terrain, the 3D building layer, solar canvas, and required attribution are present
+7. Simulate terrain/vector source failures and verify retry then flat fallback
+8. Dispatch WebGL context loss and verify the text summary
+9. Confirm closing the modal removes the 3D canvas and that no 3D resource is requested before opening
+10. Confirm initial and Reset camera return to zoom 15, pitch 58 degrees, and bearing 135 degrees
+11. At every zoom from 15 through 20, confirm the measured solar bounds remain inside the viewport safe area, including the larger responsive top safe area
+12. Confirm `data-solar-base-height="11.00"`, `data-compass-height-meters="10.00"`, and `data-solar-compass-gap-meters="1.00"`
+13. Confirm all three diagnostic heights remain unchanged from zoom 15 through 20
+14. Simulate 14 FPS interaction samples; confirm the scene stays `full-3d` for nine seconds and degrades only on the tenth second
+15. Simulate idle 30+ FPS samples; confirm each recovery level requires a fresh five-second window
+16. Confirm source fallback `flat`, WebGL-loss `summary`, renewed interaction, and hidden-tab samples cannot incorrectly recover the scene
 
 ---
 
@@ -321,3 +388,5 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
 - A free, open-source map library (e.g., MapLibre GL JS) will be used for 3D rendering
 - Browser WebGL support is assumed for 3D rendering capabilities
 - The main map component already exposes necessary state (location, date, timezone, hourly data, selectedHour)
+- OpenFreeMap and Mapterhorn public services require no API key or paid account but provide no availability SLA
+- Self-hosting remains an optional future availability strategy and is outside the zero-infrastructure-cost scope
