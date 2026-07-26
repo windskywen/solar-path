@@ -152,7 +152,7 @@ The modal MUST have access to:
 
 #### Entry Point & Modal
 
-- **FR3D-001**: System MUST show a "3D View" button on the main map UI; button MUST be disabled when required data (location, date, hourly) is not available, and enabled only when all required data exists.
+- **FR3D-001**: System MUST show a prominent "Open 3D View" button in the map section header, replacing the former Active Focus card. The button MUST NOT overlay the map canvas, MUST be disabled when required data (location, date, hourly) is not available, and MUST be enabled only when all required data exists.
 - **FR3D-002**: Clicking MUST open a near-fullscreen modal:
   - Desktop: ~90–95% viewport
   - Mobile: full-screen

@@ -213,8 +213,37 @@ test.describe('3D Solar Path View - US1: Open/Close Modal', () => {
 
   test('3D View button is visible when location data is available', async ({ page }) => {
     const button = page.locator('[data-testid="3d-view-button"]');
+    const map = page.locator('.maplibregl-map').first();
     await expect(button).toBeVisible();
     await expect(button).toBeEnabled();
+    await expect(button).toContainText('Open 3D View');
+    await expect(page.getByText('Active focus', { exact: true })).toHaveCount(0);
+    await expect(map.locator('[data-testid="3d-view-button"]')).toHaveCount(0);
+
+    const buttonBox = await button.boundingBox();
+    const mapBox = await map.boundingBox();
+    expect(buttonBox).not.toBeNull();
+    expect(mapBox).not.toBeNull();
+    expect(buttonBox!.y + buttonBox!.height).toBeLessThanOrEqual(mapBox!.y);
+  });
+
+  test('3D View header action reflows above the map on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    const button = page.getByTestId('3d-view-button');
+    const map = page.locator('.maplibregl-map').first();
+    const buttonBox = await button.boundingBox();
+    const mapBox = await map.boundingBox();
+
+    expect(buttonBox).not.toBeNull();
+    expect(mapBox).not.toBeNull();
+    expect(buttonBox!.width).toBeGreaterThan(300);
+    expect(buttonBox!.y + buttonBox!.height).toBeLessThanOrEqual(mapBox!.y);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth
+      )
+    ).toBe(true);
   });
 
   test('3D View button is disabled when no location', async ({ page }) => {

@@ -5,7 +5,7 @@
 
 ## Summary
 
-Add a **"3D View"** button on the main map panel that opens a near-fullscreen modal displaying OpenFreeMap vector cartography, Mapterhorn terrain, OpenStreetMap building extrusions, and the sun trajectory for 24 hourly points positioned by azimuth + altitude. The modal supports optional `selectedHour` highlighting, hover tooltips, progressive performance degradation, and preserves main map camera state on close. Implementation uses **deck.gl** overlays on **MapLibre GL JS** for GPU-accelerated 3D rendering, with **Radix UI Dialog** for accessible modal behavior.
+Add a prominent **"Open 3D View"** button to the map section header, replacing the former Active Focus card, that opens a near-fullscreen modal displaying OpenFreeMap vector cartography, Mapterhorn terrain, OpenStreetMap building extrusions, and the sun trajectory for 24 hourly points positioned by azimuth + altitude. The button remains outside the map canvas so it is never obscured by map controls or overlays. The modal supports optional `selectedHour` highlighting, hover tooltips, progressive performance degradation, and preserves main map camera state on close. Implementation uses **deck.gl** overlays on **MapLibre GL JS** for GPU-accelerated 3D rendering, with **Radix UI Dialog** for accessible modal behavior.
 
 ## Technical Context
 
@@ -61,7 +61,9 @@ specs/002-3d-solar-path-view/
 src/
 ├── components/
 │   ├── map/
-│   │   └── MapPanel.tsx           # MODIFY: Add 3D View button
+│   │   └── MapPanel.tsx           # MODIFY: Keep map canvas free of the 3D trigger
+│   ├── home/
+│   │   └── HomePage.tsx           # MODIFY: Header 3D CTA + modal ownership
 │   └── solar3d/                   # NEW: 3D view components
 │       ├── index.ts               # Barrel export
 │       ├── Solar3DViewModal.tsx   # Radix Dialog wrapper
@@ -102,8 +104,8 @@ No Constitution violations requiring justification.
 ### Component Hierarchy
 
 ```text
-MapPanel (existing)
-└── [3D View Button] ─────────────────────────────────────────┐
+HomePage map header
+└── [Open 3D View Button] ────────────────────────────────────┐
                                                               │
 Solar3DViewModal (Radix Dialog)                               │
 ├── Header                                                    │

@@ -52,8 +52,8 @@
 
 - [x] T010 [US1] Create Solar3DViewModal component in src/components/solar3d/Solar3DViewModal.tsx (Radix Dialog wrapper, snapshot capture on open)
 - [x] T011 [US1] Create placeholder Solar3DMapCanvas in src/components/solar3d/Solar3DMapCanvas.tsx (client-only dynamic import, basic MapLibre setup)
-- [x] T012 [US1] Add "3D View" button to src/components/map/MapPanel.tsx with disabled state when data not ready
-- [x] T013 [US1] Add is3DViewOpen state and Solar3DViewModal integration to src/components/map/MapPanel.tsx
+- [x] T012 [US1] Add prominent "Open 3D View" button to the map header in src/components/home/HomePage.tsx with disabled state when data is not ready; replace the former Active Focus card
+- [x] T013 [US1] Add is3DViewOpen state and Solar3DViewModal integration to src/components/home/HomePage.tsx, keeping the trigger out of the map canvas
 - [x] T014 [US1] Create E2E test for open/close in tests/e2e/p1-3d-view.spec.ts (modal opens, Esc closes, main map unchanged)
 - [x] T015 [US1] Run E2E test and verify: `npm run test:e2e -- tests/e2e/p1-3d-view.spec.ts`
 
