@@ -7,10 +7,12 @@ const DESKTOP_PATH_MIN_PIXELS = 120;
 const DESKTOP_PATH_MAX_PIXELS = 200;
 const COMPACT_PATH_MIN_PIXELS = 90;
 const COMPACT_PATH_MAX_PIXELS = 130;
-const MIN_SOLAR_BASE_HEIGHT_METERS = 30;
-const BUILDING_CLEARANCE_METERS = 15;
 const SOLAR_VIEWPORT_FIT_SAFETY_RATIO = 0.96;
 const MIN_SOLAR_VIEWPORT_SCALE = 0.05;
+
+export const COMPASS_GROUND_OFFSET_METERS = 10;
+export const SOLAR_COMPASS_GAP_METERS = 1;
+export const SOLAR_BASE_HEIGHT_METERS = COMPASS_GROUND_OFFSET_METERS + SOLAR_COMPASS_GAP_METERS;
 
 export const SOLAR_SCENE_CAMERA = {
   zoom: 15,
@@ -36,10 +38,6 @@ export interface SolarSceneMetrics {
   sunRadiusMeters: number;
   selectedSunRadiusPixels: number;
   selectedSunRadiusMeters: number;
-}
-
-export interface BuildingFeatureLike {
-  properties?: Record<string, unknown> | null;
 }
 
 export interface AdaptiveSolarGeometry {
@@ -127,15 +125,6 @@ export function calculateSolarSceneMetrics({
   };
 }
 
-export function calculateSolarBaseHeight(features: BuildingFeatureLike[]): number {
-  const highestBuilding = features.reduce((highest, feature) => {
-    const height = Number(feature.properties?.render_height);
-    return Number.isFinite(height) && height >= 0 ? Math.max(highest, height) : highest;
-  }, 0);
-
-  return Math.max(MIN_SOLAR_BASE_HEIGHT_METERS, highestBuilding + BUILDING_CLEARANCE_METERS);
-}
-
 export function buildAdaptiveSolarGeometry(
   points: Solar3DPoint[],
   radiusMeters: number,
@@ -166,31 +155,32 @@ export function buildAdaptiveSolarGeometry(
 
 export function buildSolarReferenceGeometry(
   pathRadiusMeters: number,
-  baseHeightMeters: number
+  solarBaseHeightMeters: number,
+  compassHeightMeters: number
 ): SolarReferenceGeometry {
   const compassRadius = pathRadiusMeters * 1.08;
-  const origin: [number, number, number] = [0, 0, baseHeightMeters];
+  const solarOrigin: [number, number, number] = [0, 0, solarBaseHeightMeters];
 
   return {
     compassLines: [
       {
-        from: [-compassRadius, 0, baseHeightMeters],
-        to: [compassRadius, 0, baseHeightMeters],
+        from: [-compassRadius, 0, compassHeightMeters],
+        to: [compassRadius, 0, compassHeightMeters],
       },
       {
-        from: [0, -compassRadius, baseHeightMeters],
-        to: [0, compassRadius, baseHeightMeters],
+        from: [0, -compassRadius, compassHeightMeters],
+        to: [0, compassRadius, compassHeightMeters],
       },
     ],
     compassLabels: [
-      { text: 'N', position: [0, compassRadius * 0.9, baseHeightMeters] },
-      { text: 'S', position: [0, -compassRadius * 0.9, baseHeightMeters] },
-      { text: 'E', position: [compassRadius * 0.9, 0, baseHeightMeters] },
-      { text: 'W', position: [-compassRadius * 0.9, 0, baseHeightMeters] },
+      { text: 'N', position: [0, compassRadius * 0.9, compassHeightMeters] },
+      { text: 'S', position: [0, -compassRadius * 0.9, compassHeightMeters] },
+      { text: 'E', position: [compassRadius * 0.9, 0, compassHeightMeters] },
+      { text: 'W', position: [-compassRadius * 0.9, 0, compassHeightMeters] },
     ],
     anchorLine: {
-      from: [0, 0, 0],
-      to: origin,
+      from: [0, 0, compassHeightMeters],
+      to: solarOrigin,
     },
   };
 }
@@ -254,27 +244,15 @@ export function calculateSolarViewportFit({
     const deltaY = y - originY;
 
     if (deltaX > 0) {
-      maximumRelativeScale = Math.min(
-        maximumRelativeScale,
-        (centerRightLimit - originX) / deltaX
-      );
+      maximumRelativeScale = Math.min(maximumRelativeScale, (centerRightLimit - originX) / deltaX);
     } else if (deltaX < 0) {
-      maximumRelativeScale = Math.min(
-        maximumRelativeScale,
-        (originX - centerLeftLimit) / -deltaX
-      );
+      maximumRelativeScale = Math.min(maximumRelativeScale, (originX - centerLeftLimit) / -deltaX);
     }
 
     if (deltaY > 0) {
-      maximumRelativeScale = Math.min(
-        maximumRelativeScale,
-        (centerBottomLimit - originY) / deltaY
-      );
+      maximumRelativeScale = Math.min(maximumRelativeScale, (centerBottomLimit - originY) / deltaY);
     } else if (deltaY < 0) {
-      maximumRelativeScale = Math.min(
-        maximumRelativeScale,
-        (originY - centerTopLimit) / -deltaY
-      );
+      maximumRelativeScale = Math.min(maximumRelativeScale, (originY - centerTopLimit) / -deltaY);
     }
   }
 
@@ -293,9 +271,6 @@ export function calculateSolarViewportFit({
   };
 }
 
-export function getCameraFocusElevation(
-  terrainElevation: number,
-  solarBaseHeight: number
-): number {
+export function getCameraFocusElevation(terrainElevation: number, solarBaseHeight: number): number {
   return terrainElevation + solarBaseHeight;
 }

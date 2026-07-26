@@ -339,6 +339,9 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
     const scene = await waitForInteractive3DScene(page);
     await expect(scene).toHaveAttribute('data-render-mode', 'full-3d');
     await expect(scene).toHaveAttribute('data-map-provider', 'openfreemap');
+    await expect(scene).toHaveAttribute('data-compass-height-meters', '2.00');
+    await expect(scene).toHaveAttribute('data-solar-base-height', '4.00');
+    await expect(scene).toHaveAttribute('data-solar-compass-gap-meters', '2.00');
 
     const attribution = scene.locator('.maplibregl-ctrl-attrib-inner');
     await expect(attribution).toContainText('OpenFreeMap', { timeout: 15000 });
@@ -374,9 +377,10 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
         .toBe('true');
       expect(await readMetric('data-path-radius-pixels')).toBeGreaterThan(0);
       expect(await readMetric('data-sun-radius-pixels')).toBe(expectedSunPixels);
+      expect(await readMetric('data-compass-height-meters')).toBe(2);
+      expect(await readMetric('data-solar-base-height')).toBe(4);
+      expect(await readMetric('data-solar-compass-gap-meters')).toBe(2);
     }
-
-    expect(await readMetric('data-solar-base-height')).toBeGreaterThanOrEqual(30);
   });
 
   test('keeps the complete solar scene inside a mobile map at every zoom level', async ({

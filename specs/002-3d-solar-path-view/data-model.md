@@ -293,7 +293,9 @@ const pathRadiusPixels = clamp(
   isMobile ? 130 : 200
 );
 const pathRadiusMeters = pathRadiusPixels * metersPerPixel;
-const solarBaseHeight = Math.max(30, highestRenderedBuilding + 15);
+const compassHeightMeters = 2;
+const solarCompassGapMeters = 2;
+const solarBaseHeight = compassHeightMeters + solarCompassGapMeters;
 const cameraFocusElevation = terrainElevation + solarBaseHeight;
 const renderedPathRadiusMeters = pathRadiusMeters * viewportFitScale;
 

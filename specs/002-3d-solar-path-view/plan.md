@@ -146,7 +146,7 @@ useSolar3DData hook transforms:
 deck.gl layers render:
         │  - SimpleMeshLayer (zoom-responsive sun spheres)
         │  - PathLayer (zoom-responsive visible-point polyline)
-        │  - LineLayer (elevated connectors/compass + terrain anchor)
+        │  - LineLayer (4m solar connectors + 2m compass + vertical anchor)
         │
         ▼
 Interactions:
@@ -168,7 +168,7 @@ Interactions:
 | Tile Source | Fastest available | Per clarification: prioritize latency over style match |
 | Default Camera | zoom 15, pitch 58°, bearing 135° | Starts at the full building extrusion threshold without fitting the old 1200m arc |
 | Visual Scale | Screen-space target converted with meters-per-pixel | Preserves readable path/sun size across zoom 15–20 |
-| Building Clearance | Highest rendered building + 15m, minimum 30m | Keeps the visual celestial sphere above nearby extrusions |
+| Vertical References | Compass at 2m, solar horizon at 4m | Keeps a deterministic 2m separation independent of building height |
 
 ---
 
@@ -191,7 +191,9 @@ Input:
   targetRpx: clamp(shortViewportSide × 0.35, deviceMin, deviceMax)
   Rpx: targetRpx × viewportFitScale
   R: Rpx × mpp
-  B: max(30, highestRenderedBuilding + 15)
+  C: 2 (compass plane)
+  G: 2 (vertical gap)
+  B: C + G = 4 (solar horizon plane)
 
 Conversion:
   a = degToRad(azimuthDeg)
@@ -216,10 +218,11 @@ point into screen coordinates. The scene includes the selected-sun marker radius
 and an inset edge margin, then iteratively reduces `viewportFitScale` until the
 complete solar path and every sun sphere are contained.
 
-The location marker and shadow remain at terrain-relative `z = 0`. Connector and
-compass origins use `[0, 0, B]`, and a subtle vertical anchor connects those
-reference planes. Camera focus elevation is the zoom-stable
-`terrainElevation + B`; screen-space fitting controls the arc size separately.
+The location marker and shadow remain at terrain-relative `z = 0`. Connectors
+use the fixed solar origin `[0, 0, 4]`, while compass lines and cardinal labels
+use `[0, 0, 2]`. A subtle vertical anchor connects those two planes. Camera
+focus elevation is the zoom-stable `terrainElevation + 4`; screen-space fitting
+controls the arc size separately.
 
 ### Direction Verification (Unit Test Cases)
 
@@ -260,7 +263,7 @@ reference planes. Camera focus elevation is the zoom-stable
 | Memory leaks | Cleanup map.remove() and overlay on unmount |
 | Bundle size increase | Dynamic import for modal keeps initial load fast |
 | Zoom causes geometry churn | Sample zoom through one requestAnimationFrame callback and ignore pan/pitch/bearing |
-| Nearby tall buildings obscure the arc | Query the rendered solar footprint and raise the shared solar origin dynamically |
+| Nearby tall buildings obscure the low 4m arc | Accept occlusion to preserve the explicit fixed-height reference planes |
 
 ---
 
