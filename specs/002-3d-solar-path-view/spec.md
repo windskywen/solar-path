@@ -177,12 +177,13 @@ The modal MUST have access to:
 - **FR3D-046**: The large translucent ground plane MUST NOT be rendered; the center marker, low-interference compass lines, and N/E/S/W labels MUST remain.
 - **FR3D-047**: The initial pitch MUST be approximately 55–60 degrees and maximum pitch MUST be 75 degrees.
 - **FR3D-048**: Style or critical 3D source loading MUST retry once. A second failure MUST fall back to the existing lightweight flat map, and a final rendering failure MUST show the text summary.
-- **FR3D-049**: Initial view and "Reset View" MUST use zoom 17, pitch 58 degrees, and bearing 135 degrees. The modal MUST constrain navigation to zoom 15–20 and MUST NOT use solar-path bounds to reduce the initial zoom.
-- **FR3D-049A**: The solar trajectory MUST target 26% of the viewport short side, clamped to 120–200px on desktop and 90–130px on mobile. The corresponding meter radius MUST be recalculated from `156543.03392 × cos(latitude) ÷ 2^zoom`.
+- **FR3D-049**: Initial view and "Reset View" MUST use zoom 15, pitch 58 degrees, and bearing 135 degrees. The modal MUST constrain navigation to zoom 15–20 and MUST NOT use solar-path bounds to reduce the initial zoom below the building extrusion range.
+- **FR3D-049A**: The solar trajectory MUST target 35% of the viewport short side, clamped to 120–200px on desktop and 90–130px on mobile. The corresponding meter radius MUST be recalculated from `156543.03392 × cos(latitude) ÷ 2^zoom`.
 - **FR3D-049B**: Normal/selected sun spheres MUST target 8px/11px radii on desktop and 7px/10px on mobile. Path and shadow widths MUST use pixel units.
 - **FR3D-049C**: In full 3D mode, the scene MUST query rendered buildings within the solar footprint and set the solar reference height to `max(30m, highest render_height + 15m)`.
 - **FR3D-049D**: The solar path, sun spheres, connectors, compass, and cardinal labels MUST use the elevated solar reference height. The location marker and shadow path MUST stay on terrain, with a subtle vertical anchor joining terrain to the solar origin.
-- **FR3D-049E**: Camera focus elevation MUST track `terrainElevation + solarBaseHeight + pathRadiusMeters × 0.35`.
+- **FR3D-049E**: Camera focus elevation MUST remain at `terrainElevation + solarBaseHeight`, avoiding zoom-dependent vertical drift.
+- **FR3D-049F**: After every zoom, pitch, bearing, or viewport-size change, the projected solar points and sun-marker radii MUST be measured against an inset viewport safe area. If any part is outside, the visual path radius MUST shrink iteratively until the complete path and every sun sphere are contained.
 
 #### 3D Trajectory Rendering
 
@@ -227,7 +228,7 @@ Let:
 - `a = degToRad(azimuthDeg)` where azimuth is 0°=North, 90°=East
 - `h = degToRad(altitudeDeg)`
 - `mpp = 156543.03392 × cos(latitude) ÷ 2^zoom`
-- `Rpx = clamp(shortViewportSide × 0.26, deviceMinimum, deviceMaximum)`
+- `Rpx = clamp(shortViewportSide × 0.35, deviceMinimum, deviceMaximum) × viewportFitScale`
 - `R = Rpx × mpp` (zoom-responsive visual radius in meters)
 - `B = max(30m, highestBuildingHeight + 15m)` (solar reference height)
 
@@ -244,8 +245,9 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
 
 - MUST prioritize interpretability over physical scale accuracy
 - East, North, and Up MUST use the same `R`, preserving azimuth and altitude without axis distortion
-- Desktop `Rpx`: 26% of viewport short side, clamped to 120–200px
-- Mobile `Rpx`: 26% of viewport short side, clamped to 90–130px
+- Desktop target `Rpx`: 35% of viewport short side, clamped to 120–200px
+- Mobile target `Rpx`: 35% of viewport short side, clamped to 90–130px
+- `viewportFitScale` MUST dynamically reduce the target radius when projected points or sun-marker extents approach a viewport edge
 - Normal/selected sun radius: desktop 8px/11px; mobile 7px/10px
 - Zoom updates MUST be requestAnimationFrame-throttled; pan, pitch, and bearing changes MUST NOT rebuild solar geometry
 - The path radius is a visual celestial sphere, not a physical distance to the Sun
@@ -347,8 +349,8 @@ Polyline: Connect the sequence of computed points (visible subset) in ascending 
 7. Simulate terrain/vector source failures and verify retry then flat fallback
 8. Dispatch WebGL context loss and verify the text summary
 9. Confirm closing the modal removes the 3D canvas and that no 3D resource is requested before opening
-10. Confirm initial and Reset camera return to zoom 17, pitch 58 degrees, and bearing 135 degrees
-11. At zoom 15, 17, and 19, confirm path/sun pixel radii stay stable while meter radii scale with zoom
+10. Confirm initial and Reset camera return to zoom 15, pitch 58 degrees, and bearing 135 degrees
+11. At every zoom from 15 through 20, confirm the measured solar bounds remain inside the viewport safe area
 12. Confirm `solarBaseHeight` is at least 30m and exceeds the highest rendered building in the queried footprint by 15m
 
 ---

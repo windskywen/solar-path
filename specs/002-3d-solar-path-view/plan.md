@@ -166,7 +166,7 @@ Interactions:
 | SSR Strategy | `dynamic({ ssr: false })` | MapLibre/deck.gl require browser APIs |
 | Data Binding | Static snapshot | Simpler than live sync, matches "read-only" principle |
 | Tile Source | Fastest available | Per clarification: prioritize latency over style match |
-| Default Camera | zoom 17, pitch 58°, bearing 135° | Keeps the full building extrusion visible without fitting the old 1200m arc |
+| Default Camera | zoom 15, pitch 58°, bearing 135° | Starts at the full building extrusion threshold without fitting the old 1200m arc |
 | Visual Scale | Screen-space target converted with meters-per-pixel | Preserves readable path/sun size across zoom 15–20 |
 | Building Clearance | Highest rendered building + 15m, minimum 30m | Keeps the visual celestial sphere above nearby extrusions |
 
@@ -188,7 +188,8 @@ Input:
   azimuthDeg: 0-360° (0° = North, 90° = East)
   altitudeDeg: ≥0° (visible hours only)
   mpp: 156543.03392 × cos(latitude) ÷ 2^zoom
-  Rpx: clamp(shortViewportSide × 0.26, deviceMin, deviceMax)
+  targetRpx: clamp(shortViewportSide × 0.35, deviceMin, deviceMax)
+  Rpx: targetRpx × viewportFitScale
   R: Rpx × mpp
   B: max(30, highestRenderedBuilding + 15)
 
@@ -207,12 +208,18 @@ deck.gl position: [east, north, up]
 `Rpx` is clamped to 120–200px on desktop and 90–130px on mobile. Normal and
 selected sun spheres target 8px/11px on desktop and 7px/10px on mobile; their
 meter scale is recalculated from the same `mpp`. Zoom updates are
-requestAnimationFrame-throttled. Pan, pitch, and bearing do not rebuild geometry.
+requestAnimationFrame-throttled. Pan does not rebuild geometry; completed pitch
+and bearing changes trigger one projected-bounds fit check.
+
+After zoom, pitch, bearing, or viewport changes, deck.gl projects every solar
+point into screen coordinates. The scene includes the selected-sun marker radius
+and an inset edge margin, then iteratively reduces `viewportFitScale` until the
+complete solar path and every sun sphere are contained.
 
 The location marker and shadow remain at terrain-relative `z = 0`. Connector and
 compass origins use `[0, 0, B]`, and a subtle vertical anchor connects those
-reference planes. Camera focus elevation is
-`terrainElevation + B + R × 0.35`.
+reference planes. Camera focus elevation is the zoom-stable
+`terrainElevation + B`; screen-space fitting controls the arc size separately.
 
 ### Direction Verification (Unit Test Cases)
 

@@ -4,6 +4,7 @@ import type { Solar3DPoint } from '@/types/solar3d';
 import {
   buildAdaptiveSolarGeometry,
   buildSolarReferenceGeometry,
+  calculateSolarViewportFit,
   calculateMetersPerPixel,
   calculateSolarBaseHeight,
   calculateSolarSceneMetrics,
@@ -31,7 +32,7 @@ function createPoint(
 describe('adaptive solar scene metrics', () => {
   it('uses a building-scale default camera and limits the supported zoom range', () => {
     expect(SOLAR_SCENE_CAMERA).toEqual({
-      zoom: 17,
+      zoom: 15,
       minZoom: 15,
       maxZoom: 20,
       pitch: 58,
@@ -69,9 +70,9 @@ describe('adaptive solar scene metrics', () => {
       isCompact: false,
     });
 
-    expect(zoom15.pathRadiusPixels).toBe(156);
-    expect(zoom17.pathRadiusPixels).toBe(156);
-    expect(zoom19.pathRadiusPixels).toBe(156);
+    expect(zoom15.pathRadiusPixels).toBe(200);
+    expect(zoom17.pathRadiusPixels).toBe(200);
+    expect(zoom19.pathRadiusPixels).toBe(200);
     expect(zoom15.sunRadiusPixels).toBe(8);
     expect(zoom17.sunRadiusPixels).toBe(8);
     expect(zoom19.sunRadiusPixels).toBe(8);
@@ -93,7 +94,7 @@ describe('adaptive solar scene metrics', () => {
       isCompact: true,
     });
 
-    expect(metrics.pathRadiusPixels).toBeCloseTo(101.4);
+    expect(metrics.pathRadiusPixels).toBe(130);
     expect(metrics.sunRadiusPixels).toBe(7);
     expect(metrics.selectedSunRadiusPixels).toBe(10);
   });
@@ -146,7 +147,46 @@ describe('adaptive solar scene metrics', () => {
     });
   });
 
-  it('focuses the camera between the elevated horizon plane and solar arc', () => {
-    expect(getCameraFocusElevation(42, 62.5, 160)).toBeCloseTo(160.5);
+  it('keeps camera focus on the elevated solar origin without zoom-dependent drift', () => {
+    expect(getCameraFocusElevation(42, 62.5)).toBeCloseTo(104.5);
+  });
+
+  it('shrinks a projected solar scene until markers stay inside the viewport safe area', () => {
+    const fit = calculateSolarViewportFit({
+      currentScale: 1,
+      projectedOrigin: [500, 400],
+      projectedPoints: [
+        [980, 400],
+        [500, 25],
+        [40, 760],
+      ],
+      viewportWidth: 1000,
+      viewportHeight: 800,
+      edgePaddingPixels: 24,
+      markerRadiusPixels: 14,
+    });
+
+    expect(fit.isContained).toBe(false);
+    expect(fit.nextScale).toBeLessThan(1);
+    expect(fit.nextScale).toBeGreaterThan(0);
+  });
+
+  it('can restore the full visual radius when a previously reduced scene has room', () => {
+    const fit = calculateSolarViewportFit({
+      currentScale: 0.6,
+      projectedOrigin: [500, 400],
+      projectedPoints: [
+        [650, 400],
+        [500, 260],
+        [350, 520],
+      ],
+      viewportWidth: 1000,
+      viewportHeight: 800,
+      edgePaddingPixels: 24,
+      markerRadiusPixels: 14,
+    });
+
+    expect(fit.isContained).toBe(true);
+    expect(fit.nextScale).toBe(1);
   });
 });

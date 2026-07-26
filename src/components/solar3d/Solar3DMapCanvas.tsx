@@ -23,7 +23,7 @@ import { MapboxOverlay } from '@deck.gl/mapbox';
 import { ScatterplotLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers';
 import { SimpleMeshLayer } from '@deck.gl/mesh-layers';
 import { SphereGeometry } from '@luma.gl/engine';
-import type { PickingInfo } from '@deck.gl/core';
+import type { Deck, PickingInfo, WebMercatorViewport } from '@deck.gl/core';
 import type { MapSourceDataEvent } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -45,6 +45,7 @@ import {
   buildSolarReferenceGeometry,
   calculateSolarBaseHeight,
   calculateSolarSceneMetrics,
+  calculateSolarViewportFit,
   getCameraFocusElevation,
   SOLAR_SCENE_CAMERA,
   type BuildingFeatureLike,
@@ -96,6 +97,22 @@ const FALLBACK_MAP_STYLE = {
 const MAP_LOAD_TIMEOUT_MS = 10_000;
 const LOW_FPS_THRESHOLD = 30;
 const LOW_FPS_WINDOW_MS = 3_000;
+const INITIAL_SOLAR_VIEWPORT_SCALE = 0.7;
+
+type MapboxOverlayWithDeck = {
+  _deck?: Deck;
+};
+
+function getSolarProjectionViewport(
+  overlay: MapboxOverlay | null
+): WebMercatorViewport | null {
+  const deck = (overlay as unknown as MapboxOverlayWithDeck | null)?._deck;
+  const viewport = deck?.getViewports().find((candidate) => {
+    return 'addMetersToLngLat' in candidate;
+  });
+
+  return (viewport as WebMercatorViewport | undefined) ?? null;
+}
 
 export interface Solar3DMapCanvasProps {
   /**
@@ -266,6 +283,7 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
   const initializationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const zoomFrameRef = useRef<number | null>(null);
   const clearanceFrameRef = useRef<number | null>(null);
+  const viewportFitFrameRef = useRef<number | null>(null);
   const sceneRetryCountRef = useRef(0);
   const isRecoveringSceneRef = useRef(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -281,6 +299,15 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     height: typeof window === 'undefined' ? 1 : window.innerHeight,
   }));
   const [solarBaseHeight, setSolarBaseHeight] = useState(30);
+  const [solarViewportScale, setSolarViewportScale] = useState(
+    INITIAL_SOLAR_VIEWPORT_SCALE
+  );
+  const [solarViewportContained, setSolarViewportContained] = useState(false);
+  const [solarScreenBounds, setSolarScreenBounds] = useState<string>('pending');
+  const [solarViewportMeasuredZoom, setSolarViewportMeasuredZoom] = useState<
+    number | null
+  >(null);
+  const [cameraOrientationRevision, setCameraOrientationRevision] = useState(0);
   const deckOverlayRef = useRef<MapboxOverlay | null>(null);
 
   // Check WebGL support on mount
@@ -319,22 +346,26 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
       viewportSize.width,
     ]
   );
+  const effectivePathRadiusMeters =
+    sceneMetrics.pathRadiusMeters * solarViewportScale;
+  const effectivePathRadiusPixels =
+    sceneMetrics.pathRadiusPixels * solarViewportScale;
   const adaptiveGeometry = useMemo(
     () =>
       buildAdaptiveSolarGeometry(
         visiblePoints,
-        sceneMetrics.pathRadiusMeters,
+        effectivePathRadiusMeters,
         solarBaseHeight
       ),
-    [sceneMetrics.pathRadiusMeters, solarBaseHeight, visiblePoints]
+    [effectivePathRadiusMeters, solarBaseHeight, visiblePoints]
   );
   const referenceGeometry = useMemo(
     () =>
       buildSolarReferenceGeometry(
-        sceneMetrics.pathRadiusMeters,
+        effectivePathRadiusMeters,
         solarBaseHeight
       ),
-    [sceneMetrics.pathRadiusMeters, solarBaseHeight]
+    [effectivePathRadiusMeters, solarBaseHeight]
   );
   const appliedTerrainElevation =
     mapProvider === 'openfreemap' && getSceneVisibility(performanceMode).terrain
@@ -343,6 +374,10 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
   const coordinateOrigin = useMemo(
     () => getSolarCoordinateOrigin(location, appliedTerrainElevation),
     [location, appliedTerrainElevation]
+  );
+  const cameraFocusElevation = getCameraFocusElevation(
+    appliedTerrainElevation,
+    solarBaseHeight
   );
   const resetMapCamera = useCallback(
     (duration: number) => {
@@ -353,10 +388,11 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
         zoom: SOLAR_SCENE_CAMERA.zoom,
         pitch: SOLAR_SCENE_CAMERA.pitch,
         bearing: SOLAR_SCENE_CAMERA.bearing,
+        elevation: cameraFocusElevation,
         duration,
       });
     },
-    [location.lat, location.lng]
+    [cameraFocusElevation, location.lat, location.lng]
   );
 
   const recoverSceneLoad = useCallback(() => {
@@ -368,6 +404,10 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     setTerrainElevation(0);
     setSolarBaseHeight(30);
     setSceneZoom(SOLAR_SCENE_CAMERA.zoom);
+    setSolarViewportScale(INITIAL_SOLAR_VIEWPORT_SCALE);
+    setSolarViewportContained(false);
+    setSolarScreenBounds('pending');
+    setSolarViewportMeasuredZoom(null);
     onHover?.(null);
 
     if (mapProvider === 'openfreemap' && sceneRetryCountRef.current < 1) {
@@ -521,16 +561,24 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
         );
       });
     };
+    const sampleCameraOrientation = () => {
+      setCameraOrientationRevision((current) => current + 1);
+    };
 
     sampleViewport();
     sampleZoom();
+    sampleCameraOrientation();
     const resizeObserver = new ResizeObserver(sampleViewport);
     resizeObserver.observe(container);
     map.on('zoom', sampleZoom);
+    map.on('pitchend', sampleCameraOrientation);
+    map.on('rotateend', sampleCameraOrientation);
 
     return () => {
       resizeObserver.disconnect();
       map.off('zoom', sampleZoom);
+      map.off('pitchend', sampleCameraOrientation);
+      map.off('rotateend', sampleCameraOrientation);
       if (zoomFrameRef.current !== null) {
         cancelAnimationFrame(zoomFrameRef.current);
         zoomFrameRef.current = null;
@@ -590,7 +638,7 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
 
         try {
           const center = map.project([location.lng, location.lat]);
-          const radius = sceneMetrics.pathRadiusPixels;
+          const radius = effectivePathRadiusPixels;
           const features = map.queryRenderedFeatures(
             [
               [center.x - radius, center.y - radius],
@@ -635,22 +683,18 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     location.lng,
     mapProvider,
     performanceMode,
-    sceneMetrics.pathRadiusPixels,
+    effectivePathRadiusPixels,
   ]);
 
   useEffect(() => {
     if (!isMapLoaded || !mapRef.current) return;
 
     const map = mapRef.current.getMap();
-    const focusElevation = getCameraFocusElevation(
-      appliedTerrainElevation,
-      solarBaseHeight,
-      sceneMetrics.pathRadiusMeters
-    );
     const refreshCameraFocus = () => {
       if (map.isMoving()) return;
-      if (Math.abs(map.getCenterElevation() - focusElevation) >= 0.1) {
-        map.setCenterElevation(focusElevation);
+      if (Math.abs(map.getCenterElevation() - cameraFocusElevation) >= 0.1) {
+        map.setCenterElevation(cameraFocusElevation);
+        setCameraOrientationRevision((current) => current + 1);
       }
     };
 
@@ -663,10 +707,8 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
       map.off('zoomend', refreshCameraFocus);
     };
   }, [
-    appliedTerrainElevation,
+    cameraFocusElevation,
     isMapLoaded,
-    sceneMetrics.pathRadiusMeters,
-    solarBaseHeight,
   ]);
 
   useEffect(() => {
@@ -937,6 +979,89 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     sceneMetrics.sunRadiusMeters,
   ]);
 
+  useEffect(() => {
+    if (!isMapLoaded || !mapRef.current || isEmpty) return;
+
+    if (viewportFitFrameRef.current !== null) {
+      cancelAnimationFrame(viewportFitFrameRef.current);
+    }
+    viewportFitFrameRef.current = requestAnimationFrame(() => {
+      viewportFitFrameRef.current = null;
+      const viewport = getSolarProjectionViewport(deckOverlayRef.current);
+      if (!viewport) return;
+
+      const projectPosition = (
+        position: [number, number, number]
+      ): [number, number] | null => {
+        const lngLatPosition = viewport.addMetersToLngLat(
+          coordinateOrigin,
+          position
+        );
+        const projected = viewport.project(lngLatPosition);
+        return Number.isFinite(projected[0]) && Number.isFinite(projected[1])
+          ? [projected[0], projected[1]]
+          : null;
+      };
+      const projectedOrigin = projectPosition(adaptiveGeometry.solarOrigin);
+      const projectedPoints = adaptiveGeometry.points
+        .map((point) => projectPosition(point.position))
+        .filter((point): point is [number, number] => point !== null);
+      if (!projectedOrigin || projectedPoints.length !== adaptiveGeometry.points.length) {
+        setSolarViewportContained(false);
+        setSolarScreenBounds('unavailable');
+        return;
+      }
+
+      const fit = calculateSolarViewportFit({
+        currentScale: solarViewportScale,
+        projectedOrigin,
+        projectedPoints,
+        viewportWidth: viewportSize.width,
+        viewportHeight: viewportSize.height,
+        edgePaddingPixels: isCompactDevice ? 16 : 24,
+        markerRadiusPixels: sceneMetrics.selectedSunRadiusPixels * 1.5 + 4,
+      });
+      setSolarViewportContained(fit.isContained);
+      setSolarViewportMeasuredZoom(sceneZoom);
+      setSolarScreenBounds(
+        [
+          fit.bounds.minX,
+          fit.bounds.minY,
+          fit.bounds.maxX,
+          fit.bounds.maxY,
+        ]
+          .map((value) => value.toFixed(1))
+          .join(',')
+      );
+      setSolarViewportScale((current) => {
+        const shouldShrink =
+          !fit.isContained && fit.nextScale < current - 0.005;
+        const shouldExpand =
+          fit.isContained && fit.nextScale > current + 0.025;
+        return shouldShrink || shouldExpand ? fit.nextScale : current;
+      });
+    });
+
+    return () => {
+      if (viewportFitFrameRef.current !== null) {
+        cancelAnimationFrame(viewportFitFrameRef.current);
+        viewportFitFrameRef.current = null;
+      }
+    };
+  }, [
+    adaptiveGeometry,
+    cameraOrientationRevision,
+    coordinateOrigin,
+    isCompactDevice,
+    isEmpty,
+    isMapLoaded,
+    sceneMetrics.selectedSunRadiusPixels,
+    sceneZoom,
+    solarViewportScale,
+    viewportSize.height,
+    viewportSize.width,
+  ]);
+
   // Handle reset view when resetKey changes
   useEffect(() => {
     if (resetKey > 0 && mapRef.current) {
@@ -987,11 +1112,20 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
       data-render-mode={performanceMode}
       data-map-provider={mapProvider}
       data-map-zoom={sceneZoom.toFixed(2)}
-      data-path-radius-pixels={sceneMetrics.pathRadiusPixels.toFixed(2)}
-      data-path-radius-meters={sceneMetrics.pathRadiusMeters.toFixed(2)}
+      data-path-radius-pixels={effectivePathRadiusPixels.toFixed(2)}
+      data-path-radius-meters={effectivePathRadiusMeters.toFixed(2)}
+      data-target-path-radius-pixels={sceneMetrics.pathRadiusPixels.toFixed(2)}
       data-sun-radius-pixels={sceneMetrics.sunRadiusPixels.toFixed(2)}
       data-selected-sun-radius-pixels={sceneMetrics.selectedSunRadiusPixels.toFixed(2)}
       data-solar-base-height={solarBaseHeight.toFixed(2)}
+      data-solar-viewport-scale={solarViewportScale.toFixed(4)}
+      data-solar-viewport-contained={solarViewportContained ? 'true' : 'false'}
+      data-solar-viewport-measured-zoom={
+        solarViewportMeasuredZoom === null
+          ? 'pending'
+          : solarViewportMeasuredZoom.toFixed(2)
+      }
+      data-solar-screen-bounds={solarScreenBounds}
     >
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <div className="absolute left-8 top-8 h-44 w-44 rounded-full bg-cyan-400/12 blur-3xl" />

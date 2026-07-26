@@ -263,7 +263,7 @@ export interface Solar3DCameraState {
 ```typescript
 const DEFAULT_3D_CAMERA: Solar3DCameraState = {
   center: [location.lng, location.lat],
-  zoom: 17,
+  zoom: 15,
   pitch: 58,
   bearing: 135
 };
@@ -278,7 +278,7 @@ const DEFAULT_3D_CAMERA: Solar3DCameraState = {
  * Camera and screen-space targets for 3D rendering.
  */
 export const SOLAR_SCENE_CAMERA = {
-  zoom: 17,
+  zoom: 15,
   minZoom: 15,
   maxZoom: 20,
   pitch: 58,
@@ -288,12 +288,14 @@ export const SOLAR_SCENE_CAMERA = {
 const metersPerPixel =
   156543.03392 * Math.cos(latitude * Math.PI / 180) / 2 ** zoom;
 const pathRadiusPixels = clamp(
-  Math.min(viewportWidth, viewportHeight) * 0.26,
+  Math.min(viewportWidth, viewportHeight) * 0.35,
   isMobile ? 90 : 120,
   isMobile ? 130 : 200
 );
 const pathRadiusMeters = pathRadiusPixels * metersPerPixel;
 const solarBaseHeight = Math.max(30, highestRenderedBuilding + 15);
+const cameraFocusElevation = terrainElevation + solarBaseHeight;
+const renderedPathRadiusMeters = pathRadiusMeters * viewportFitScale;
 
 /**
  * Color palette for daylight states.

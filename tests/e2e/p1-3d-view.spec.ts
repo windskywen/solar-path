@@ -268,17 +268,17 @@ test.describe('3D Solar Path View - US5: Camera Controls', () => {
     await expect(modal).toBeVisible();
   });
 
-  test('initial and Reset View camera return to zoom 17', async ({ page }) => {
+  test('initial and Reset View camera return to zoom 15', async ({ page }) => {
     await open3DModal(page);
     const scene = await waitForInteractive3DScene(page);
 
-    await expect.poll(async () => Number(await scene.getAttribute('data-map-zoom'))).toBeCloseTo(17, 1);
+    await expect.poll(async () => Number(await scene.getAttribute('data-map-zoom'))).toBeCloseTo(15, 1);
 
-    await scene.locator('.maplibregl-ctrl-zoom-out').click();
-    await expect.poll(async () => Number(await scene.getAttribute('data-map-zoom'))).toBeLessThan(16.5);
+    await scene.locator('.maplibregl-ctrl-zoom-in').click();
+    await expect.poll(async () => Number(await scene.getAttribute('data-map-zoom'))).toBeCloseTo(16, 1);
 
     await page.getByText('Reset View').click();
-    await expect.poll(async () => Number(await scene.getAttribute('data-map-zoom'))).toBeCloseTo(17, 1);
+    await expect.poll(async () => Number(await scene.getAttribute('data-map-zoom'))).toBeCloseTo(15, 1);
   });
 });
 
@@ -347,7 +347,9 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
     await expect(attribution).toContainText('Mapterhorn');
   });
 
-  test('keeps solar path and spheres at stable screen size while zoom changes', async ({ page }) => {
+  test('keeps the complete solar path and spheres inside the map at every zoom level', async ({
+    page,
+  }) => {
     await waitForAppReady(page);
     await open3DModal(page);
 
@@ -355,26 +357,53 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
     const readMetric = async (attribute: string) =>
       Number(await scene.getAttribute(attribute));
 
-    await expect.poll(() => readMetric('data-map-zoom')).toBeCloseTo(17, 1);
-    const pathPixelsAt17 = await readMetric('data-path-radius-pixels');
-    const pathMetersAt17 = await readMetric('data-path-radius-meters');
-    const sunPixelsAt17 = await readMetric('data-sun-radius-pixels');
-
     const zoomIn = scene.locator('.maplibregl-ctrl-zoom-in');
-    await zoomIn.click();
-    await expect.poll(() => readMetric('data-map-zoom')).toBeCloseTo(18, 1);
-    await zoomIn.click();
-    await expect.poll(() => readMetric('data-map-zoom')).toBeCloseTo(19, 1);
+    const expectedSunPixels = await readMetric('data-sun-radius-pixels');
 
-    const pathPixelsAt19 = await readMetric('data-path-radius-pixels');
-    const pathMetersAt19 = await readMetric('data-path-radius-meters');
-    const sunPixelsAt19 = await readMetric('data-sun-radius-pixels');
-    const solarBaseHeight = await readMetric('data-solar-base-height');
+    for (let zoom = 15; zoom <= 20; zoom += 1) {
+      if (zoom > 15) {
+        await zoomIn.click();
+      }
 
-    expect(pathPixelsAt19).toBeCloseTo(pathPixelsAt17, 1);
-    expect(sunPixelsAt19).toBeCloseTo(sunPixelsAt17, 1);
-    expect(pathMetersAt19 / pathMetersAt17).toBeCloseTo(0.25, 1);
-    expect(solarBaseHeight).toBeGreaterThanOrEqual(30);
+      await expect.poll(() => readMetric('data-map-zoom')).toBeCloseTo(zoom, 1);
+      await expect
+        .poll(() => readMetric('data-solar-viewport-measured-zoom'))
+        .toBeCloseTo(zoom, 1);
+      await expect
+        .poll(() => scene.getAttribute('data-solar-viewport-contained'))
+        .toBe('true');
+      expect(await readMetric('data-path-radius-pixels')).toBeGreaterThan(0);
+      expect(await readMetric('data-sun-radius-pixels')).toBe(expectedSunPixels);
+    }
+
+    expect(await readMetric('data-solar-base-height')).toBeGreaterThanOrEqual(30);
+  });
+
+  test('keeps the complete solar scene inside a mobile map at every zoom level', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await waitForAppReady(page);
+    await open3DModal(page);
+
+    const scene = await waitForInteractive3DScene(page);
+    const readMetric = async (attribute: string) =>
+      Number(await scene.getAttribute(attribute));
+    const zoomIn = scene.locator('.maplibregl-ctrl-zoom-in');
+
+    for (let zoom = 15; zoom <= 20; zoom += 1) {
+      if (zoom > 15) {
+        await zoomIn.click();
+      }
+
+      await expect.poll(() => readMetric('data-map-zoom')).toBeCloseTo(zoom, 1);
+      await expect
+        .poll(() => readMetric('data-solar-viewport-measured-zoom'))
+        .toBeCloseTo(zoom, 1);
+      await expect
+        .poll(() => scene.getAttribute('data-solar-viewport-contained'))
+        .toBe('true');
+    }
   });
 
   test('falls back to the lightweight flat map after the free style retry fails', async ({
