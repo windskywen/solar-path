@@ -70,6 +70,10 @@ export interface AdaptiveSolarGeometry {
 
 export interface SolarReferenceGeometry {
   compassRingPositions: [number, number, number][];
+  cardinalAxes: Array<{
+    from: [number, number, number];
+    to: [number, number, number];
+  }>;
   compassTicks: Array<{
     from: [number, number, number];
     to: [number, number, number];
@@ -78,6 +82,7 @@ export interface SolarReferenceGeometry {
     text: 'N' | 'E' | 'S' | 'W';
     position: [number, number, number];
   }>;
+  compassOrigin: [number, number, number];
   anchorLine: {
     from: [number, number, number];
     to: [number, number, number];
@@ -208,6 +213,7 @@ export function buildSolarReferenceGeometry(
   const tickInnerRadius = compassRadius * 0.95;
   const tickOuterRadius = compassRadius * 1.05;
   const solarOrigin: [number, number, number] = [0, 0, solarBaseHeightMeters];
+  const compassOrigin: [number, number, number] = [0, 0, compassHeightMeters];
   const compassRingArc = Array.from(
     { length: COMPASS_RING_SEGMENTS },
     (_, index): [number, number, number] => {
@@ -239,6 +245,16 @@ export function buildSolarReferenceGeometry(
 
   return {
     compassRingPositions,
+    cardinalAxes: [
+      {
+        from: [0, compassRadius, compassHeightMeters],
+        to: [0, -compassRadius, compassHeightMeters],
+      },
+      {
+        from: [-compassRadius, 0, compassHeightMeters],
+        to: [compassRadius, 0, compassHeightMeters],
+      },
+    ],
     compassTicks: [
       buildTick(0, 1),
       buildTick(1, 0),
@@ -251,8 +267,9 @@ export function buildSolarReferenceGeometry(
       { text: 'S', position: [0, -labelRadius, compassHeightMeters] },
       { text: 'W', position: [-labelRadius, 0, compassHeightMeters] },
     ],
+    compassOrigin,
     anchorLine: {
-      from: [0, 0, compassHeightMeters],
+      from: compassOrigin,
       to: solarOrigin,
     },
   };
@@ -302,11 +319,22 @@ export function buildSolarMilestones(
   const candidates: Array<{
     kind: Solar3DMilestoneKind;
     point: Solar3DPoint | null;
+    eventTime?: string;
     priority: number;
   }> = [
     { kind: 'noon', point: peakPoint, priority: 0 },
-    { kind: 'rise', point: findNearestPoint(points, events.sunriseLocal), priority: 1 },
-    { kind: 'set', point: findNearestPoint(points, events.sunsetLocal), priority: 2 },
+    {
+      kind: 'rise',
+      point: findNearestPoint(points, events.sunriseLocal),
+      eventTime: events.sunriseLocal,
+      priority: 1,
+    },
+    {
+      kind: 'set',
+      point: findNearestPoint(points, events.sunsetLocal),
+      eventTime: events.sunsetLocal,
+      priority: 2,
+    },
   ];
   const usedHours = new Set<number>();
   const milestoneOrder: Record<Solar3DMilestoneKind, number> = {
@@ -322,10 +350,10 @@ export function buildSolarMilestones(
       usedHours.add(candidate.point.hour);
       return true;
     })
-    .map(({ kind, point }) => ({
+    .map(({ kind, point, eventTime }) => ({
       kind,
       label: `${kind === 'rise' ? 'Rise' : kind === 'noon' ? 'Noon' : 'Set'} · ${
-        point.localTimeLabel
+        kind === 'noon' ? point.localTimeLabel : (eventTime ?? point.localTimeLabel)
       }`,
       hour: point.hour,
       position: point.position,

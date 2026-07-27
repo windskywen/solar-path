@@ -47,18 +47,18 @@ export const SOLAR_3D_COLORS = {
   shadowPath: [7, 15, 28, 28] as [number, number, number, number],
   /** Ground plane fill - light blue tint to distinguish from map */
   ground: [33, 150, 243, 30] as [number, number, number, number],
-  /** Compass ring and cardinal ticks - cool observatory cyan */
-  compassRing: [103, 232, 249, 185] as [number, number, number, number],
-  /** Dark compass keyline for contrast over terrain and buildings */
-  compassUnderlay: [7, 15, 28, 190] as [number, number, number, number],
+  /** Compass ring, axes, and cardinal ticks - high-contrast observatory cyan */
+  compassRing: [14, 116, 144, 235] as [number, number, number, number],
+  /** Dark outline used only by screen-facing compass text */
+  compassLabelOutline: [7, 15, 28, 230] as [number, number, number, number],
   /** Compass text */
   compassText: [241, 245, 249, 255] as [number, number, number, number],
   /** North reference accent */
   compassNorth: [251, 113, 133, 255] as [number, number, number, number],
   /** Location marker - distinct red */
   locationMarker: [231, 76, 60, 255] as [number, number, number, number],
-  /** Connector lines (center to sun) - low-interference warm reference */
-  connectorLines: [255, 210, 105, 32] as [number, number, number, number],
+  /** Connector lines (center to sun) - secondary warm reference */
+  connectorLines: [255, 210, 105, 72] as [number, number, number, number],
   /** Milestone label foreground and surface */
   milestoneText: [248, 250, 252, 255] as [number, number, number, number],
   milestoneSurface: [7, 16, 34, 220] as [number, number, number, number],

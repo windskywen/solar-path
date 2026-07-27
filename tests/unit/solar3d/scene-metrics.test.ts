@@ -153,6 +153,28 @@ describe('adaptive solar scene metrics', () => {
     expect(reference.compassRingPositions[0]).toEqual(
       reference.compassRingPositions[reference.compassRingPositions.length - 1]
     );
+    expect(reference.cardinalAxes).toEqual([
+      {
+        from: [0, 160 * 1.12, COMPASS_GROUND_OFFSET_METERS],
+        to: [0, -160 * 1.12, COMPASS_GROUND_OFFSET_METERS],
+      },
+      {
+        from: [-160 * 1.12, 0, COMPASS_GROUND_OFFSET_METERS],
+        to: [160 * 1.12, 0, COMPASS_GROUND_OFFSET_METERS],
+      },
+    ]);
+    expect(reference.compassOrigin).toEqual([
+      0,
+      0,
+      COMPASS_GROUND_OFFSET_METERS,
+    ]);
+    expect(
+      reference.cardinalAxes.every(
+        (axis) =>
+          axis.from[2] === reference.compassOrigin[2] &&
+          axis.to[2] === reference.compassOrigin[2]
+      )
+    ).toBe(true);
     expect(reference.compassTicks).toHaveLength(4);
     expect(
       reference.compassTicks.every(
@@ -178,7 +200,7 @@ describe('adaptive solar scene metrics', () => {
     expect(south.position[1]).toBeLessThan(0);
     expect(west.position[0]).toBeLessThan(0);
     expect(reference.anchorLine).toEqual({
-      from: [0, 0, COMPASS_GROUND_OFFSET_METERS],
+      from: reference.compassOrigin,
       to: [0, 0, SOLAR_BASE_HEIGHT_METERS],
     });
     expect(reference.anchorLine.to[2] - reference.anchorLine.from[2]).toBe(
@@ -190,7 +212,7 @@ describe('adaptive solar scene metrics', () => {
     expect(getCameraFocusElevation(42, SOLAR_BASE_HEIGHT_METERS)).toBeCloseTo(63);
   });
 
-  it('uses the nearest visible hours for rise, noon, and set milestones', () => {
+  it('shows exact event minutes while anchoring rise and set to the nearest visible hours', () => {
     const points = [
       createPoint(6, 70, 3),
       createPoint(7, 80, 18),
@@ -205,10 +227,22 @@ describe('adaptive solar scene metrics', () => {
         sunsetLocal: '17:38',
       }).map(({ kind, label, hour }) => ({ kind, label, hour }))
     ).toEqual([
-      { kind: 'rise', label: 'Rise · 07:00', hour: 7 },
+      { kind: 'rise', label: 'Rise · 06:37', hour: 7 },
       { kind: 'noon', label: 'Noon · 12:00', hour: 12 },
-      { kind: 'set', label: 'Set · 18:00', hour: 18 },
+      { kind: 'set', label: 'Set · 17:38', hour: 18 },
     ]);
+  });
+
+  it('omits rise and set milestones when event times are invalid', () => {
+    const milestones = buildSolarMilestones(
+      [createPoint(6, 70, 3), createPoint(12, 180, 65), createPoint(18, 285, 2)],
+      {
+        sunriseLocal: 'not-a-time',
+        sunsetLocal: '24:00',
+      }
+    );
+
+    expect(milestones.map((milestone) => milestone.kind)).toEqual(['noon']);
   });
 
   it('deduplicates short-day milestones in favor of noon', () => {
