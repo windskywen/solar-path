@@ -41,11 +41,6 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-function getPreferredLanguage(): string | undefined {
-  if (typeof navigator === 'undefined') return undefined;
-  return navigator.languages?.[0] || navigator.language || undefined;
-}
-
 interface FetchGeocodeOptions {
   query: string;
   limit: number;
@@ -53,7 +48,6 @@ interface FetchGeocodeOptions {
   signal?: AbortSignal;
   lat?: number;
   lng?: number;
-  language?: string;
 }
 
 export async function fetchGeocode({
@@ -63,7 +57,6 @@ export async function fetchGeocode({
   signal,
   lat,
   lng,
-  language,
 }: FetchGeocodeOptions): Promise<GeocodeResponse> {
   const params = new URLSearchParams({
     q: query,
@@ -76,7 +69,6 @@ export async function fetchGeocode({
       params.set('lat', lat.toString());
       params.set('lng', lng.toString());
     }
-    if (language) params.set('lang', language);
   }
 
   const response = await fetch(`/api/geocode?${params}`, {
@@ -143,7 +135,6 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
     bias,
   } = options;
   const queryClient = useQueryClient();
-  const language = getPreferredLanguage();
   const [query, setQueryState] = useState('');
   const [fallbackState, setFallbackState] = useState<FallbackState | null>(null);
   const [fallbackError, setFallbackError] = useState<string | null>(null);
@@ -173,7 +164,6 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
       limit,
       bias?.lat ?? null,
       bias?.lng ?? null,
-      language ?? null,
     ],
     queryFn: ({ signal }) =>
       fetchGeocode({
@@ -183,7 +173,6 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
         signal,
         lat: bias?.lat,
         lng: bias?.lng,
-        language,
       }),
     enabled: shouldSearch,
     retry: false,

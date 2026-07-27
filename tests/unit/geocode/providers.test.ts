@@ -3,7 +3,6 @@ import {
   buildCoordinateUrl,
   convertTomTomResult,
   convertTomTomResults,
-  normalizeTomTomLanguage,
 } from '@/lib/geocode/providers';
 import {
   isGeocodeQueryEligible,
@@ -74,23 +73,6 @@ describe('TomTom geocode provider conversion', () => {
     expect(buildCoordinateUrl(23.991, 121.611)).toBe(
       'https://www.openstreetmap.org/?mlat=23.991&mlon=121.611#map=18/23.991/121.611'
     );
-  });
-});
-
-describe('TomTom language normalization', () => {
-  it.each([
-    ['zh-Hant-TW', 'zh-TW'],
-    ['zh-CN', 'zh-CN'],
-    ['en-AU', 'en-AU'],
-    ['en-CA', 'en-US'],
-    ['fr-CA,fr;q=0.9', 'fr-CA'],
-    ['pt-BR', 'pt-BR'],
-  ])('normalizes %s to %s', (input, expected) => {
-    expect(normalizeTomTomLanguage(input)).toBe(expected);
-  });
-
-  it('omits unsupported browser languages so TomTom can infer from the query', () => {
-    expect(normalizeTomTomLanguage('ja-JP')).toBeUndefined();
   });
 });
 

@@ -75,4 +75,26 @@ describe('SearchResults', () => {
       source: 'search',
     });
   });
+
+  it.each([
+    ['介禮街20號, 花蓮市, 花蓮縣', '介禮街'],
+    ['20 Jieli Street, Hualien City', 'Jieli'],
+    ['東京都千代田区丸の内', '千代田区'],
+    ['서울특별시 중구 세종대로', '서울특별시'],
+    ['شارع الشيخ زايد، دبي', 'الشيخ'],
+    ['Taipei 台北 101', 'Taipei 台北'],
+  ])('renders provider displayName unchanged for "%s"', (displayName, query) => {
+    render(
+      <SearchResults
+        results={[{ ...result, id: displayName, displayName }]}
+        isLoading={false}
+        query={query}
+        provider="tomtom"
+        attribution="Search data © TomTom"
+        onSelect={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button')).toHaveTextContent(displayName);
+  });
 });

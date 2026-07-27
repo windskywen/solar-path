@@ -10,7 +10,6 @@ import {
   convertNominatimResult,
   convertTomTomResults,
   NOMINATIM_ATTRIBUTION,
-  normalizeTomTomLanguage,
   TOMTOM_ATTRIBUTION,
   type GeocodeResponse,
   type GeocodeResult,
@@ -129,9 +128,8 @@ function checkRateLimit(clientIp: string): number {
   return 0;
 }
 
-function createCacheKey(query: string, limit: number, language?: string): string {
-  const languageKey = language ? language.split(',')[0].trim() : 'default';
-  return `${query.toLowerCase().trim()}:${limit}:${languageKey}`;
+function createCacheKey(query: string, limit: number): string {
+  return `${query.toLowerCase().trim()}:${limit}`;
 }
 
 function parseCoordinate(value: string | null, minimum: number, maximum: number): number | undefined {
@@ -168,7 +166,6 @@ function removeCjkHouseNumber(query: string): string {
 async function fetchFromTomTom(
   query: string,
   limit: number,
-  language: string | undefined,
   lat: number | undefined,
   lng: number | undefined,
   requestSignal: AbortSignal
@@ -185,7 +182,6 @@ async function fetchFromTomTom(
     idxSet: TOMTOM_INDEXES,
   });
 
-  if (language) params.set('language', language);
   if (lat !== undefined && lng !== undefined) {
     params.set('lat', lat.toString());
     params.set('lon', lng.toString());
@@ -219,7 +215,6 @@ async function waitForNominatimSlot(): Promise<void> {
 async function fetchFromNominatim(
   query: string,
   limit: number,
-  acceptLanguage: string | undefined,
   requestSignal: AbortSignal
 ): Promise<GeocodeResult[]> {
   await waitForNominatimSlot();
@@ -231,12 +226,10 @@ async function fetchFromNominatim(
     addressdetails: '1',
   });
 
-  const languages = acceptLanguage ? `${acceptLanguage},zh-TW,zh-CN,zh,en` : 'zh-TW,zh-CN,zh,en,*';
   const response = await fetch(`${NOMINATIM_BASE_URL}?${params}`, {
     headers: {
       'User-Agent': USER_AGENT,
       Accept: 'application/json',
-      'Accept-Language': languages,
     },
     cache: 'no-store',
     signal: createUpstreamSignal(requestSignal, NOMINATIM_TIMEOUT_MS),
@@ -251,10 +244,9 @@ async function fetchFromNominatim(
 async function fetchNominatimFallback(
   query: string,
   limit: number,
-  acceptLanguage: string | undefined,
   requestSignal: AbortSignal
 ): Promise<GeocodeResult[]> {
-  let results = await fetchFromNominatim(query, limit, acceptLanguage, requestSignal);
+  let results = await fetchFromNominatim(query, limit, requestSignal);
 
   if (results.length === 0) {
     const simplifiedQuery = removeCjkHouseNumber(query);
@@ -262,7 +254,6 @@ async function fetchNominatimFallback(
       results = await fetchFromNominatim(
         simplifiedQuery,
         limit,
-        acceptLanguage,
         requestSignal
       );
     }
@@ -326,12 +317,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<GeocodeRes
   }
 
   if (mode === 'autocomplete') {
-    const language = normalizeTomTomLanguage(
-      searchParams.get('lang') || request.headers.get('accept-language')
-    );
-
     try {
-      const results = await fetchFromTomTom(query, parsedLimit, language, lat, lng, request.signal);
+      const results = await fetchFromTomTom(query, parsedLimit, lat, lng, request.signal);
       return jsonResponse({
         provider: 'tomtom',
         attribution: TOMTOM_ATTRIBUTION,
@@ -363,8 +350,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<GeocodeRes
     }
   }
 
-  const acceptLanguage = request.headers.get('accept-language') || undefined;
-  const cacheKey = createCacheKey(query, parsedLimit, acceptLanguage);
+  const cacheKey = createCacheKey(query, parsedLimit);
   const cached = nominatimCache.get(cacheKey);
 
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
@@ -384,7 +370,6 @@ export async function GET(request: NextRequest): Promise<NextResponse<GeocodeRes
     const results = await fetchNominatimFallback(
       query,
       parsedLimit,
-      acceptLanguage,
       request.signal
     );
 

@@ -3,11 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GET } from '@/app/api/geocode/route';
 import type { GeocodeResponse } from '@/lib/geocode/providers';
 
-function request(query: string, client = crypto.randomUUID()) {
+function request(
+  query: string,
+  client = crypto.randomUUID(),
+  acceptLanguage = 'zh-Hant-TW,zh;q=0.9'
+) {
   return new NextRequest(`http://localhost/api/geocode?${query}`, {
     headers: {
       'x-forwarded-for': `test-${client}`,
-      'accept-language': 'zh-Hant-TW,zh;q=0.9',
+      'accept-language': acceptLanguage,
     },
   });
 }
@@ -48,7 +52,7 @@ describe('/api/geocode', () => {
     vi.restoreAllMocks();
   });
 
-  it('calls TomTom Fuzzy Search with typeahead, mixed indexes, bias, limit and normalized language', async () => {
+  it('calls TomTom Fuzzy Search with typeahead, mixed indexes, bias and limit while ignoring legacy language inputs', async () => {
     const fetchMock = vi.fn().mockResolvedValue(tomTomResponse());
     vi.stubGlobal('fetch', fetchMock);
 
@@ -81,10 +85,38 @@ describe('/api/geocode', () => {
     expect(upstreamUrl.searchParams.get('limit')).toBe('5');
     expect(upstreamUrl.searchParams.get('lat')).toBe('23.98');
     expect(upstreamUrl.searchParams.get('lon')).toBe('121.6');
-    expect(upstreamUrl.searchParams.get('language')).toBe('zh-TW');
+    expect(upstreamUrl.searchParams.has('language')).toBe(false);
     expect(upstreamUrl.searchParams.get('key')).toBe('server-secret');
     expect(JSON.stringify(body)).not.toContain('server-secret');
   });
+
+  it.each([
+    ['介禮街20號', 'en-US,en;q=0.9'],
+    ['20 Jieli Street', 'zh-TW,zh;q=0.9'],
+    ['東京都千代田区', 'en-US,en;q=0.9'],
+    ['서울특별시 중구', 'en-US,en;q=0.9'],
+    ['شارع الشيخ زايد', 'en-US,en;q=0.9'],
+    ['Taipei 台北 101', 'fr-FR,fr;q=0.9'],
+  ])(
+    'lets TomTom infer result language from query "%s" instead of browser locale',
+    async (query, acceptLanguage) => {
+      const fetchMock = vi.fn().mockResolvedValue(tomTomResponse());
+      vi.stubGlobal('fetch', fetchMock);
+
+      const response = await GET(
+        request(
+          `q=${encodeURIComponent(query)}&mode=autocomplete&limit=5&lang=en-US`,
+          crypto.randomUUID(),
+          acceptLanguage
+        )
+      );
+
+      expect(response.status).toBe(200);
+      const upstreamUrl = new URL(fetchMock.mock.calls[0][0] as string);
+      expect(decodeURIComponent(upstreamUrl.pathname)).toContain(`${query}.json`);
+      expect(upstreamUrl.searchParams.has('language')).toBe(false);
+    }
+  );
 
   it('does not put TomTom results in the shared LRU cache', async () => {
     const fetchMock = vi.fn().mockImplementation(async () => tomTomResponse());
@@ -179,5 +211,39 @@ describe('/api/geocode', () => {
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toContain('nominatim.openstreetmap.org/search');
+    const upstreamOptions = fetchMock.mock.calls[0][1] as RequestInit;
+    const upstreamHeaders = new Headers(upstreamOptions.headers);
+    expect(upstreamHeaders.has('Accept-Language')).toBe(false);
+  });
+
+  it('shares Nominatim cache entries across browser languages', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify([
+          {
+            place_id: 789,
+            display_name: 'Queen Street, Brisbane, Queensland, Australia',
+            lat: '-27.4698',
+            lon: '153.0251',
+            osm_type: 'way',
+            osm_id: 1011,
+          },
+        ]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      )
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const query = `q=Queen%20Street%20${crypto.randomUUID()}&mode=fallback&limit=5`;
+
+    const englishResponse = await GET(
+      request(query, crypto.randomUUID(), 'en-AU,en;q=0.9')
+    );
+    const chineseResponse = await GET(
+      request(query, crypto.randomUUID(), 'zh-TW,zh;q=0.9')
+    );
+
+    expect(englishResponse.headers.get('X-Cache')).toBe('MISS');
+    expect(chineseResponse.headers.get('X-Cache')).toBe('HIT');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
