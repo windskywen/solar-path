@@ -2,16 +2,14 @@
  * SearchResults Component
  *
  * Dropdown component displaying geocoding search results.
- * Shows display name and OSM verification link for each result.
- *
- * @see FR-004: OSM verification link requirement
+ * Shows provider attribution and a neutral coordinate link for each result.
  */
 
 'use client';
 
 import { memo } from 'react';
 import type { LocationPoint } from '@/types/solar';
-import type { GeocodeResult } from '@/hooks/useGeocode';
+import type { GeocodeProvider, GeocodeResult } from '@/lib/geocode/providers';
 
 export interface SearchResultsProps {
   /** Search results to display */
@@ -20,10 +18,18 @@ export interface SearchResultsProps {
   isLoading: boolean;
   /** Current search query (for highlighting) */
   query: string;
+  /** Provider used for the active result set */
+  provider: GeocodeProvider | null;
+  /** Provider-required attribution */
+  attribution: string;
+  /** Search error shown inside the dropdown */
+  error?: string | null;
+  /** Whether Enter can trigger the one-off fallback */
+  fallbackAvailable?: boolean;
   /** Callback when a result is selected */
   onSelect: (location: LocationPoint) => void;
-  /** Callback when OSM link is clicked */
-  onOsmClick?: (osmUrl: string) => void;
+  /** Callback when the coordinate link is clicked */
+  onCoordinateClick?: (coordinateUrl: string) => void;
   /** Additional CSS classes */
   className?: string;
   /** Optional id for the listbox element */
@@ -63,12 +69,12 @@ const SearchResultItem = memo(function SearchResultItem({
   result,
   query,
   onSelect,
-  onOsmClick,
+  onCoordinateClick,
 }: {
   result: GeocodeResult;
   query: string;
   onSelect: (location: LocationPoint) => void;
-  onOsmClick?: (osmUrl: string) => void;
+  onCoordinateClick?: (coordinateUrl: string) => void;
 }) {
   const handleSelect = () => {
     onSelect({
@@ -80,10 +86,10 @@ const SearchResultItem = memo(function SearchResultItem({
     });
   };
 
-  const handleOsmClick = (e: React.MouseEvent) => {
+  const handleCoordinateClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onOsmClick) {
-      onOsmClick(result.osmUrl);
+    if (onCoordinateClick) {
+      onCoordinateClick(result.osmUrl);
     } else {
       window.open(result.osmUrl, '_blank', 'noopener,noreferrer');
     }
@@ -106,11 +112,11 @@ const SearchResultItem = memo(function SearchResultItem({
         </div>
         <a
           href={result.osmUrl}
-          onClick={handleOsmClick}
+          onClick={handleCoordinateClick}
           className="flex-shrink-0 text-[10px] text-[var(--solar-accent)] underline transition-opacity hover:text-[var(--solar-text-strong)] sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
-          title="Verify on OpenStreetMap"
+          title="Open coordinates"
         >
-          OSM ↗
+          Open coordinates ↗
         </a>
       </div>
     </button>
@@ -145,6 +151,17 @@ function NoResults({ query }: { query: string }) {
   );
 }
 
+function ProviderUnavailable({ message }: { message: string }) {
+  return (
+    <div className="p-4 text-center" role="status">
+      <p className="text-xs font-medium text-[var(--solar-text-strong)]">{message}</p>
+      <p className="mt-1 text-[10px] text-[var(--solar-text-faint)]">
+        Or use GPS or enter coordinates manually.
+      </p>
+    </div>
+  );
+}
+
 /**
  * SearchResults component
  */
@@ -152,8 +169,12 @@ export function SearchResults({
   results,
   isLoading,
   query,
+  provider,
+  attribution,
+  error,
+  fallbackAvailable = false,
   onSelect,
-  onOsmClick,
+  onCoordinateClick,
   className = '',
   listboxId,
 }: SearchResultsProps) {
@@ -169,6 +190,16 @@ export function SearchResults({
         className={`absolute left-0 right-0 top-full z-[80] mt-2 overflow-hidden rounded-[22px] border [border-color:var(--solar-dropdown-border)] [background:var(--solar-dropdown-bg)] [box-shadow:var(--solar-dropdown-shadow)] backdrop-blur-2xl ${className}`}
       >
         <LoadingSkeleton />
+      </div>
+    );
+  }
+
+  if (error && (fallbackAvailable || results.length === 0)) {
+    return (
+      <div
+        className={`absolute left-0 right-0 top-full z-[80] mt-2 rounded-[22px] border [border-color:var(--solar-dropdown-border)] [background:var(--solar-dropdown-bg)] [box-shadow:var(--solar-dropdown-shadow)] backdrop-blur-2xl ${className}`}
+      >
+        <ProviderUnavailable message={error} />
       </div>
     );
   }
@@ -194,15 +225,15 @@ export function SearchResults({
     >
       {results.map((result) => (
         <SearchResultItem
-          key={result.osmUrl}
+          key={result.id}
           result={result}
           query={query}
           onSelect={onSelect}
-          onOsmClick={onOsmClick}
+          onCoordinateClick={onCoordinateClick}
         />
       ))}
       <div className="border-t [border-color:var(--solar-divider)] px-3 py-2 text-xs text-[var(--solar-text-muted)]">
-        Data from OpenStreetMap contributors
+        {attribution || (provider === 'tomtom' ? 'Search data © TomTom' : '© OpenStreetMap contributors')}
       </div>
     </div>
   );

@@ -23,6 +23,12 @@ export function SiteFooter() {
               <span aria-hidden="true" className="hidden text-[var(--solar-text-faint)] sm:inline">
                 &middot;
               </span>
+              <Link href="/terms" className={footerLinkClass}>
+                Terms
+              </Link>
+              <span aria-hidden="true" className="hidden text-[var(--solar-text-faint)] sm:inline">
+                &middot;
+              </span>
               <Link href="/about" className={footerLinkClass}>
                 About
               </Link>
@@ -37,6 +43,15 @@ export function SiteFooter() {
 
           <p className="mt-2 text-center sm:text-left">
             Data sources:{' '}
+            <a
+              href="https://www.tomtom.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={footerLinkClass}
+            >
+              TomTom
+            </a>
+            ,{' '}
             <a
               href="https://www.openstreetmap.org/copyright"
               target="_blank"
