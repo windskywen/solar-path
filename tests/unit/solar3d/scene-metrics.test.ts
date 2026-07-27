@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { Solar3DPoint } from '@/types/solar3d';
 import {
   buildAdaptiveSolarGeometry,
+  buildSolarMilestones,
   buildSolarReferenceGeometry,
   calculateSolarViewportFit,
   calculateSolarViewportPadding,
@@ -76,16 +77,17 @@ describe('adaptive solar scene metrics', () => {
     expect(zoom15.pathRadiusPixels).toBe(200);
     expect(zoom17.pathRadiusPixels).toBe(200);
     expect(zoom19.pathRadiusPixels).toBe(200);
-    expect(zoom15.sunRadiusPixels).toBe(8);
-    expect(zoom17.sunRadiusPixels).toBe(8);
-    expect(zoom19.sunRadiusPixels).toBe(8);
-    expect(zoom15.selectedSunRadiusPixels).toBe(11);
-    expect(zoom17.selectedSunRadiusPixels).toBe(11);
-    expect(zoom19.selectedSunRadiusPixels).toBe(11);
+    expect(zoom15.sunRadiusPixels).toBe(6);
+    expect(zoom17.sunRadiusPixels).toBe(6);
+    expect(zoom19.sunRadiusPixels).toBe(6);
+    expect(zoom15.selectedSunRadiusPixels).toBe(9);
+    expect(zoom17.selectedSunRadiusPixels).toBe(9);
+    expect(zoom19.selectedSunRadiusPixels).toBe(9);
+    expect(zoom15.selectedHaloRadiusPixels).toBe(14);
     expect(zoom15.pathRadiusMeters).toBeCloseTo(zoom17.pathRadiusMeters * 4, 8);
     expect(zoom15.pathRadiusMeters).toBeCloseTo(zoom19.pathRadiusMeters * 16, 8);
-    expect(zoom15.sunRadiusMeters / zoom15.metersPerPixel).toBeCloseTo(8, 8);
-    expect(zoom19.sunRadiusMeters / zoom19.metersPerPixel).toBeCloseTo(8, 8);
+    expect(zoom15.sunRadiusMeters / zoom15.metersPerPixel).toBeCloseTo(6, 8);
+    expect(zoom19.sunRadiusMeters / zoom19.metersPerPixel).toBeCloseTo(6, 8);
   });
 
   it('uses the compact viewport limits and sphere sizes on mobile', () => {
@@ -98,14 +100,15 @@ describe('adaptive solar scene metrics', () => {
     });
 
     expect(metrics.pathRadiusPixels).toBe(130);
-    expect(metrics.sunRadiusPixels).toBe(7);
-    expect(metrics.selectedSunRadiusPixels).toBe(10);
+    expect(metrics.sunRadiusPixels).toBe(5);
+    expect(metrics.selectedSunRadiusPixels).toBe(8);
+    expect(metrics.selectedHaloRadiusPixels).toBe(12);
   });
 
   it('keeps the compass and solar reference planes at fixed terrain offsets', () => {
-    expect(COMPASS_GROUND_OFFSET_METERS).toBe(10);
+    expect(COMPASS_GROUND_OFFSET_METERS).toBe(20);
     expect(SOLAR_COMPASS_GAP_METERS).toBe(1);
-    expect(SOLAR_BASE_HEIGHT_METERS).toBe(11);
+    expect(SOLAR_BASE_HEIGHT_METERS).toBe(21);
     expect(SOLAR_BASE_HEIGHT_METERS - COMPASS_GROUND_OFFSET_METERS).toBe(
       SOLAR_COMPASS_GAP_METERS
     );
@@ -139,18 +142,23 @@ describe('adaptive solar scene metrics', () => {
     });
   });
 
-  it('keeps compass references ten metres above terrain and one metre below the solar origin', () => {
+  it('builds a closed cardinal compass ring twenty metres above terrain', () => {
     const reference = buildSolarReferenceGeometry(
       160,
       SOLAR_BASE_HEIGHT_METERS,
       COMPASS_GROUND_OFFSET_METERS
     );
 
+    expect(reference.compassRingPositions).toHaveLength(65);
+    expect(reference.compassRingPositions[0]).toEqual(
+      reference.compassRingPositions[reference.compassRingPositions.length - 1]
+    );
+    expect(reference.compassTicks).toHaveLength(4);
     expect(
-      reference.compassLines.every(
-        (line) =>
-          line.from[2] === COMPASS_GROUND_OFFSET_METERS &&
-          line.to[2] === COMPASS_GROUND_OFFSET_METERS
+      reference.compassTicks.every(
+        (tick) =>
+          tick.from[2] === COMPASS_GROUND_OFFSET_METERS &&
+          tick.to[2] === COMPASS_GROUND_OFFSET_METERS
       )
     ).toBe(true);
     expect(
@@ -158,6 +166,17 @@ describe('adaptive solar scene metrics', () => {
         (label) => label.position[2] === COMPASS_GROUND_OFFSET_METERS
       )
     ).toBe(true);
+    expect(reference.compassLabels.map((label) => label.text)).toEqual([
+      'N',
+      'E',
+      'S',
+      'W',
+    ]);
+    const [north, east, south, west] = reference.compassLabels;
+    expect(north.position[1]).toBeGreaterThan(0);
+    expect(east.position[0]).toBeGreaterThan(0);
+    expect(south.position[1]).toBeLessThan(0);
+    expect(west.position[0]).toBeLessThan(0);
     expect(reference.anchorLine).toEqual({
       from: [0, 0, COMPASS_GROUND_OFFSET_METERS],
       to: [0, 0, SOLAR_BASE_HEIGHT_METERS],
@@ -168,7 +187,64 @@ describe('adaptive solar scene metrics', () => {
   });
 
   it('keeps camera focus on the elevated solar origin without zoom-dependent drift', () => {
-    expect(getCameraFocusElevation(42, SOLAR_BASE_HEIGHT_METERS)).toBeCloseTo(53);
+    expect(getCameraFocusElevation(42, SOLAR_BASE_HEIGHT_METERS)).toBeCloseTo(63);
+  });
+
+  it('uses the nearest visible hours for rise, noon, and set milestones', () => {
+    const points = [
+      createPoint(6, 70, 3),
+      createPoint(7, 80, 18),
+      createPoint(12, 180, 65),
+      createPoint(17, 275, 15),
+      createPoint(18, 285, 2),
+    ];
+
+    expect(
+      buildSolarMilestones(points, {
+        sunriseLocal: '06:37',
+        sunsetLocal: '17:38',
+      }).map(({ kind, label, hour }) => ({ kind, label, hour }))
+    ).toEqual([
+      { kind: 'rise', label: 'Rise · 07:00', hour: 7 },
+      { kind: 'noon', label: 'Noon · 12:00', hour: 12 },
+      { kind: 'set', label: 'Set · 18:00', hour: 18 },
+    ]);
+  });
+
+  it('deduplicates short-day milestones in favor of noon', () => {
+    const points = [createPoint(12, 180, 4)];
+    const milestones = buildSolarMilestones(points, {
+      sunriseLocal: '11:50',
+      sunsetLocal: '12:10',
+    });
+
+    expect(milestones).toHaveLength(1);
+    expect(milestones[0]).toMatchObject({
+      kind: 'noon',
+      label: 'Noon · 12:00',
+      hour: 12,
+    });
+  });
+
+  it('shows only noon for polar day and no milestones for polar night', () => {
+    const polarDayPoints = [
+      createPoint(0, 0, 12),
+      createPoint(12, 180, 36),
+      createPoint(23, 345, 14),
+    ];
+
+    expect(
+      buildSolarMilestones(polarDayPoints, {
+        dayLengthHours: 24,
+        note: 'Midnight sun - sun does not set',
+      }).map((milestone) => milestone.kind)
+    ).toEqual(['noon']);
+    expect(
+      buildSolarMilestones([], {
+        dayLengthHours: 0,
+        note: 'Polar night - sun does not rise',
+      })
+    ).toEqual([]);
   });
 
   it('shrinks a projected solar scene until markers stay inside the viewport safe area', () => {
