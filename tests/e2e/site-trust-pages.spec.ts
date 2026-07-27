@@ -7,6 +7,7 @@ test.describe('Site trust and content surfaces', () => {
     const howItWorks = page.getByRole('region', { name: /How it works/i }).first();
 
     await expect(page.getByRole('link', { name: 'Privacy Policy' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Terms' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Contact Us' })).toBeVisible();
     await expect(page.getByRole('heading', { name: /How it works/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Use cases/i })).toBeVisible();
@@ -39,5 +40,14 @@ test.describe('Site trust and content surfaces', () => {
     await expect(page.getByRole('heading', { name: /About Solar Path Tracker/i })).toBeVisible();
     await expect(page.getByText(/solarpathtracker@gmail.com/i)).toBeVisible();
     await expect(page.getByRole('heading', { name: /Typical use cases/i })).toBeVisible();
+  });
+
+  test('terms page discloses TomTom search licensing', async ({ page }) => {
+    await page.goto('/terms');
+
+    await expect(page.getByRole('heading', { name: /Terms of Use/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Licensed address and place results/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /TomTom Maps API terms/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /TomTom Third Party Product Terms/i })).toBeVisible();
   });
 });

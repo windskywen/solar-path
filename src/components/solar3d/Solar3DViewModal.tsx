@@ -92,7 +92,7 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
   const dateISO = useDateISO();
   const timezone = useTimezone();
   const selectedHour = useSelectedHour();
-  const { hourly } = useSolarData();
+  const { hourly, events } = useSolarData();
 
   // Tooltip state
   const [tooltip, setTooltip] = useState<Solar3DTooltipData>(null);
@@ -107,9 +107,10 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
       dateISO,
       timezone,
       hourly,
+      events,
       selectedHour,
     };
-  }, [open, location, dateISO, timezone, hourly, selectedHour]);
+  }, [open, location, dateISO, timezone, hourly, events, selectedHour]);
 
   // Derive 3D view data from snapshot
   const viewData: Solar3DViewData | null = useMemo(() => {
@@ -331,7 +332,7 @@ export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) 
                 <Solar3DTooltip data={tooltip} />
 
                 {viewData && !viewData.isEmpty && (
-                  <Solar3DLegend className="absolute bottom-3 left-3 z-20 w-[10.5rem] max-w-[calc(100%-1.5rem)] sm:bottom-6 sm:left-6 sm:w-[290px]" />
+                  <Solar3DLegend className="absolute bottom-24 left-3 z-20 w-[10rem] max-w-[calc(100%-1.5rem)] sm:bottom-5 sm:left-5 sm:w-auto sm:max-w-[calc(100%-2.5rem)]" />
                 )}
               </div>
             </div>

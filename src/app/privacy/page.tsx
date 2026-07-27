@@ -92,9 +92,17 @@ export default function PrivacyPage() {
             </p>
             <p>
               If you use Search Location, your query is sent through our `/api/geocode` endpoint to
-              OpenStreetMap Nominatim so we can return matching places. Search responses may be
-              cached in server memory for up to 24 hours to reduce repeated upstream lookups, and
-              request metadata may be used for rate limiting.
+              TomTom so we can return matching global addresses, places, streets, and administrative
+              areas. If a starting location is available, its coordinates are also sent as a soft
+              location preference; they do not restrict the search to that area. TomTom autocomplete
+              results are not placed in our shared 24-hour search cache.
+            </p>
+            <p>
+              If TomTom autocomplete is unavailable, the interface offers a one-time fallback after
+              you explicitly press Enter. Only then is the current query sent to OpenStreetMap
+              Nominatim. Those fallback responses may be cached in server memory for up to 24 hours
+              to reduce repeated upstream lookups. Request metadata may also be used for rate
+              limiting.
             </p>
             <p>
               On first load, the site may request an approximate location from our `/api/ip-geo`
@@ -124,8 +132,15 @@ export default function PrivacyPage() {
                 measurement.
               </li>
               <li>
-                <strong className="text-[var(--solar-text-strong)]">OpenStreetMap / Nominatim:</strong>{' '}
-                powers place search and map verification links.
+                <strong className="text-[var(--solar-text-strong)]">TomTom:</strong> powers global
+                address and place autocomplete and may receive the search text and a soft location
+                preference.
+              </li>
+              <li>
+                <strong className="text-[var(--solar-text-strong)]">
+                  OpenStreetMap / Nominatim:
+                </strong>{' '}
+                provides map tiles, coordinate links, and the explicitly triggered fallback search.
               </li>
               <li>
                 <strong className="text-[var(--solar-text-strong)]">ip-api.com:</strong> provides

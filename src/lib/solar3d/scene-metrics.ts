@@ -1,4 +1,5 @@
-import type { Solar3DPoint } from '@/types/solar3d';
+import type { SunEvents } from '@/types/solar';
+import type { Solar3DMilestone, Solar3DMilestoneKind, Solar3DPoint } from '@/types/solar3d';
 import { computePosition } from './geometry';
 
 const EARTH_CIRCUMFERENCE_PER_TILE = 156543.03392;
@@ -17,15 +18,18 @@ const DESKTOP_VIEWPORT_TOP_PADDING_MIN_PIXELS = 72;
 const DESKTOP_VIEWPORT_TOP_PADDING_MAX_PIXELS = 112;
 const COMPACT_VIEWPORT_TOP_PADDING_MIN_PIXELS = 48;
 const COMPACT_VIEWPORT_TOP_PADDING_MAX_PIXELS = 72;
+const COMPASS_RING_SEGMENTS = 64;
+const COMPASS_RING_RADIUS_RATIO = 1.12;
+const COMPASS_LABEL_RADIUS_RATIO = 1.18;
 
-export const COMPASS_GROUND_OFFSET_METERS = 10;
+export const COMPASS_GROUND_OFFSET_METERS = 20;
 export const SOLAR_COMPASS_GAP_METERS = 1;
 export const SOLAR_BASE_HEIGHT_METERS = COMPASS_GROUND_OFFSET_METERS + SOLAR_COMPASS_GAP_METERS;
 
 export const SOLAR_SCENE_CAMERA = {
   zoom: 15,
-  minZoom: 15,
-  maxZoom: 20,
+  minZoom: 14,
+  maxZoom: 17,
   pitch: 58,
   bearing: 135,
 } as const;
@@ -46,6 +50,7 @@ export interface SolarSceneMetrics {
   sunRadiusMeters: number;
   selectedSunRadiusPixels: number;
   selectedSunRadiusMeters: number;
+  selectedHaloRadiusPixels: number;
 }
 
 export interface AdaptiveSolarGeometry {
@@ -60,7 +65,12 @@ export interface AdaptiveSolarGeometry {
 }
 
 export interface SolarReferenceGeometry {
-  compassLines: Array<{
+  compassRingPositions: [number, number, number][];
+  cardinalAxes: Array<{
+    from: [number, number, number];
+    to: [number, number, number];
+  }>;
+  compassTicks: Array<{
     from: [number, number, number];
     to: [number, number, number];
   }>;
@@ -68,6 +78,7 @@ export interface SolarReferenceGeometry {
     text: 'N' | 'E' | 'S' | 'W';
     position: [number, number, number];
   }>;
+  compassOrigin: [number, number, number];
   anchorLine: {
     from: [number, number, number];
     to: [number, number, number];
@@ -125,8 +136,9 @@ export function calculateSolarSceneMetrics({
     isCompact ? COMPACT_PATH_MIN_PIXELS : DESKTOP_PATH_MIN_PIXELS,
     isCompact ? COMPACT_PATH_MAX_PIXELS : DESKTOP_PATH_MAX_PIXELS
   );
-  const sunRadiusPixels = isCompact ? 7 : 8;
-  const selectedSunRadiusPixels = isCompact ? 10 : 11;
+  const sunRadiusPixels = isCompact ? 5 : 6;
+  const selectedSunRadiusPixels = isCompact ? 8 : 9;
+  const selectedHaloRadiusPixels = isCompact ? 12 : 14;
 
   return {
     metersPerPixel,
@@ -136,6 +148,7 @@ export function calculateSolarSceneMetrics({
     sunRadiusMeters: sunRadiusPixels * metersPerPixel,
     selectedSunRadiusPixels,
     selectedSunRadiusMeters: selectedSunRadiusPixels * metersPerPixel,
+    selectedHaloRadiusPixels,
   };
 }
 
@@ -151,15 +164,9 @@ export function calculateSolarViewportPadding(
       : DESKTOP_VIEWPORT_EDGE_PADDING_PIXELS,
     topPaddingPixels: clamp(
       safeViewportHeight *
-        (isCompact
-          ? COMPACT_VIEWPORT_TOP_PADDING_RATIO
-          : DESKTOP_VIEWPORT_TOP_PADDING_RATIO),
-      isCompact
-        ? COMPACT_VIEWPORT_TOP_PADDING_MIN_PIXELS
-        : DESKTOP_VIEWPORT_TOP_PADDING_MIN_PIXELS,
-      isCompact
-        ? COMPACT_VIEWPORT_TOP_PADDING_MAX_PIXELS
-        : DESKTOP_VIEWPORT_TOP_PADDING_MAX_PIXELS
+        (isCompact ? COMPACT_VIEWPORT_TOP_PADDING_RATIO : DESKTOP_VIEWPORT_TOP_PADDING_RATIO),
+      isCompact ? COMPACT_VIEWPORT_TOP_PADDING_MIN_PIXELS : DESKTOP_VIEWPORT_TOP_PADDING_MIN_PIXELS,
+      isCompact ? COMPACT_VIEWPORT_TOP_PADDING_MAX_PIXELS : DESKTOP_VIEWPORT_TOP_PADDING_MAX_PIXELS
     ),
   };
 }
@@ -197,31 +204,144 @@ export function buildSolarReferenceGeometry(
   solarBaseHeightMeters: number,
   compassHeightMeters: number
 ): SolarReferenceGeometry {
-  const compassRadius = pathRadiusMeters * 1.08;
+  const compassRadius = pathRadiusMeters * COMPASS_RING_RADIUS_RATIO;
+  const labelRadius = compassRadius * COMPASS_LABEL_RADIUS_RATIO;
+  const tickInnerRadius = compassRadius * 0.95;
+  const tickOuterRadius = compassRadius * 1.05;
   const solarOrigin: [number, number, number] = [0, 0, solarBaseHeightMeters];
+  const compassOrigin: [number, number, number] = [0, 0, compassHeightMeters];
+  const compassRingArc = Array.from(
+    { length: COMPASS_RING_SEGMENTS },
+    (_, index): [number, number, number] => {
+      const angle = (index / COMPASS_RING_SEGMENTS) * Math.PI * 2;
+      return [
+        compassRadius * Math.sin(angle),
+        compassRadius * Math.cos(angle),
+        compassHeightMeters,
+      ];
+    }
+  );
+  const compassRingPositions = [...compassRingArc, compassRingArc[0]];
+
+  const buildTick = (
+    eastDirection: number,
+    northDirection: number
+  ): { from: [number, number, number]; to: [number, number, number] } => ({
+    from: [eastDirection * tickInnerRadius, northDirection * tickInnerRadius, compassHeightMeters],
+    to: [eastDirection * tickOuterRadius, northDirection * tickOuterRadius, compassHeightMeters],
+  });
 
   return {
-    compassLines: [
+    compassRingPositions,
+    cardinalAxes: [
+      {
+        from: [0, compassRadius, compassHeightMeters],
+        to: [0, -compassRadius, compassHeightMeters],
+      },
       {
         from: [-compassRadius, 0, compassHeightMeters],
         to: [compassRadius, 0, compassHeightMeters],
       },
-      {
-        from: [0, -compassRadius, compassHeightMeters],
-        to: [0, compassRadius, compassHeightMeters],
-      },
     ],
+    compassTicks: [buildTick(0, 1), buildTick(1, 0), buildTick(0, -1), buildTick(-1, 0)],
     compassLabels: [
-      { text: 'N', position: [0, compassRadius * 0.9, compassHeightMeters] },
-      { text: 'S', position: [0, -compassRadius * 0.9, compassHeightMeters] },
-      { text: 'E', position: [compassRadius * 0.9, 0, compassHeightMeters] },
-      { text: 'W', position: [-compassRadius * 0.9, 0, compassHeightMeters] },
+      { text: 'N', position: [0, labelRadius, compassHeightMeters] },
+      { text: 'E', position: [labelRadius, 0, compassHeightMeters] },
+      { text: 'S', position: [0, -labelRadius, compassHeightMeters] },
+      { text: 'W', position: [-labelRadius, 0, compassHeightMeters] },
     ],
+    compassOrigin,
     anchorLine: {
-      from: [0, 0, compassHeightMeters],
+      from: compassOrigin,
       to: solarOrigin,
     },
   };
+}
+
+function parseTimeMinutes(time: string | undefined): number | null {
+  if (!time) return null;
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return null;
+  }
+  return hours * 60 + minutes;
+}
+
+function findNearestPoint(points: Solar3DPoint[], time: string | undefined): Solar3DPoint | null {
+  const targetMinutes = parseTimeMinutes(time);
+  if (targetMinutes === null || points.length === 0) return null;
+
+  return points.reduce((nearest, point) => {
+    const pointMinutes = parseTimeMinutes(point.localTimeLabel) ?? point.hour * 60;
+    const nearestMinutes = parseTimeMinutes(nearest.localTimeLabel) ?? nearest.hour * 60;
+    return Math.abs(pointMinutes - targetMinutes) < Math.abs(nearestMinutes - targetMinutes)
+      ? point
+      : nearest;
+  });
+}
+
+export function buildSolarMilestones(
+  points: Solar3DPoint[],
+  events: SunEvents
+): Solar3DMilestone[] {
+  if (points.length === 0) return [];
+
+  const peakPoint = points.reduce((peak, point) =>
+    point.altitudeDeg > peak.altitudeDeg ? point : peak
+  );
+  const candidates: Array<{
+    kind: Solar3DMilestoneKind;
+    point: Solar3DPoint | null;
+    eventTime?: string;
+    priority: number;
+  }> = [
+    { kind: 'noon', point: peakPoint, priority: 0 },
+    {
+      kind: 'rise',
+      point: findNearestPoint(points, events.sunriseLocal),
+      eventTime: events.sunriseLocal,
+      priority: 1,
+    },
+    {
+      kind: 'set',
+      point: findNearestPoint(points, events.sunsetLocal),
+      eventTime: events.sunsetLocal,
+      priority: 2,
+    },
+  ];
+  const usedHours = new Set<number>();
+  const milestoneOrder: Record<Solar3DMilestoneKind, number> = {
+    rise: 0,
+    noon: 1,
+    set: 2,
+  };
+
+  return candidates
+    .sort((left, right) => left.priority - right.priority)
+    .filter((candidate): candidate is typeof candidate & { point: Solar3DPoint } => {
+      if (!candidate.point || usedHours.has(candidate.point.hour)) return false;
+      usedHours.add(candidate.point.hour);
+      return true;
+    })
+    .map(({ kind, point, eventTime }) => ({
+      kind,
+      label: `${kind === 'rise' ? 'Rise' : kind === 'noon' ? 'Noon' : 'Set'} · ${
+        kind === 'noon' ? point.localTimeLabel : (eventTime ?? point.localTimeLabel)
+      }`,
+      hour: point.hour,
+      position: point.position,
+    }))
+    .sort((left, right) => milestoneOrder[left.kind] - milestoneOrder[right.kind]);
 }
 
 export function calculateSolarViewportFit({

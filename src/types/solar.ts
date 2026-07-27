@@ -20,7 +20,7 @@ export interface LocationPoint {
   name?: string;
   /** How the location was obtained */
   source?: LocationSource;
-  /** OpenStreetMap verification link (for search results) */
+  /** Coordinate/reference link for a selected search result */
   osmUrl?: string;
 }
 
@@ -93,19 +93,29 @@ export interface SolarDataset {
 
 /** Represents a single search result from geocoding */
 export interface GeocodeResult {
+  /** Provider result id */
+  id: string;
   /** Human-readable location name */
   displayName: string;
   /** Latitude */
   lat: number;
   /** Longitude */
   lng: number;
-  /** OpenStreetMap verification link */
+  /** Provider result category */
+  resultType: string;
+  /** Coordinate/reference link */
   osmUrl: string;
 }
 
 /** Geocoding API response */
 export interface GeocodeResponse {
+  provider: 'tomtom' | 'nominatim';
+  attribution: string;
+  fallbackAvailable: boolean;
   results: GeocodeResult[];
+  error?: string;
+  code?: GeocodeErrorCode;
+  retryAfter?: number;
 }
 
 /** Response from IP-based geolocation service */
@@ -127,7 +137,10 @@ export interface IpGeoResponse {
 export type GeocodeErrorCode =
   | 'INVALID_QUERY'
   | 'INVALID_LIMIT'
+  | 'INVALID_MODE'
+  | 'INVALID_BIAS'
   | 'RATE_LIMITED'
+  | 'PROVIDER_UNAVAILABLE'
   | 'UPSTREAM_ERROR';
 export type IpGeoErrorCode = 'IP_GEO_UNAVAILABLE';
 

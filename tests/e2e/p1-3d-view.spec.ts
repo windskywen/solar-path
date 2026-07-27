@@ -512,9 +512,40 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
     const scene = await waitForInteractive3DScene(page);
     await expect(scene).toHaveAttribute('data-render-mode', 'full-3d');
     await expect(scene).toHaveAttribute('data-map-provider', 'openfreemap');
-    await expect(scene).toHaveAttribute('data-compass-height-meters', '10.00');
-    await expect(scene).toHaveAttribute('data-solar-base-height', '11.00');
+    await expect(scene).toHaveAttribute('data-compass-height-meters', '20.00');
+    await expect(scene).toHaveAttribute('data-solar-base-height', '21.00');
     await expect(scene).toHaveAttribute('data-solar-compass-gap-meters', '1.00');
+    await expect(scene).toHaveAttribute('data-sun-radius-pixels', '6.00');
+    await expect(scene).toHaveAttribute('data-selected-sun-radius-pixels', '9.00');
+    await expect(scene).toHaveAttribute('data-selected-halo-radius-pixels', '14.00');
+    await expect(scene).toHaveAttribute('data-compass-label-count', '4');
+    await expect(scene).toHaveAttribute('data-compass-axis-count', '2');
+    await expect(scene).toHaveAttribute('data-compass-origin', '0.00,0.00,20.00');
+    await expect(scene).toHaveAttribute('data-connector-width-pixels', '2');
+    await expect(scene).toHaveAttribute('data-milestone-count', '3');
+    await expect(scene).toHaveAttribute(
+      'data-rise-milestone-label',
+      /^Rise · \d{2}:\d{2}$/
+    );
+    await expect(scene).toHaveAttribute(
+      'data-set-milestone-label',
+      /^Set · \d{2}:\d{2}$/
+    );
+    expect(Number(await scene.getAttribute('data-connector-count'))).toBeGreaterThan(0);
+    const coordinateMarker = page.getByTestId('solar-coordinate-marker');
+    await expect(coordinateMarker).toBeVisible();
+    expect((await coordinateMarker.boundingBox())?.width).toBe(18);
+    await expect(page.getByTestId('solar-milestone-rise')).toHaveText(
+      /^Rise · \d{2}:\d{2}$/
+    );
+    await expect(page.getByTestId('solar-milestone-set')).toHaveText(
+      /^Set · \d{2}:\d{2}$/
+    );
+
+    const legend = page.getByTestId('solar-3d-legend');
+    const legendBox = await legend.boundingBox();
+    expect(legendBox).not.toBeNull();
+    expect(legendBox!.height).toBeLessThanOrEqual(56);
 
     const attribution = scene.locator('.maplibregl-ctrl-attrib-inner');
     await expect(attribution).toContainText('OpenFreeMap', { timeout: 15000 });
@@ -561,8 +592,8 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
         .toBeGreaterThanOrEqual(topPadding - 0.5);
       expect(await readMetric('data-path-radius-pixels')).toBeGreaterThan(0);
       expect(await readMetric('data-sun-radius-pixels')).toBe(expectedSunPixels);
-      expect(await readMetric('data-compass-height-meters')).toBe(10);
-      expect(await readMetric('data-solar-base-height')).toBe(11);
+      expect(await readMetric('data-compass-height-meters')).toBe(20);
+      expect(await readMetric('data-solar-base-height')).toBe(21);
       expect(await readMetric('data-solar-compass-gap-meters')).toBe(1);
     }
   });
@@ -580,6 +611,23 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
     const readMetric = async (attribute: string) =>
       Number(await scene.getAttribute(attribute));
     const zoomIn = scene.locator('.maplibregl-ctrl-zoom-in');
+
+    expect(await readMetric('data-sun-radius-pixels')).toBe(5);
+    expect(await readMetric('data-selected-sun-radius-pixels')).toBe(8);
+    expect(await readMetric('data-selected-halo-radius-pixels')).toBe(12);
+    expect(await readMetric('data-compass-label-count')).toBe(4);
+    expect(await readMetric('data-compass-axis-count')).toBe(2);
+    expect(await readMetric('data-connector-width-pixels')).toBe(2);
+    await expect(scene).toHaveAttribute('data-compass-origin', '0.00,0.00,20.00');
+    const coordinateMarker = page.getByTestId('solar-coordinate-marker');
+    await expect(coordinateMarker).toBeVisible();
+    expect((await coordinateMarker.boundingBox())?.width).toBe(16);
+    await expect(page.getByTestId('solar-milestone-rise')).toBeVisible();
+    await expect(page.getByTestId('solar-milestone-set')).toBeVisible();
+    const legendBox = await page.getByTestId('solar-3d-legend').boundingBox();
+    expect(legendBox).not.toBeNull();
+    expect(legendBox!.width).toBeLessThanOrEqual(168);
+    expect(legendBox!.height).toBeLessThanOrEqual(72);
 
     for (let zoom = 15; zoom <= 20; zoom += 1) {
       if (zoom > 15) {

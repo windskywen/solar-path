@@ -3,7 +3,7 @@
  * Based on data-model.md specification for feature 002-3d-solar-path-view
  */
 
-import type { HourlySolarPosition, LocationPoint } from './solar';
+import type { HourlySolarPosition, LocationPoint, SunEvents } from './solar';
 
 // ============================================================================
 // Snapshot Types (Captured when modal opens)
@@ -22,6 +22,8 @@ export interface Solar3DSnapshot {
   timezone: string;
   /** All 24 hourly positions (includes night hours) */
   hourly: HourlySolarPosition[];
+  /** Sunrise/sunset metadata captured with the hourly snapshot */
+  events: SunEvents;
   /** Currently selected hour, or null if none */
   selectedHour: number | null;
 }
@@ -62,6 +64,15 @@ export interface Solar3DPath {
    * Points are ordered by hour (ascending).
    */
   positions: [number, number, number][];
+}
+
+export type Solar3DMilestoneKind = 'rise' | 'noon' | 'set';
+
+export interface Solar3DMilestone {
+  kind: Solar3DMilestoneKind;
+  label: string;
+  hour: number;
+  position: [number, number, number];
 }
 
 // ============================================================================

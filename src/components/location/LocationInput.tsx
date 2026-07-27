@@ -6,7 +6,7 @@
  * Provides location input via:
  * - GPS button (browser geolocation)
  * - Search input (geocoding with debounced search)
- * - Display of current coordinates with OSM verification link
+ * - Display of current coordinates with a coordinate link
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
@@ -38,10 +38,18 @@ export function LocationInput({ className = '' }: LocationInputProps) {
     query,
     setQuery,
     results,
+    provider,
+    attribution,
     isLoading: isSearching,
     error: searchError,
+    fallbackAvailable,
+    requestFallback,
     clear: clearSearch,
-  } = useGeocode({ limit: 5 });
+    canSearch,
+  } = useGeocode({
+    limit: 5,
+    bias: location ? { lat: location.lat, lng: location.lng } : undefined,
+  });
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -179,6 +187,10 @@ export function LocationInput({ className = '' }: LocationInputProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       setIsSearchOpen(false);
+    } else if (e.key === 'Enter' && fallbackAvailable) {
+      e.preventDefault();
+      setIsSearchOpen(true);
+      void requestFallback();
     }
   };
 
@@ -202,12 +214,12 @@ export function LocationInput({ className = '' }: LocationInputProps) {
                 onChange={handleSearchChange}
                 onFocus={handleSearchFocus}
                 onKeyDown={handleKeyDown}
-                placeholder="Search address or city..."
+                placeholder="Search location, address, or city..."
                 autoComplete="off"
                 role="combobox"
                 aria-autocomplete="list"
                 aria-controls="search-location-results"
-                aria-expanded={isSearchOpen && query.length >= 2}
+                aria-expanded={isSearchOpen && canSearch}
                 className="h-12 w-full rounded-2xl border px-3 py-2 pl-10 text-sm text-[var(--solar-text-strong)] [border-color:var(--solar-input-border)] [background:var(--solar-input-bg)] [box-shadow:var(--solar-input-shadow)] transition-all outline-none placeholder:text-[var(--solar-input-placeholder)] focus:[border-color:var(--solar-input-focus-border)] focus:ring-2 focus:ring-[var(--solar-input-focus-ring)]"
                 aria-label="Search for a location"
                 aria-haspopup="listbox"
@@ -249,11 +261,15 @@ export function LocationInput({ className = '' }: LocationInputProps) {
               )}
 
               {/* Search Results Dropdown */}
-              {isSearchOpen && query.length >= 2 && (
+              {isSearchOpen && canSearch && (
                 <SearchResults
                   results={results}
                   isLoading={isSearching}
                   query={query}
+                  provider={provider}
+                  attribution={attribution}
+                  error={searchError}
+                  fallbackAvailable={fallbackAvailable}
                   onSelect={handleSelectLocation}
                   listboxId="search-location-results"
                 />
@@ -328,9 +344,9 @@ export function LocationInput({ className = '' }: LocationInputProps) {
       </div>
 
       {/* Error Messages */}
-      {(gpsError || searchError || error) && (
+      {(gpsError || error) && (
         <div className="rounded-2xl border [border-color:var(--solar-danger-soft-border)] [background:var(--solar-danger-soft-bg)] p-3">
-          <p className="text-xs text-[var(--solar-danger-soft-text)]">{gpsError || searchError || error}</p>
+          <p className="text-xs text-[var(--solar-danger-soft-text)]">{gpsError || error}</p>
         </div>
       )}
 
@@ -351,14 +367,15 @@ export function LocationInput({ className = '' }: LocationInputProps) {
                     {location.lat.toFixed(4)}°, {location.lng.toFixed(4)}°
                   </p>
               </div>
-              {/* OSM Verification Link */}
+              {/* Coordinate Link */}
               {location.osmUrl && (
                 <a
                   href={location.osmUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[var(--solar-text-muted)] transition-colors hover:text-[var(--solar-accent)]"
-                  title="Verify on OpenStreetMap"
+                  title="Open coordinates"
+                  aria-label="Open coordinates"
                 >
                   <svg
                     className="w-3.5 h-3.5"

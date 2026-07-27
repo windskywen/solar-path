@@ -24,6 +24,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
     },
     {
+      url: absoluteUrl('/terms'),
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
       url: absoluteUrl('/sunrise-sunset-calculator'),
       lastModified,
       changeFrequency: 'weekly',

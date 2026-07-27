@@ -16,6 +16,11 @@ export interface Solar3DTooltipProps {
   data: Solar3DTooltipData;
 }
 
+function getCardinalDirection(azimuthDeg: number): string {
+  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  return directions[Math.round(azimuthDeg / 45) % directions.length];
+}
+
 /**
  * Solar3DTooltip
  *
@@ -30,44 +35,45 @@ export function Solar3DTooltip({ data }: Solar3DTooltipProps) {
     data.daylightState === 'golden'
       ? '[border-color:var(--solar-warning-border)] [background:var(--solar-warning-bg)] text-[var(--solar-warning-text)]'
       : '[border-color:var(--solar-input-focus-border)] [background:var(--solar-accent-soft)] text-[var(--solar-accent)]';
+  const cardinalDirection = getCardinalDirection(data.azimuthDeg);
 
   return (
     <div
-      className="pointer-events-none absolute z-20 max-w-[calc(100vw-1.5rem)]"
+      className="pointer-events-none absolute left-[clamp(0.75rem,var(--tooltip-x),calc(100%_-_13.25rem))] top-[clamp(5.75rem,var(--tooltip-y),calc(100%_-_0.75rem))] z-20 w-[12.5rem] max-w-[calc(100%-1.5rem)]"
       style={{
-        left: data.x + 14,
-        top: data.y - 14,
+        '--tooltip-x': `${data.x + 12}px`,
+        '--tooltip-y': `${data.y - 10}px`,
         transform: 'translateY(-100%)',
-      }}
+      } as React.CSSProperties}
+      data-testid="solar-3d-tooltip"
     >
-      <div className="min-w-[190px] rounded-[24px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-tooltip-bg)] p-3.5 [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[0.62rem] font-medium uppercase tracking-[0.28em] text-[var(--solar-3d-kicker)]">
-              Sun position
-            </p>
-            <p className="mt-1 text-lg font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]">
+      <div className="rounded-[18px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-tooltip-bg)] px-3 py-2.5 [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-baseline gap-2">
+            <p className="font-mono text-base font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]">
               {data.localTimeLabel}
             </p>
+            <span className="text-[0.56rem] font-medium uppercase tracking-[0.2em] text-[var(--solar-3d-kicker)]">
+              Sun
+            </span>
           </div>
           <span
-            className={`inline-flex rounded-full border px-2 py-1 text-[0.65rem] font-medium ${stateClasses}`}
+            className={`inline-flex rounded-full border px-1.5 py-0.5 text-[0.58rem] font-medium ${stateClasses}`}
           >
             {stateLabel}
           </span>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-          <div className="rounded-[18px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-3 py-2">
-            <p className="text-[0.65rem] uppercase tracking-[0.22em] text-[var(--solar-text-muted)]">Azimuth</p>
-            <p className="mt-1 font-mono text-[var(--solar-text-strong)]">{data.azimuthDeg.toFixed(1)}°</p>
-          </div>
-          <div className="rounded-[18px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-3 py-2">
-            <p className="text-[0.65rem] uppercase tracking-[0.22em] text-[var(--solar-text-muted)]">
-              Altitude
-            </p>
-            <p className="mt-1 font-mono text-[var(--solar-text-strong)]">{data.altitudeDeg.toFixed(1)}°</p>
-          </div>
+        <div className="mt-2 flex items-center rounded-full border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-2.5 py-1.5 font-mono text-[0.68rem] text-[var(--solar-text-strong)]">
+          <span className="text-[var(--solar-text-muted)]">Az</span>
+          <span className="ml-1">{data.azimuthDeg.toFixed(1)}°</span>
+          <span className="ml-1 font-semibold text-cyan-200">{cardinalDirection}</span>
+          <span className="mx-2 h-3 w-px bg-white/10" aria-hidden="true" />
+          <span className="text-[var(--solar-text-muted)]">Alt</span>
+          <span className="ml-1">
+            {data.altitudeDeg >= 0 ? '+' : ''}
+            {data.altitudeDeg.toFixed(1)}°
+          </span>
         </div>
       </div>
     </div>

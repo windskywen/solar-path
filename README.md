@@ -38,12 +38,19 @@ A web application that visualizes the sun's path across the sky for any location
    npm install
    ```
 
-3. Create environment file (optional, for local overrides, SEO metadata, and AdSense scaffolding):
+3. Create an environment file for local overrides and the address-search API key:
    ```bash
    cp .env.example .env.local
    ```
 
-4. Optional SEO site URL configuration:
+4. Add a server-only TomTom Search API key:
+   ```bash
+   TOMTOM_SEARCH_API_KEY=your-key-here
+   ```
+   Keep the real key in `.env.local` and in Vercel Development, Preview, and Production
+   environment variables. Do not rename it with a `NEXT_PUBLIC_` prefix.
+
+5. Optional SEO site URL configuration:
    ```bash
    NEXT_PUBLIC_SITE_URL=https://your-production-domain.example
    ```
@@ -51,7 +58,7 @@ A web application that visualizes the sun's path across the sky for any location
 
    This repository also supports a committed `.env.production` for public, non-secret values such as the canonical site URL.
 
-5. Optional AdSense configuration:
+6. Optional AdSense configuration:
    ```bash
    NEXT_PUBLIC_ADSENSE_ENABLED=false
    NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-0000000000000000
@@ -61,12 +68,12 @@ A web application that visualizes the sun's path across the sky for any location
 
    The app loads the AdSense script from the root layout and serves `public/ads.txt` from the site root, so both should be deployed together.
 
-6. Start the development server:
+7. Start the development server:
    ```bash
    npm run dev
    ```
 
-7. Open [http://localhost:3000](http://localhost:3000) in your browser.
+8. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Available Scripts
 
@@ -178,4 +185,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - Solar calculations by [mourner/suncalc](https://github.com/mourner/suncalc)
 - Map tiles by [OpenStreetMap](https://www.openstreetmap.org/) contributors
-- Geocoding by [Nominatim](https://nominatim.org/)
+- Address autocomplete by [TomTom Search](https://developer.tomtom.com/search-api/documentation/search-service/fuzzy-search)
+- Explicit fallback geocoding by [Nominatim](https://nominatim.org/)

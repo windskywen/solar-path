@@ -26,12 +26,18 @@ import { SphereGeometry } from '@luma.gl/engine';
 import type { Deck, PickingInfo, WebMercatorViewport } from '@deck.gl/core';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import type { Solar3DViewData, Solar3DTooltipData, Solar3DPoint } from '@/types/solar3d';
-import { SOLAR_3D_COLORS } from '@/lib/solar3d/geometry';
+import type {
+  Solar3DMilestoneKind,
+  Solar3DViewData,
+  Solar3DTooltipData,
+  Solar3DPoint,
+} from '@/types/solar3d';
+import { SOLAR_3D_COLORS, solarColorToCss } from '@/lib/solar3d/geometry';
 import {
   advancePerformanceGovernor,
   createPerformanceGovernorState,
   ensureSolar3DMapScene,
+  findFirstTextLabelLayerId,
   getSceneVisibility,
   getSolarCoordinateOrigin,
   MAPTERHORN_TERRAIN_SOURCE_ID,
@@ -43,6 +49,7 @@ import {
 } from '@/lib/solar3d/map-scene';
 import {
   buildAdaptiveSolarGeometry,
+  buildSolarMilestones,
   buildSolarReferenceGeometry,
   calculateSolarSceneMetrics,
   calculateSolarViewportFit,
@@ -107,6 +114,13 @@ type MapboxOverlayWithDeck = {
 type Solar3DPerformanceDebugElement = HTMLElement & {
   __solar3DPerformanceMap?: ReturnType<MapRef['getMap']>;
   __solar3DPerformanceSample?: (fps: number, elapsedMs: number) => void;
+};
+
+type ProjectedSolarMilestone = {
+  kind: Solar3DMilestoneKind;
+  label: string;
+  x: number;
+  y: number;
 };
 
 function getSolarProjectionViewport(
@@ -312,6 +326,12 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
   const [solarViewportMeasuredZoom, setSolarViewportMeasuredZoom] = useState<
     number | null
   >(null);
+  const [compassOriginScreen, setCompassOriginScreen] = useState<
+    [number, number] | null
+  >(null);
+  const [projectedMilestones, setProjectedMilestones] = useState<
+    ProjectedSolarMilestone[]
+  >([]);
   const [cameraOrientationRevision, setCameraOrientationRevision] = useState(0);
   const deckOverlayRef = useRef<MapboxOverlay | null>(null);
 
@@ -384,6 +404,17 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
         COMPASS_GROUND_OFFSET_METERS
       ),
     [effectivePathRadiusMeters]
+  );
+  const milestones = useMemo(
+    () => buildSolarMilestones(adaptiveGeometry.points, snapshot.events),
+    [adaptiveGeometry.points, snapshot.events]
+  );
+  const selectedPoint = useMemo(
+    () =>
+      isSelectedVisible
+        ? adaptiveGeometry.points.find((point) => point.hour === selectedHour) ?? null
+        : null,
+    [adaptiveGeometry.points, isSelectedVisible, selectedHour]
   );
   const appliedTerrainElevation =
     mapProvider === 'openfreemap' && getSceneVisibility(performanceMode).terrain
@@ -822,6 +853,9 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
       deckOverlayRef.current.setProps({ layers: [] });
       return;
     }
+    const labelLayerBeforeId = findFirstTextLabelLayerId(
+      mapRef.current?.getMap().getStyle().layers
+    );
 
     // Color helper
     const getPointColor = (point: Solar3DPoint): [number, number, number, number] => {
@@ -840,19 +874,49 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
       return sceneMetrics.sunRadiusMeters;
     };
 
+    const compassPathData = [{ path: referenceGeometry.compassRingPositions }];
+    const solarPathData = [{ path: adaptiveGeometry.pathPositions }];
+    const compassLabelSize = isCompactDevice ? 20 : 24;
+
     const layers = [
-      // Compass Lines
-      new LineLayer({
-        id: 'compass-lines',
-        data: referenceGeometry.compassLines,
-        getSourcePosition: (d: { from: number[] }) => d.from as [number, number, number],
-        getTargetPosition: (d: { to: number[] }) => d.to as [number, number, number],
-        getColor: SOLAR_3D_COLORS.compassLines,
+      // One observatory-cyan reference system: ring, full cardinal axes, and ticks.
+      new PathLayer({
+        id: 'compass-ring',
+        data: compassPathData,
+        getPath: (d: { path: [number, number, number][] }) => d.path,
+        getColor: SOLAR_3D_COLORS.compassRing,
         getWidth: 2,
         widthUnits: 'pixels',
         coordinateSystem: 2, // METER_OFFSETS
         coordinateOrigin,
         pickable: false,
+        parameters: { depthTest: false },
+      }),
+      new LineLayer({
+        id: 'compass-cardinal-axes',
+        data: referenceGeometry.cardinalAxes,
+        getSourcePosition: (d: { from: number[] }) => d.from as [number, number, number],
+        getTargetPosition: (d: { to: number[] }) => d.to as [number, number, number],
+        getColor: SOLAR_3D_COLORS.compassRing,
+        getWidth: 2,
+        widthUnits: 'pixels',
+        coordinateSystem: 2, // METER_OFFSETS
+        coordinateOrigin,
+        pickable: false,
+        parameters: { depthTest: false },
+      }),
+      new LineLayer({
+        id: 'compass-ticks',
+        data: referenceGeometry.compassTicks,
+        getSourcePosition: (d: { from: number[] }) => d.from as [number, number, number],
+        getTargetPosition: (d: { to: number[] }) => d.to as [number, number, number],
+        getColor: SOLAR_3D_COLORS.compassRing,
+        getWidth: 2,
+        widthUnits: 'pixels',
+        coordinateSystem: 2, // METER_OFFSETS
+        coordinateOrigin,
+        pickable: false,
+        parameters: { depthTest: false },
       }),
 
       // Low-interference anchor from the ground compass origin to the floating solar origin.
@@ -861,7 +925,7 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
         data: [referenceGeometry.anchorLine],
         getSourcePosition: (d: { from: number[] }) => d.from as [number, number, number],
         getTargetPosition: (d: { to: number[] }) => d.to as [number, number, number],
-        getColor: [255, 255, 255, 72],
+        getColor: [255, 255, 255, 48],
         getWidth: 1,
         widthUnits: 'pixels',
         coordinateSystem: 2, // METER_OFFSETS
@@ -876,45 +940,44 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
         getSourcePosition: (d: { from: number[] }) => d.from as [number, number, number],
         getTargetPosition: (d: { to: number[] }) => d.to as [number, number, number],
         getColor: SOLAR_3D_COLORS.connectorLines,
-        getWidth: 1,
+        getWidth: 2,
         widthUnits: 'pixels',
         coordinateSystem: 2, // METER_OFFSETS
         coordinateOrigin,
         pickable: false,
       }),
 
-      // Compass Labels
+      // Screen-facing compass labels remain readable through buildings.
       new TextLayer({
         id: 'compass-labels',
         data: referenceGeometry.compassLabels,
         getPosition: (d: { position: number[] }) => d.position as [number, number, number],
         getText: (d: { text: string }) => d.text,
-        getColor: SOLAR_3D_COLORS.compassText,
-        getSize: 24,
+        getColor: (d: { text: string }) =>
+          d.text === 'N' ? SOLAR_3D_COLORS.compassNorth : SOLAR_3D_COLORS.compassText,
+        getSize: compassLabelSize,
         sizeUnits: 'pixels',
         getTextAnchor: 'middle',
         getAlignmentBaseline: 'center',
         coordinateSystem: 2, // METER_OFFSETS
         coordinateOrigin,
         pickable: false,
-        fontFamily: 'Inter, system-ui, sans-serif',
+        billboard: true,
+        outlineWidth: 0.28,
+        outlineColor: SOLAR_3D_COLORS.compassLabelOutline,
+        background: true,
+        getBackgroundColor: SOLAR_3D_COLORS.milestoneSurface,
+        getBorderColor: (d: { text: string }) =>
+          d.text === 'N' ? SOLAR_3D_COLORS.compassNorth : SOLAR_3D_COLORS.compassRing,
+        getBorderWidth: 1,
+        backgroundPadding: isCompactDevice ? [5, 3] : [6, 3],
+        backgroundBorderRadius: 10,
+        fontFamily: 'Geist, system-ui, sans-serif',
         fontWeight: 'bold',
-      }),
-
-      // Location Marker (Center)
-      new ScatterplotLayer({
-        id: 'location-marker',
-        data: [{ position: [0, 0, 0] }],
-        getPosition: (d: { position: number[] }) => d.position as [number, number, number],
-        getRadius: 8,
-        getFillColor: SOLAR_3D_COLORS.locationMarker,
-        radiusUnits: 'pixels',
-        coordinateSystem: 2, // METER_OFFSETS
-        coordinateOrigin,
-        pickable: false,
-        stroked: true,
-        getLineColor: [255, 255, 255, 255],
-        getLineWidth: 2,
+        characterSet: 'NESW',
+        fontSettings: { sdf: true },
+        beforeId: labelLayerBeforeId,
+        parameters: { depthTest: false },
       }),
 
       // Shadow Path
@@ -923,24 +986,53 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
         data: [{ path: adaptiveGeometry.shadowPositions }],
         getPath: (d: { path: number[][] }) => d.path as [number, number, number][],
         getColor: SOLAR_3D_COLORS.shadowPath,
-        getWidth: 2,
+        getWidth: 1,
         widthUnits: 'pixels',
         coordinateSystem: 2, // METER_OFFSETS
         coordinateOrigin,
         pickable: false,
       }),
 
-      // Path layer - connects all visible points
+      // Warm trajectory with a dark keyline.
       new PathLayer({
-        id: 'solar-path',
-        data: [{ path: adaptiveGeometry.pathPositions }],
+        id: 'solar-path-underlay',
+        data: solarPathData,
         getPath: (d: { path: [number, number, number][] }) => d.path,
-        getColor: SOLAR_3D_COLORS.path,
-        getWidth: 4,
+        getColor: SOLAR_3D_COLORS.pathUnderlay,
+        getWidth: isCompactDevice ? 5 : 6,
         widthUnits: 'pixels',
         coordinateSystem: 2, // METER_OFFSETS
         coordinateOrigin,
         pickable: false,
+      }),
+      new PathLayer({
+        id: 'solar-path',
+        data: solarPathData,
+        getPath: (d: { path: [number, number, number][] }) => d.path,
+        getColor: SOLAR_3D_COLORS.path,
+        getWidth: isCompactDevice ? 2 : 3,
+        widthUnits: 'pixels',
+        coordinateSystem: 2, // METER_OFFSETS
+        coordinateOrigin,
+        pickable: false,
+      }),
+
+      // Static halo distinguishes the selected hour without adding motion.
+      new ScatterplotLayer({
+        id: 'selected-sun-halo',
+        data: selectedPoint ? [selectedPoint] : [],
+        getPosition: (d: Solar3DPoint) => d.position,
+        getRadius: sceneMetrics.selectedHaloRadiusPixels,
+        radiusUnits: 'pixels',
+        getFillColor: SOLAR_3D_COLORS.selectedHalo,
+        stroked: true,
+        getLineColor: SOLAR_3D_COLORS.path,
+        getLineWidth: 1,
+        lineWidthUnits: 'pixels',
+        coordinateSystem: 2, // METER_OFFSETS
+        coordinateOrigin,
+        pickable: false,
+        parameters: { depthTest: false },
       }),
 
       // 3D Spheres for sun points
@@ -986,12 +1078,13 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
           getColor: [selectedHour, isSelectedVisible],
         },
         material: {
-          ambient: 0.5,
-          diffuse: 0.8,
-          shininess: 32,
-          specularColor: [255, 255, 255],
+          ambient: 0.68,
+          diffuse: 0.58,
+          shininess: 18,
+          specularColor: [255, 246, 210],
         },
       }),
+
     ];
 
     deckOverlayRef.current.setProps({ layers });
@@ -1004,10 +1097,74 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     isMapLoaded,
     sphereGeometry,
     coordinateOrigin,
+    isCompactDevice,
+    milestones,
     referenceGeometry,
-    sceneMetrics.pathRadiusMeters,
+    sceneMetrics.selectedHaloRadiusPixels,
     sceneMetrics.selectedSunRadiusMeters,
     sceneMetrics.sunRadiusMeters,
+    selectedPoint,
+  ]);
+
+  useEffect(() => {
+    if (!isMapLoaded || !mapRef.current || isEmpty) {
+      setCompassOriginScreen(null);
+      setProjectedMilestones([]);
+      return;
+    }
+
+    const map = mapRef.current.getMap();
+    let projectionFrame: number | null = null;
+    const updateCompassOriginScreen = () => {
+      if (projectionFrame !== null) return;
+      projectionFrame = requestAnimationFrame(() => {
+        projectionFrame = null;
+        const viewport = getSolarProjectionViewport(deckOverlayRef.current);
+        if (!viewport) {
+          setCompassOriginScreen(null);
+          setProjectedMilestones([]);
+          return;
+        }
+
+        const projectPosition = (position: [number, number, number]) => {
+          const lngLatPosition = viewport.addMetersToLngLat(
+            coordinateOrigin,
+            position
+          );
+          return viewport.project(lngLatPosition);
+        };
+        const projected = projectPosition(referenceGeometry.compassOrigin);
+        setCompassOriginScreen(
+          Number.isFinite(projected[0]) && Number.isFinite(projected[1])
+            ? [projected[0], projected[1]]
+            : null
+        );
+        setProjectedMilestones(
+          milestones.flatMap((milestone) => {
+            const [x, y] = projectPosition(milestone.position);
+            return Number.isFinite(x) && Number.isFinite(y)
+              ? [{ kind: milestone.kind, label: milestone.label, x, y }]
+              : [];
+          })
+        );
+      });
+    };
+
+    updateCompassOriginScreen();
+    map.on('move', updateCompassOriginScreen);
+
+    return () => {
+      map.off('move', updateCompassOriginScreen);
+      if (projectionFrame !== null) {
+        cancelAnimationFrame(projectionFrame);
+      }
+    };
+  }, [
+    coordinateOrigin,
+    isEmpty,
+    isMapLoaded,
+    milestones,
+    referenceGeometry.compassOrigin,
   ]);
 
   useEffect(() => {
@@ -1034,10 +1191,16 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
           : null;
       };
       const projectedOrigin = projectPosition(adaptiveGeometry.solarOrigin);
-      const projectedPoints = adaptiveGeometry.points
-        .map((point) => projectPosition(point.position))
+      const fitPositions = [
+        ...adaptiveGeometry.points.map((point) => point.position),
+        ...referenceGeometry.compassRingPositions,
+        ...referenceGeometry.compassLabels.map((label) => label.position),
+        ...milestones.map((milestone) => milestone.position),
+      ];
+      const projectedPoints = fitPositions
+        .map((position) => projectPosition(position))
         .filter((point): point is [number, number] => point !== null);
-      if (!projectedOrigin || projectedPoints.length !== adaptiveGeometry.points.length) {
+      if (!projectedOrigin || projectedPoints.length !== fitPositions.length) {
         setSolarViewportContained(false);
         setSolarScreenBounds('unavailable');
         return;
@@ -1051,7 +1214,10 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
         viewportHeight: viewportSize.height,
         edgePaddingPixels: viewportPadding.edgePaddingPixels,
         topPaddingPixels: viewportPadding.topPaddingPixels,
-        markerRadiusPixels: sceneMetrics.selectedSunRadiusPixels * 1.5 + 4,
+        markerRadiusPixels: Math.max(
+          sceneMetrics.selectedHaloRadiusPixels + 4,
+          isCompactDevice ? 38 : 48
+        ),
       });
       setSolarViewportContained(fit.isContained);
       setSolarViewportMeasuredZoom(sceneZoom);
@@ -1084,9 +1250,13 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
     adaptiveGeometry,
     cameraOrientationRevision,
     coordinateOrigin,
+    isCompactDevice,
     isEmpty,
     isMapLoaded,
-    sceneMetrics.selectedSunRadiusPixels,
+    milestones,
+    referenceGeometry.compassLabels,
+    referenceGeometry.compassRingPositions,
+    sceneMetrics.selectedHaloRadiusPixels,
     sceneZoom,
     solarViewportScale,
     viewportSize.height,
@@ -1150,6 +1320,21 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
       data-target-path-radius-pixels={sceneMetrics.pathRadiusPixels.toFixed(2)}
       data-sun-radius-pixels={sceneMetrics.sunRadiusPixels.toFixed(2)}
       data-selected-sun-radius-pixels={sceneMetrics.selectedSunRadiusPixels.toFixed(2)}
+      data-selected-halo-radius-pixels={sceneMetrics.selectedHaloRadiusPixels.toFixed(2)}
+      data-compass-label-count={referenceGeometry.compassLabels.length}
+      data-compass-axis-count={referenceGeometry.cardinalAxes.length}
+      data-compass-origin={referenceGeometry.compassOrigin
+        .map((coordinate) => coordinate.toFixed(2))
+        .join(',')}
+      data-connector-count={adaptiveGeometry.connectorLines.length}
+      data-connector-width-pixels="2"
+      data-milestone-count={milestones.length}
+      data-rise-milestone-label={
+        milestones.find((milestone) => milestone.kind === 'rise')?.label ?? 'none'
+      }
+      data-set-milestone-label={
+        milestones.find((milestone) => milestone.kind === 'set')?.label ?? 'none'
+      }
       data-solar-base-height={SOLAR_BASE_HEIGHT_METERS.toFixed(2)}
       data-compass-height-meters={COMPASS_GROUND_OFFSET_METERS.toFixed(2)}
       data-solar-compass-gap-meters={SOLAR_COMPASS_GAP_METERS.toFixed(2)}
@@ -1200,6 +1385,45 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
           <NavigationControl position="top-right" showCompass showZoom />
         </Map>
       </div>
+
+      {compassOriginScreen && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_0_0_2px_rgba(7,15,28,0.42),0_0_14px_rgba(231,76,60,0.48)]"
+          data-testid="solar-coordinate-marker"
+          style={{
+            left: compassOriginScreen[0],
+            top: compassOriginScreen[1],
+            width: isCompactDevice ? 16 : 18,
+            height: isCompactDevice ? 16 : 18,
+            backgroundColor: '#e74c3c',
+          }}
+        />
+      )}
+
+      {projectedMilestones.map((milestone) => (
+        <div
+          key={milestone.kind}
+          aria-hidden="true"
+          className="pointer-events-none absolute z-10 whitespace-nowrap rounded-md border px-1.5 py-1 font-mono text-[10px] font-bold leading-none shadow-[0_5px_18px_rgba(7,15,28,0.28)]"
+          data-testid={`solar-milestone-${milestone.kind}`}
+          style={{
+            left: milestone.x,
+            top: milestone.y,
+            transform:
+              milestone.kind === 'rise'
+                ? 'translate(calc(-100% - 10px), -50%)'
+                : milestone.kind === 'set'
+                  ? 'translate(10px, -50%)'
+                  : 'translate(calc(-100% - 10px), calc(-100% - 24px))',
+            color: solarColorToCss(SOLAR_3D_COLORS.milestoneText),
+            backgroundColor: solarColorToCss(SOLAR_3D_COLORS.milestoneSurface),
+            borderColor: solarColorToCss(SOLAR_3D_COLORS.milestoneBorder),
+          }}
+        >
+          {milestone.label}
+        </div>
+      ))}
 
       <div className="pointer-events-none absolute left-3 right-3 top-3 z-20 sm:left-4 sm:right-auto">
         <div className="inline-flex max-w-[18rem] items-center gap-3 rounded-full border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-legend-bg)] px-3 py-2 [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
