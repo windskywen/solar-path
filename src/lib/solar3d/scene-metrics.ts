@@ -1,9 +1,5 @@
 import type { SunEvents } from '@/types/solar';
-import type {
-  Solar3DMilestone,
-  Solar3DMilestoneKind,
-  Solar3DPoint,
-} from '@/types/solar3d';
+import type { Solar3DMilestone, Solar3DMilestoneKind, Solar3DPoint } from '@/types/solar3d';
 import { computePosition } from './geometry';
 
 const EARTH_CIRCUMFERENCE_PER_TILE = 156543.03392;
@@ -32,8 +28,8 @@ export const SOLAR_BASE_HEIGHT_METERS = COMPASS_GROUND_OFFSET_METERS + SOLAR_COM
 
 export const SOLAR_SCENE_CAMERA = {
   zoom: 15,
-  minZoom: 15,
-  maxZoom: 20,
+  minZoom: 14,
+  maxZoom: 17,
   pitch: 58,
   bearing: 135,
 } as const;
@@ -231,16 +227,8 @@ export function buildSolarReferenceGeometry(
     eastDirection: number,
     northDirection: number
   ): { from: [number, number, number]; to: [number, number, number] } => ({
-    from: [
-      eastDirection * tickInnerRadius,
-      northDirection * tickInnerRadius,
-      compassHeightMeters,
-    ],
-    to: [
-      eastDirection * tickOuterRadius,
-      northDirection * tickOuterRadius,
-      compassHeightMeters,
-    ],
+    from: [eastDirection * tickInnerRadius, northDirection * tickInnerRadius, compassHeightMeters],
+    to: [eastDirection * tickOuterRadius, northDirection * tickOuterRadius, compassHeightMeters],
   });
 
   return {
@@ -255,12 +243,7 @@ export function buildSolarReferenceGeometry(
         to: [compassRadius, 0, compassHeightMeters],
       },
     ],
-    compassTicks: [
-      buildTick(0, 1),
-      buildTick(1, 0),
-      buildTick(0, -1),
-      buildTick(-1, 0),
-    ],
+    compassTicks: [buildTick(0, 1), buildTick(1, 0), buildTick(0, -1), buildTick(-1, 0)],
     compassLabels: [
       { text: 'N', position: [0, labelRadius, compassHeightMeters] },
       { text: 'E', position: [labelRadius, 0, compassHeightMeters] },
