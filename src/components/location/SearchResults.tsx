@@ -34,6 +34,8 @@ export interface SearchResultsProps {
   className?: string;
   /** Optional id for the listbox element */
   listboxId?: string;
+  /** Context-specific guidance shown when providers are unavailable */
+  unavailableGuidance?: string;
 }
 
 /**
@@ -151,12 +153,18 @@ function NoResults({ query }: { query: string }) {
   );
 }
 
-function ProviderUnavailable({ message }: { message: string }) {
+function ProviderUnavailable({
+  message,
+  guidance,
+}: {
+  message: string;
+  guidance: string;
+}) {
   return (
     <div className="p-4 text-center" role="status">
       <p className="text-xs font-medium text-[var(--solar-text-strong)]">{message}</p>
       <p className="mt-1 text-[10px] text-[var(--solar-text-faint)]">
-        Or use GPS or enter coordinates manually.
+        {guidance}
       </p>
     </div>
   );
@@ -177,6 +185,7 @@ export function SearchResults({
   onCoordinateClick,
   className = '',
   listboxId,
+  unavailableGuidance = 'Or use GPS or enter coordinates manually.',
 }: SearchResultsProps) {
   // Don't show anything if no query
   if (!query.trim()) {
@@ -199,7 +208,7 @@ export function SearchResults({
       <div
         className={`absolute left-0 right-0 top-full z-[80] mt-2 rounded-[22px] border [border-color:var(--solar-dropdown-border)] [background:var(--solar-dropdown-bg)] [box-shadow:var(--solar-dropdown-shadow)] backdrop-blur-2xl ${className}`}
       >
-        <ProviderUnavailable message={error} />
+        <ProviderUnavailable message={error} guidance={unavailableGuidance} />
       </div>
     );
   }

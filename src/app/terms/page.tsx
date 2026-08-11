@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { ContentPageHeader } from '@/components/layout/ContentPageHeader';
 import { buildPageMetadata } from '@/lib/metadata';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -20,7 +22,9 @@ const linkClass =
 
 export default function TermsPage() {
   return (
-    <main className="relative z-10 mx-auto flex w-full max-w-screen-2xl flex-1 flex-col px-3 py-4 sm:px-4 lg:px-6">
+    <>
+      <ContentPageHeader />
+      <main className="relative z-10 mx-auto flex w-full max-w-screen-2xl flex-1 flex-col px-3 py-4 sm:px-4 lg:px-6">
       <section className={`${glassPanel} px-4 py-5 sm:px-6 sm:py-6`}>
         <div className="max-w-4xl space-y-3">
           <p className={eyebrow}>Terms & licensed data</p>
@@ -30,6 +34,9 @@ export default function TermsPage() {
           <p className="max-w-3xl text-sm leading-6 text-[var(--solar-text)] sm:text-base">
             By accessing or using Solar Path Tracker, you agree to these terms. If you do not
             agree, do not use the site or its address-search services.
+          </p>
+          <p className="text-xs text-[var(--solar-text-muted)]">
+            Last updated: <time dateTime="2026-08-12">12 August 2026</time>
           </p>
         </div>
       </section>
@@ -149,15 +156,13 @@ export default function TermsPage() {
               warranties and liability to the extent allowed by the applicable licence and law.
             </p>
             <p>
-              Questions about these terms can be sent to{' '}
-              <a href="mailto:solarpathtracker@gmail.com" className={linkClass}>
-                solarpathtracker@gmail.com
-              </a>
-              .
+              Questions about these terms can be sent through the{' '}
+              <Link href="/contact" className={linkClass}>Contact page</Link>.
             </p>
           </div>
         </section>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

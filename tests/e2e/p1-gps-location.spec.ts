@@ -19,12 +19,6 @@ const MOCK_LOCATION = {
   accuracy: 100,
 };
 
-// Default Taipei location (from IP geo fallback)
-const DEFAULT_LOCATION = {
-  latitude: 25.033,
-  longitude: 121.5654,
-};
-
 /**
  * Grant geolocation permission and set mock coordinates
  */
@@ -41,6 +35,25 @@ async function mockGeolocation(page: Page, coords: typeof MOCK_LOCATION) {
  */
 async function denyGeolocation(page: Page) {
   await page.context().clearPermissions();
+  await page.addInitScript(() => {
+    const permissionError = {
+      code: 1,
+      message: 'User denied geolocation',
+      PERMISSION_DENIED: 1,
+      POSITION_UNAVAILABLE: 2,
+      TIMEOUT: 3,
+    } as GeolocationPositionError;
+
+    Object.defineProperty(navigator.geolocation, 'getCurrentPosition', {
+      configurable: true,
+      value: (
+        _success: PositionCallback,
+        error?: PositionErrorCallback | null
+      ) => error?.(permissionError),
+    });
+  });
+  await page.reload();
+  await page.waitForLoadState('networkidle');
 }
 
 test.describe('User Story 1: GPS Location', () => {
@@ -53,18 +66,16 @@ test.describe('User Story 1: GPS Location', () => {
 
   test('app loads with default location from IP geolocation', async ({ page }) => {
     // Should see the main page title or location display
-    await expect(page.getByText(/Solar Path Tracker/i)).toBeVisible();
+    await expect(page.getByText('Solar Path Tracker', { exact: true })).toBeVisible();
 
     // Should have a location displayed (from IP geo or default)
-    const locationDisplay = page
-      .locator('[data-testid="location-display"]')
-      .or(page.getByText(/Selected Location|GPS Location|Taipei/i));
+    const locationDisplay = page.locator('[data-testid="location-display"]');
     await expect(locationDisplay).toBeVisible({ timeout: 10000 });
   });
 
   test('GPS button is visible and clickable', async ({ page }) => {
     // Find GPS button
-    const gpsButton = page.getByRole('button', { name: /GPS|My Location|Use Current Location/i });
+    const gpsButton = page.getByRole('button', { name: 'Use current GPS location' });
     await expect(gpsButton).toBeVisible();
     await expect(gpsButton).toBeEnabled();
   });
@@ -74,7 +85,7 @@ test.describe('User Story 1: GPS Location', () => {
     await mockGeolocation(page, MOCK_LOCATION);
 
     // Click GPS button
-    const gpsButton = page.getByRole('button', { name: /GPS|My Location|Use Current Location/i });
+    const gpsButton = page.getByRole('button', { name: 'Use current GPS location' });
     await gpsButton.click();
 
     // Wait for location to update (look for coordinates or location name)
@@ -94,7 +105,7 @@ test.describe('User Story 1: GPS Location', () => {
     await mockGeolocation(page, MOCK_LOCATION);
 
     // Click GPS button
-    const gpsButton = page.getByRole('button', { name: /GPS|My Location|Use Current Location/i });
+    const gpsButton = page.getByRole('button', { name: 'Use current GPS location' });
     await gpsButton.click();
 
     // Should show loading state (spinner or "Locating..." text)
@@ -126,27 +137,21 @@ test.describe('User Story 1: GPS Location', () => {
     // Wait for map to load
     await expect(page.locator('.maplibregl-map')).toBeVisible({ timeout: 15000 });
 
-    // Get initial coordinates from location display
-    const initialContent = await page.textContent('body');
+    const locationDisplay = page.locator('[data-testid="location-display"]');
+    await expect(locationDisplay).toBeVisible({ timeout: 10000 });
+    const initialContent = await locationDisplay.textContent();
 
     // Click on map (center of map container)
-    const mapContainer = page.locator('.maplibregl-map');
+    const mapContainer = page.locator('.maplibregl-canvas');
     const mapBox = await mapContainer.boundingBox();
 
     if (mapBox) {
       // Click slightly off-center to ensure a different location
-      await page.mouse.click(mapBox.x + mapBox.width * 0.3, mapBox.y + mapBox.height * 0.3);
+      await mapContainer.click({
+        position: { x: mapBox.width * 0.25, y: mapBox.height * 0.4 },
+      });
 
-      // Wait for location to potentially update
-      await page.waitForTimeout(1000);
-
-      // Location display should have updated
-      const newContent = await page.textContent('body');
-
-      // Either coordinates changed or "Selected Location" appears
-      expect(
-        newContent?.includes('Selected Location') || newContent !== initialContent
-      ).toBeTruthy();
+      await expect.poll(() => locationDisplay.textContent(), { timeout: 5000 }).not.toBe(initialContent);
     }
   });
 
@@ -168,40 +173,34 @@ test.describe('User Story 1: GPS Location', () => {
     await page.waitForLoadState('networkidle');
 
     // Look for sun events information
-    const sunriseText = page.getByText(/Sunrise/i);
-    const sunsetText = page.getByText(/Sunset/i);
-    const dayLengthText = page.getByText(/Day Length/i);
+    const overview = page.getByRole('region', { name: 'Daily solar overview' });
+    const sunriseText = overview.getByText('Sunrise', { exact: true });
+    const sunsetText = overview.getByText('Sunset', { exact: true });
+    const dayLengthText = overview.getByText('Day Length', { exact: true });
 
     await expect(sunriseText).toBeVisible({ timeout: 10000 });
     await expect(sunsetText).toBeVisible({ timeout: 10000 });
     await expect(dayLengthText).toBeVisible({ timeout: 10000 });
 
-    // Should have actual time values (HH:MM format)
-    const timePattern = /\d{1,2}:\d{2}/;
-    const bodyContent = await page.textContent('body');
-    expect(bodyContent).toMatch(timePattern);
+    // Each event card should expose its own local time value (HH:MM format).
+    await expect(sunriseText.locator('..').getByText(/^\d{2}:\d{2}$/)).toHaveCount(1);
+    await expect(sunsetText.locator('..').getByText(/^\d{2}:\d{2}$/)).toHaveCount(1);
   });
 
   test('solar data table shows hourly positions', async ({ page }) => {
     // Wait for data to load
     await page.waitForLoadState('networkidle');
 
-    // Look for the data table or hourly data display
-    const tableOrList = page.locator('table').or(page.getByText(/Hourly|Hour|Time/i));
-    await expect(tableOrList).toBeVisible({ timeout: 10000 });
-
-    // Should show altitude and azimuth values
-    const bodyContent = await page.textContent('body');
-    expect(bodyContent).toMatch(/Altitude|Alt|°/);
-    expect(bodyContent).toMatch(/Azimuth|Az/);
+    await expect(page.getByRole('heading', { name: 'Hourly breakdown' })).toBeVisible({
+      timeout: 10000,
+    });
+    const hourlyControls = page.locator('button[aria-label*="Azimuth"][aria-label*="Altitude"]');
+    await expect(hourlyControls).toHaveCount(24);
   });
 
   test('date picker allows selecting a different date', async ({ page }) => {
     // Wait for date picker to be visible
-    const datePicker = page
-      .getByRole('button', { name: /date|today|select date/i })
-      .or(page.locator('[data-testid="date-picker"]'))
-      .or(page.locator('input[type="date"]'));
+    const datePicker = page.locator('input[type="date"]');
 
     await expect(datePicker).toBeVisible({ timeout: 10000 });
     await expect(datePicker).toBeEnabled();
@@ -212,13 +211,15 @@ test.describe('User Story 1: GPS Location', () => {
     await denyGeolocation(page);
 
     // Click GPS button
-    const gpsButton = page.getByRole('button', { name: /GPS|My Location|Use Current Location/i });
+    const gpsButton = page.getByRole('button', { name: 'Use current GPS location' });
     await gpsButton.click();
 
     // Should show error message about location access
-    await expect(page.getByText(/denied|permission|unable|failed/i)).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(
+      page.getByText('Location access denied. Please enable location permissions.', {
+        exact: true,
+      })
+    ).toBeVisible({ timeout: 10000 });
   });
 });
 
@@ -233,7 +234,7 @@ test.describe('Responsive Layout', () => {
     await expect(page.locator('.maplibregl-map')).toBeVisible({ timeout: 15000 });
 
     // GPS button should be accessible
-    const gpsButton = page.getByRole('button', { name: /GPS|My Location|Use Current Location/i });
+    const gpsButton = page.getByRole('button', { name: 'Use current GPS location' });
     await expect(gpsButton).toBeVisible();
   });
 
@@ -247,7 +248,9 @@ test.describe('Responsive Layout', () => {
     await expect(page.locator('.maplibregl-map')).toBeVisible({ timeout: 15000 });
 
     // Sidebar content should be visible
-    const sunEvents = page.getByText(/Sunrise/i);
+    const sunEvents = page
+      .getByRole('region', { name: 'Daily solar overview' })
+      .getByText('Sunrise', { exact: true });
     await expect(sunEvents).toBeVisible({ timeout: 10000 });
   });
 });

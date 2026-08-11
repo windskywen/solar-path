@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
-import { AdSenseScript } from '@/components/ads/AdSenseScript';
 import { SiteFooter } from '@/components/layout/SiteFooter';
+import { getAdSenseSettings } from '@/lib/adsense';
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_LOCALE, SITE_NAME, absoluteUrl, getSiteUrl } from '@/lib/site';
 import { Providers } from '@/components/providers/Providers';
-import { buildThemeInitScript, THEME_META_COLORS } from '@/lib/theme/theme';
+import { THEME_META_COLORS } from '@/lib/theme/theme';
 import './globals.css';
 
 const geistSans = Geist({
@@ -17,6 +17,8 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
 });
+
+const adsenseSettings = getAdSenseSettings();
 
 export const metadata: Metadata = {
   metadataBase: getSiteUrl(),
@@ -31,6 +33,9 @@ export const metadata: Metadata = {
   creator: SITE_NAME,
   publisher: SITE_NAME,
   category: 'technology',
+  other: adsenseSettings.clientId
+    ? { 'google-adsense-account': adsenseSettings.clientId }
+    : undefined,
   referrer: 'origin-when-cross-origin',
   robots: {
     index: true,
@@ -71,16 +76,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // suppressHydrationWarning: Browser extensions (password managers, etc.) inject
-    // attributes like fdprocessedid that cause harmless hydration mismatches
-    <html lang="en" className="h-full" data-theme="dark" suppressHydrationWarning>
+    <html lang="en" className="h-full" data-theme="dark" style={{ colorScheme: 'dark' }}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: buildThemeInitScript(),
-          }}
-        />
-        <AdSenseScript />
         <Providers>
           <div className="solar-main-shell relative flex min-h-screen flex-col">
             <div className="flex-1">{children}</div>

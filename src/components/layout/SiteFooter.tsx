@@ -1,82 +1,74 @@
 import Link from 'next/link';
 
-const footerLinkClass =
-  'transition-colors hover:text-[var(--solar-text-strong)] underline decoration-sky-200/40 underline-offset-4';
+const linkClass =
+  'text-[var(--solar-text-muted)] transition-colors hover:text-[var(--solar-text-strong)] underline decoration-sky-200/30 underline-offset-4';
+
+const groups = [
+  {
+    title: 'Tools',
+    links: [
+      { href: '/', label: 'Sun Path Map' },
+      { href: '/sunrise-sunset-calculator', label: 'Daylight Times' },
+      { href: '/golden-hour-calculator', label: 'Golden Hour' },
+      { href: '/solar-azimuth-altitude', label: 'Azimuth & Altitude' },
+    ],
+  },
+  {
+    title: 'Learn',
+    links: [
+      { href: '/guides', label: 'All Guides' },
+      { href: '/guides/how-to-read-a-sun-path-diagram', label: 'Read a Sun Path' },
+      { href: '/guides/brisbane-winter-vs-summer-sun-path', label: 'Seasonal Comparison' },
+      { href: '/methodology', label: 'Methodology' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { href: '/about', label: 'About' },
+      { href: '/contact', label: 'Contact Us' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { href: '/privacy', label: 'Privacy Policy' },
+      { href: '/terms', label: 'Terms of Use' },
+      { href: '/ads.txt', label: 'ads.txt' },
+    ],
+  },
+] as const;
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative z-10 px-3 pb-4 sm:px-4 lg:px-6">
-      <div className="mx-auto max-w-screen-2xl">
-        <div className="rounded-[24px] border [border-color:var(--solar-glass-border)] [background:var(--solar-surface-soft-bg)] px-4 py-3 text-[11px] text-[var(--solar-text-muted)] backdrop-blur-xl">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-center sm:text-left">&copy; {year} Solar Path Tracker</p>
+    <footer className="relative z-10 px-3 pb-4 pt-3 sm:px-4 lg:px-6">
+      <div className="mx-auto max-w-screen-2xl rounded-[28px] border px-4 py-5 text-xs [border-color:var(--solar-glass-border)] [background:var(--solar-surface-soft-bg)] [box-shadow:var(--solar-glass-shadow)] backdrop-blur-xl sm:px-6">
+        <nav aria-label="Footer navigation" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {groups.map((group) => (
+            <div key={group.title}>
+              <h2 className="text-[0.66rem] font-semibold uppercase tracking-[0.26em] text-[var(--solar-kicker)]">{group.title}</h2>
+              <ul className="mt-3 space-y-2.5">
+                {group.links.map((link) => (
+                  <li key={link.href}><Link href={link.href} className={linkClass}>{link.label}</Link></li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </nav>
 
-            <nav
-              aria-label="Footer navigation"
-              className="flex flex-wrap items-center justify-center gap-2 sm:justify-end"
-            >
-              <Link href="/privacy" className={footerLinkClass}>
-                Privacy Policy
-              </Link>
-              <span aria-hidden="true" className="hidden text-[var(--solar-text-faint)] sm:inline">
-                &middot;
-              </span>
-              <Link href="/terms" className={footerLinkClass}>
-                Terms
-              </Link>
-              <span aria-hidden="true" className="hidden text-[var(--solar-text-faint)] sm:inline">
-                &middot;
-              </span>
-              <Link href="/about" className={footerLinkClass}>
-                About
-              </Link>
-              <span aria-hidden="true" className="hidden text-[var(--solar-text-faint)] sm:inline">
-                &middot;
-              </span>
-              <Link href="/about#contact" className={footerLinkClass}>
-                Contact Us
-              </Link>
-            </nav>
-          </div>
-
-          <p className="mt-2 text-center sm:text-left">
-            Data sources:{' '}
-            <a
-              href="https://www.tomtom.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={footerLinkClass}
-            >
-              TomTom
-            </a>
-            ,{' '}
-            <a
-              href="https://www.openstreetmap.org/copyright"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={footerLinkClass}
-            >
-              OpenStreetMap
-            </a>
-            ,{' '}
-            <a
-              href="https://github.com/mourner/suncalc"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={footerLinkClass}
-            >
-              SunCalc
-            </a>
+        <div className="mt-6 border-t pt-5 [border-color:var(--solar-divider)]">
+          <p className="text-[var(--solar-text-muted)]">
+            Data and calculation sources:{' '}
+            <a href="https://www.tomtom.com/" target="_blank" rel="noopener noreferrer" className={linkClass}>TomTom</a>,{' '}
+            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className={linkClass}>OpenStreetMap</a>,{' '}
+            <a href="https://github.com/mourner/suncalc" target="_blank" rel="noopener noreferrer" className={linkClass}>SunCalc</a>, Luxon, and @photostructure/tz-lookup.
           </p>
-
-          <p className="mt-2 text-[10px] leading-4 text-[var(--solar-text-faint)] sm:max-w-5xl">
-            Disclaimer: The solar data and 3D visualizations provided on this website are for
-            general informational purposes only. While we strive for accuracy, we do not guarantee
-            the data is suitable for professional architectural, engineering, or solar installation
-            decisions. Users should verify all information independently.
+          <p className="mt-3 max-w-6xl text-[0.68rem] leading-5 text-[var(--solar-text-faint)]">
+            Solar data and 3D visualizations are general informational references. The model does not include local terrain, buildings, trees, weather, or surveyed site geometry and is not professional architectural, engineering, surveying, safety, or installation advice.
           </p>
+          <p className="mt-4 text-[var(--solar-text-muted)]">&copy; {year} Solar Path Tracker</p>
         </div>
       </div>
     </footer>

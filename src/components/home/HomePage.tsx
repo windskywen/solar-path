@@ -23,7 +23,7 @@ import {
 } from '@/store/solar-store';
 import { SkipLinks } from '@/components/a11y';
 import { generateInsights } from '@/lib/solar/insights';
-import { getTimezoneFromCoordinates } from '@/lib/utils/timezone';
+import { getTimezoneFromCoordinates, getTodayISO } from '@/lib/utils/timezone';
 
 function formatDisplayDate(dateISO: string): string {
   try {
@@ -145,16 +145,30 @@ function Solar3DViewButton({ disabled, onClick }: Solar3DViewButtonProps) {
 /**
  * Main application page
  */
-export default function HomePage() {
+interface HomePageProps {
+  initialDateISO: string;
+}
+
+export default function HomePage({ initialDateISO }: HomePageProps) {
   const location = useLocation();
   const timezone = useTimezone();
   const dateISO = useDateISO();
   const selectedHour = useSelectedHour();
-  const { setLocation, setSelectedHour, setTimezone } = useSolarActions();
+  const { setDateISO, setLocation, setSelectedHour, setTimezone } = useSolarActions();
   const [is3DViewOpen, setIs3DViewOpen] = useState(false);
 
   // Get initial location from IP
   const { location: ipLocation, isLoading: ipLoading } = useIpGeo();
+
+  // Refresh an ISR-provided date only after hydration. The first client render
+  // still matches the server exactly, so cached pages do not create text
+  // hydration errors around midnight or after a long-lived deployment.
+  useEffect(() => {
+    const currentDateISO = getTodayISO('UTC');
+    if (dateISO === initialDateISO && currentDateISO !== initialDateISO) {
+      setDateISO(currentDateISO);
+    }
+  }, [dateISO, initialDateISO, setDateISO]);
 
   // Set initial location from IP geo on first load
   useEffect(() => {
@@ -215,18 +229,18 @@ export default function HomePage() {
   const focusedToolLinks = [
     {
       href: '/sunrise-sunset-calculator',
-      label: 'Sunrise & Sunset Calculator',
-      description: 'Check first light, last light, and daylight length with the map and hourly solar timeline.',
+      label: 'Daylight Times Calculator',
+      description: 'Check first light, last light, civil twilight, and the duration of daylight in a focused result table.',
     },
     {
       href: '/golden-hour-calculator',
       label: 'Golden Hour Calculator',
-      description: 'Plan soft-light shooting windows with golden-hour timing, sun direction, and 3D daylight context.',
+      description: 'Plan soft-light windows with exact event times, boundary bearings, and an altitude chart.',
     },
     {
       href: '/solar-azimuth-altitude',
       label: 'Solar Azimuth & Altitude Calculator',
-      description: 'Measure solar angles for facade studies, outdoor comfort, and solar panel planning.',
+      description: 'Measure solar angles for facade studies, outdoor comfort, and preliminary solar site checks.',
     },
   ] as const;
 
@@ -291,7 +305,7 @@ export default function HomePage() {
                     Sun path map and solar tracker for any location.
                   </h1>
                   <p className="max-w-2xl text-sm leading-6 text-[var(--solar-text)] sm:text-base">
-                    Search a place, pick a date, and read sunrise, sunset, golden hour, solar
+                    Search a place, pick a date, and read daylight events, golden hour, solar
                     azimuth, altitude, and 3D daylight views from one live map.
                   </p>
                 </div>
@@ -342,7 +356,7 @@ export default function HomePage() {
                       {displayTimezone}
                     </span>
                   </div>
-                  <DatePicker className="w-full" />
+                  <DatePicker className="w-full" initialDateISO={initialDateISO} />
                 </div>
               </div>
             </div>
@@ -411,7 +425,7 @@ export default function HomePage() {
                     Daily solar overview
                   </h2>
                   <p className="mt-1 text-sm text-[var(--solar-text)]">
-                    Sunrise, sunset, and azimuth-altitude curves for the selected day.
+                    Daylight boundary times and azimuth-altitude curves for the selected day.
                   </p>
                 </div>
 
@@ -570,7 +584,7 @@ export default function HomePage() {
                     </li>
                     <li>
                       <strong className="text-[var(--solar-text-strong)]">Solar panel planning:</strong>{' '}
-                      compare seasonal daylight hours and the best installation angle for a site.
+                      compare seasonal daylight hours and solar angles before a detailed site assessment.
                     </li>
                     <li>
                       <strong className="text-[var(--solar-text-strong)]">Photographers and architects:</strong>{' '}
@@ -594,7 +608,7 @@ export default function HomePage() {
                     Explore focused solar calculators
                   </h2>
                   <p className="mt-4 text-sm leading-6 text-[var(--solar-text)]">
-                    Jump into dedicated pages for sunrise and sunset, golden hour, and solar angle
+                    Jump into dedicated pages for daylight times, golden hour, and solar angle
                     planning, then return to the live map when you need the full picture.
                   </p>
                   <div className="mt-4 grid gap-3">

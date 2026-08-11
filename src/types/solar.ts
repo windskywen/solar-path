@@ -65,6 +65,34 @@ export interface SunEvents {
   note?: string;
 }
 
+export interface SolarEventBoundary {
+  localTime: string;
+  azimuthDeg: number;
+  altitudeDeg: number;
+}
+
+export interface SolarEventWindow {
+  available: boolean;
+  start?: SolarEventBoundary;
+  end?: SolarEventBoundary;
+  note?: string;
+}
+
+export interface ExtendedSunEvents extends SunEvents {
+  timezone: string;
+  civilDawnLocal?: string;
+  civilDuskLocal?: string;
+  morningGoldenHour: SolarEventWindow;
+  eveningGoldenHour: SolarEventWindow;
+}
+
+export interface SolarPositionAtTime {
+  localTimeLabel: string;
+  azimuthDeg: number;
+  altitudeDeg: number;
+  daylightState: DaylightState;
+}
+
 /** Contains deterministic rule-based observations about solar conditions */
 export interface SolarInsights {
   /** Array of insight messages */

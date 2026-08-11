@@ -16,6 +16,12 @@ interface WebPageStructuredDataOptions {
   description: string;
 }
 
+interface ArticleStructuredDataOptions extends WebPageStructuredDataOptions {
+  publishedDate: string;
+  modifiedDate: string;
+  keywords: readonly string[];
+}
+
 export function buildOrganizationStructuredData() {
   return {
     '@context': 'https://schema.org',
@@ -29,9 +35,40 @@ export function buildOrganizationStructuredData() {
         '@type': 'ContactPoint',
         contactType: 'customer support',
         email: SITE_CONTACT_EMAIL,
-        url: absoluteUrl('/about#contact'),
+        url: absoluteUrl('/contact'),
       },
     ],
+  };
+}
+
+export function buildArticleStructuredData({
+  path,
+  title,
+  description,
+  publishedDate,
+  modifiedDate,
+  keywords,
+}: ArticleStructuredDataOptions) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: title,
+    description,
+    url: absoluteUrl(path),
+    mainEntityOfPage: absoluteUrl(path),
+    datePublished: publishedDate,
+    dateModified: modifiedDate,
+    keywords: [...keywords],
+    author: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: absoluteUrl('/about'),
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: absoluteUrl('/'),
+    },
   };
 }
 

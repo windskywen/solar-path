@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { ContentPageHeader } from '@/components/layout/ContentPageHeader';
+import { getAdSenseSettings } from '@/lib/adsense';
 import { buildPageMetadata } from '@/lib/metadata';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -17,8 +20,12 @@ const eyebrow =
   'text-[0.64rem] font-semibold uppercase tracking-[0.32em] text-[var(--solar-kicker)]';
 
 export default function PrivacyPage() {
+  const adsEnabled = getAdSenseSettings().enabled;
+
   return (
-    <main className="relative z-10 mx-auto flex w-full max-w-screen-2xl flex-1 flex-col px-3 py-4 sm:px-4 lg:px-6">
+    <>
+      <ContentPageHeader />
+      <main className="relative z-10 mx-auto flex w-full max-w-screen-2xl flex-1 flex-col px-3 py-4 sm:px-4 lg:px-6">
       <section className={`${glassPanel} px-4 py-5 sm:px-6 sm:py-6`}>
         <div className="max-w-4xl space-y-3">
           <p className={eyebrow}>Privacy & transparency</p>
@@ -29,6 +36,9 @@ export default function PrivacyPage() {
             This policy explains how Solar Path Tracker handles location inputs, search requests,
             analytics, and advertising. We aim to keep the core solar calculations client-friendly
             while being transparent about the third-party services that help operate the site.
+          </p>
+          <p className="text-xs text-[var(--solar-text-muted)]">
+            Last updated: <time dateTime="2026-08-12">12 August 2026</time>
           </p>
         </div>
       </section>
@@ -46,12 +56,21 @@ export default function PrivacyPage() {
           </div>
 
           <div className="space-y-4 p-4 text-sm leading-6 text-[var(--solar-text)] sm:p-5">
-            <p>
-              This website uses Google AdSense to display advertisements. Google and its partners
-              may use cookies based on a user&apos;s previous visits to this website or other
-              websites in order to serve relevant ads. That may include the use of the DoubleClick
-              cookie for ad personalization and measurement.
-            </p>
+            {adsEnabled ? (
+              <p>
+                Google AdSense is currently enabled on eligible tool and guide pages. Google and
+                its partners may use cookies or similar technologies for ad delivery, frequency
+                control, measurement, fraud prevention, and — where consent permits —
+                personalization based on visits to this or other websites.
+              </p>
+            ) : (
+              <p>
+                Solar Path Tracker is prepared to use Google AdSense, but advertising is currently
+                disabled while the site is in review mode. In this mode the site may publish an
+                AdSense account-verification meta tag and ads.txt record, but it does not load the
+                AdSense advertising script, create ad slots, or display ads.
+              </p>
+            )}
             <p>
               Users can manage or disable personalized advertising by visiting{' '}
               <a
@@ -60,14 +79,21 @@ export default function PrivacyPage() {
                 rel="noopener noreferrer"
                 className="text-[var(--solar-accent)] underline decoration-sky-200/40 underline-offset-4 transition-colors hover:text-[var(--solar-text-strong)]"
               >
-                Google Ads Settings
+              Google Ads Settings
               </a>
-              .
+              . Google advertising technologies may include the DoubleClick cookie where
+              applicable to the user&apos;s region, consent choice, and current Google services.
             </p>
             <p>
-              We do not enable AdSense Auto Ads on this site. When advertising is active, it is
-              limited to manually placed slots so the interactive map and 3D solar tools remain
-              readable and unobstructed.
+              AdSense Auto Ads are not used. When advertising is active, it is limited to manually
+              placed units after completed results or worked examples. About, Privacy, Terms,
+              Contact, and Methodology pages do not load the AdSense script or display ads.
+            </p>
+            <p>
+              Where consent is required in the EEA, United Kingdom, or Switzerland, advertising
+              is intended to use a Google-certified consent management platform with clear consent,
+              non-consent, and settings choices. Available controls depend on region and the
+              current advertising state.
             </p>
           </div>
         </section>
@@ -128,8 +154,9 @@ export default function PrivacyPage() {
             <ul className="space-y-3">
               <li>
                 <strong className="text-[var(--solar-text-strong)]">Google AdSense:</strong>{' '}
-                provides advertising when enabled and may use cookies for ad delivery and
-                measurement.
+                {adsEnabled
+                  ? ' currently provides advertising on eligible pages and may use cookies or similar technologies for ad delivery and measurement.'
+                  : ' is configured for account/site verification, but its advertising script and ad slots are disabled in review mode.'}
               </li>
               <li>
                 <strong className="text-[var(--solar-text-strong)]">TomTom:</strong> powers global
@@ -186,17 +213,12 @@ export default function PrivacyPage() {
             </p>
             <p>
               If you have a privacy question or want clarification about this policy, contact us at{' '}
-              <a
-                href="mailto:solarpathtracker@gmail.com"
-                className="text-[var(--solar-accent)] underline decoration-sky-200/40 underline-offset-4 transition-colors hover:text-[var(--solar-text-strong)]"
-              >
-                solarpathtracker@gmail.com
-              </a>
-              .
+              <Link href="/contact" className="text-[var(--solar-accent)] underline decoration-sky-200/40 underline-offset-4 transition-colors hover:text-[var(--solar-text-strong)]">our Contact page</Link>.
             </p>
           </div>
         </section>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

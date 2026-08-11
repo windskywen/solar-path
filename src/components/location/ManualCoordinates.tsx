@@ -42,10 +42,20 @@ export function ManualCoordinates({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isEditingRef = useRef(false);
+  const lastSyncedCoordinatesRef = useRef(formatCoordinates(initialLat, initialLng));
 
   useEffect(() => {
-    if (!inputRef.current || isEditingRef.current) return;
-    inputRef.current.value = formatCoordinates(initialLat, initialLng);
+    const nextCoordinates = formatCoordinates(initialLat, initialLng);
+    if (
+      !inputRef.current ||
+      isEditingRef.current ||
+      nextCoordinates === lastSyncedCoordinatesRef.current
+    ) {
+      return;
+    }
+
+    inputRef.current.value = nextCoordinates;
+    lastSyncedCoordinatesRef.current = nextCoordinates;
   }, [initialLat, initialLng]);
 
   const handleFocus = () => {
