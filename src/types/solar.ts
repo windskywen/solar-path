@@ -82,6 +82,9 @@ export interface ExtendedSunEvents extends SunEvents {
   timezone: string;
   civilDawnLocal?: string;
   civilDuskLocal?: string;
+  sunriseBoundary?: SolarEventBoundary;
+  solarNoonBoundary?: SolarEventBoundary;
+  sunsetBoundary?: SolarEventBoundary;
   morningGoldenHour: SolarEventWindow;
   eveningGoldenHour: SolarEventWindow;
 }

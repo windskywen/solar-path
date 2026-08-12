@@ -25,8 +25,17 @@ test.describe('Site trust and content surfaces', () => {
 
     await expect(page.getByRole('heading', { name: /Privacy Policy/i })).toBeVisible();
     await expect(advertisingRegion).toBeVisible();
+    await expect(advertisingRegion).toContainText(
+      /Third-party vendors, including Google, may use cookies or similar identifiers/i
+    );
+    await expect(advertisingRegion).toContainText(/prior visits to this website or other websites/i);
+    await expect(advertisingRegion).toContainText(/Google-certified ad networks/i);
     await expect(advertisingRegion).toContainText(/DoubleClick cookie/i);
     await expect(advertisingRegion.getByRole('link', { name: 'Google Ads Settings' })).toBeVisible();
+    await expect(
+      advertisingRegion.getByRole('link', { name: /certified third-party vendors/i })
+    ).toBeVisible();
+    await expect(advertisingRegion.getByRole('link', { name: /AboutAds/i })).toBeVisible();
     await expect(
       page.getByRole('heading', {
         name: /Search Location, Geolocation, and coordinate processing/i,

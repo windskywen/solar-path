@@ -6,7 +6,7 @@ import {
 } from '@/lib/solar/extended-events';
 
 describe('computeExtendedSunEvents', () => {
-  it('returns reproducible Brisbane civil and golden-hour boundaries', () => {
+  it('returns reproducible Brisbane daylight and golden-hour boundaries', () => {
     const events = computeExtendedSunEvents(
       -27.4698,
       153.0251,
@@ -22,6 +22,15 @@ describe('computeExtendedSunEvents', () => {
     expect(events.civilDuskLocal).toMatch(/^\d{2}:\d{2}$/);
     expect(events.dayLengthHours).toBeGreaterThan(10);
     expect(events.dayLengthHours).toBeLessThan(11);
+
+    expect(events.sunriseBoundary?.localTime).toBe(events.sunriseLocal);
+    expect(events.sunriseBoundary?.azimuthDeg).toBeGreaterThanOrEqual(0);
+    expect(events.sunriseBoundary?.azimuthDeg).toBeLessThan(360);
+    expect(events.solarNoonBoundary?.localTime).toMatch(/^\d{2}:\d{2}$/);
+    expect(events.solarNoonBoundary?.altitudeDeg).toBeGreaterThan(30);
+    expect(events.sunsetBoundary?.localTime).toBe(events.sunsetLocal);
+    expect(events.sunsetBoundary?.azimuthDeg).toBeGreaterThanOrEqual(0);
+    expect(events.sunsetBoundary?.azimuthDeg).toBeLessThan(360);
 
     expect(events.morningGoldenHour.available).toBe(true);
     expect(events.morningGoldenHour.start?.localTime).toBe(events.sunriseLocal);
@@ -47,6 +56,9 @@ describe('computeExtendedSunEvents', () => {
     expect(events.note).toMatch(/does not set/i);
     expect(events.sunriseLocal).toBeUndefined();
     expect(events.sunsetLocal).toBeUndefined();
+    expect(events.sunriseBoundary).toBeUndefined();
+    expect(events.solarNoonBoundary?.altitudeDeg).toBeGreaterThan(0);
+    expect(events.sunsetBoundary).toBeUndefined();
     expect(events.morningGoldenHour).toMatchObject({ available: false });
     expect(events.eveningGoldenHour).toMatchObject({ available: false });
   });
@@ -61,8 +73,28 @@ describe('computeExtendedSunEvents', () => {
 
     expect(events.dayLengthHours).toBe(0);
     expect(events.note).toMatch(/does not rise/i);
+    expect(events.sunriseBoundary).toBeUndefined();
+    expect(events.solarNoonBoundary?.altitudeDeg).toBeLessThan(0);
+    expect(events.sunsetBoundary).toBeUndefined();
     expect(events.morningGoldenHour).toMatchObject({ available: false });
     expect(events.eveningGoldenHour).toMatchObject({ available: false });
+  });
+
+  it('returns an explicit invalid state without fabricated daylight events', () => {
+    const events = computeExtendedSunEvents(
+      -27.4698,
+      153.0251,
+      'not-a-date',
+      'Australia/Brisbane'
+    );
+
+    expect(events.note).toBe('Invalid date.');
+    expect(events.dayLengthHours).toBeUndefined();
+    expect(events.sunriseBoundary).toBeUndefined();
+    expect(events.solarNoonBoundary).toBeUndefined();
+    expect(events.sunsetBoundary).toBeUndefined();
+    expect(events.morningGoldenHour).toMatchObject({ available: false, note: 'Invalid date.' });
+    expect(events.eveningGoldenHour).toMatchObject({ available: false, note: 'Invalid date.' });
   });
 });
 

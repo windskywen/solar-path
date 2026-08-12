@@ -11,7 +11,12 @@ import {
   getCardinalDirection,
 } from '@/lib/solar/extended-events';
 import { getTimezoneFromCoordinates } from '@/lib/utils/timezone';
-import type { ExtendedSunEvents, LocationPoint, SolarEventWindow } from '@/types/solar';
+import type {
+  ExtendedSunEvents,
+  LocationPoint,
+  SolarEventBoundary,
+  SolarEventWindow,
+} from '@/types/solar';
 
 export type SolarCalculatorMode = 'sunrise' | 'golden-hour' | 'angles';
 
@@ -73,6 +78,15 @@ function EventWindowCard({ title, window }: { title: string; window: SolarEventW
   );
 }
 
+function formatBoundaryDetails(boundary: SolarEventBoundary | undefined): string | undefined {
+  if (!boundary) {
+    return undefined;
+  }
+
+  const altitude = `${boundary.altitudeDeg >= 0 ? '+' : ''}${boundary.altitudeDeg.toFixed(1)}°`;
+  return `${boundary.azimuthDeg.toFixed(1)}° ${getCardinalDirection(boundary.azimuthDeg)} · Altitude ${altitude}`;
+}
+
 function SunriseResults({ events, timezone }: { events: ExtendedSunEvents; timezone: string }) {
   const specialCondition = events.note;
   return (
@@ -82,10 +96,23 @@ function SunriseResults({ events, timezone }: { events: ExtendedSunEvents; timez
           {specialCondition}
         </p>
       ) : null}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
         <ResultCard label="Civil dawn" value={events.civilDawnLocal ?? 'Unavailable'} helper="Sun at −6° altitude" />
-        <ResultCard label="Sunrise" value={events.sunriseLocal ?? 'Unavailable'} />
-        <ResultCard label="Sunset" value={events.sunsetLocal ?? 'Unavailable'} />
+        <ResultCard
+          label="Sunrise"
+          value={events.sunriseBoundary?.localTime ?? events.sunriseLocal ?? 'Unavailable'}
+          helper={formatBoundaryDetails(events.sunriseBoundary)}
+        />
+        <ResultCard
+          label="Solar noon"
+          value={events.solarNoonBoundary?.localTime ?? 'Unavailable'}
+          helper={formatBoundaryDetails(events.solarNoonBoundary)}
+        />
+        <ResultCard
+          label="Sunset"
+          value={events.sunsetBoundary?.localTime ?? events.sunsetLocal ?? 'Unavailable'}
+          helper={formatBoundaryDetails(events.sunsetBoundary)}
+        />
         <ResultCard label="Civil dusk" value={events.civilDuskLocal ?? 'Unavailable'} helper="Sun at −6° altitude" />
         <ResultCard label="Day length" value={events.dayLengthLabel ?? 'Unavailable'} helper={timezone} />
       </div>
@@ -178,7 +205,12 @@ export function SolarCalculator({ mode, initialDateISO }: SolarCalculatorProps) 
           <p className="text-xs text-[var(--solar-text-muted)]">{dateISO} · {timezone}</p>
         </div>
 
-        {mode === 'sunrise' ? <SunriseResults events={events} timezone={timezone} /> : null}
+        {mode === 'sunrise' ? (
+          <div className="space-y-4">
+            <SunriseResults events={events} timezone={timezone} />
+            <ChartsPanel positions={hourly} selectedHour={null} defaultView="altitude" />
+          </div>
+        ) : null}
 
         {mode === 'golden-hour' ? (
           <div className="space-y-4">
