@@ -58,10 +58,8 @@ export default function PrivacyPage() {
           <div className="space-y-4 p-4 text-sm leading-6 text-[var(--solar-text)] sm:p-5">
             {adsEnabled ? (
               <p>
-                Google AdSense is currently enabled on eligible tool and guide pages. Google and
-                its partners may use cookies or similar technologies for ad delivery, frequency
-                control, measurement, fraud prevention, and — where consent permits —
-                personalization based on visits to this or other websites.
+                Google AdSense is currently enabled on eligible tool and guide pages. Advertising
+                remains limited to the placements and page types described below.
               </p>
             ) : (
               <p>
@@ -71,6 +69,36 @@ export default function PrivacyPage() {
                 AdSense advertising script, create ad slots, or display ads.
               </p>
             )}
+            <p>
+              Third-party vendors, including Google, may use cookies or similar identifiers to
+              serve ads based on users&apos; prior visits to this website or other websites.
+              Google&apos;s use of advertising cookies enables Google and its partners to serve
+              personalized ads where consent permits, and contextual, non-personalized, or limited
+              ads where applicable.
+            </p>
+            <p>
+              Google-certified ad networks and other third-party ad vendors may also serve ads on
+              eligible pages. Visitors can review Google&apos;s{' '}
+              <a
+                href="https://support.google.com/adsense/answer/94149?hl=en"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--solar-accent)] underline decoration-sky-200/40 underline-offset-4 transition-colors hover:text-[var(--solar-text-strong)]"
+              >
+                certified third-party vendors
+              </a>{' '}
+              and use the opt-out controls offered by those vendors where available. Visitors can
+              also review{' '}
+              <a
+                href="https://www.aboutads.info/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--solar-accent)] underline decoration-sky-200/40 underline-offset-4 transition-colors hover:text-[var(--solar-text-strong)]"
+              >
+                AboutAds opt-out information
+              </a>
+              .
+            </p>
             <p>
               Users can manage or disable personalized advertising by visiting{' '}
               <a

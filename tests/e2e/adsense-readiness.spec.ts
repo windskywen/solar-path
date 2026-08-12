@@ -78,12 +78,17 @@ test.describe('Independent calculators', () => {
     await page.goto('/sunrise-sunset-calculator');
     await expect(page.getByRole('heading', { name: 'Brisbane · 21 June 2026' })).toBeVisible();
     await expect(page.getByText(/This fixed reference is independent/i)).toBeVisible();
+    await expect(page.getByText('Solar noon', { exact: true })).toBeVisible();
+    await expect(page.getByText(/Altitude [+-]?\d+\.\d°/).first()).toBeVisible();
+    await expect(page.getByText('Curve deck')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Altitude' })).toBeVisible();
 
     await setManualCoordinates(page, '78.22, 15.63');
     await page.locator('input[type="date"]').fill('2026-06-21');
 
     await expect(page.getByText(/Midnight sun - sun does not set/i).first()).toBeVisible();
     await expect(page.getByText('Unavailable', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('Solar noon', { exact: true })).toBeVisible();
 
     await page.locator('input[type="date"]').fill('2026-12-21');
     await expect(page.getByText(/Polar night - sun does not rise/i).first()).toBeVisible();
@@ -245,7 +250,7 @@ test.describe('Publisher content, SEO, and review-mode advertising', () => {
     expect(sitemapXml).toContain('/contact');
   });
 
-  test('mobile content pages do not create horizontal overflow or obvious layout shift', async ({
+  test('mobile affected pages stay console-clean without overflow or obvious layout shift', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -260,15 +265,27 @@ test.describe('Publisher content, SEO, and review-mode advertising', () => {
       }).observe({ type: 'layout-shift', buffered: true });
     });
 
-    await page.goto('/guides/how-to-read-a-sun-path-diagram');
-    await page.waitForLoadState('networkidle');
+    const browserErrors: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error') {
+        browserErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', (error) => browserErrors.push(error.message));
 
-    const metrics = await page.evaluate(() => ({
-      scrollWidth: document.documentElement.scrollWidth,
-      viewportWidth: window.innerWidth,
-      cls: (window as Window & { __layoutShiftScore?: number }).__layoutShiftScore ?? 0,
-    }));
-    expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.viewportWidth);
-    expect(metrics.cls).toBeLessThan(0.25);
+    for (const route of ['/sunrise-sunset-calculator', '/privacy']) {
+      await page.goto(route);
+      await page.waitForLoadState('networkidle');
+
+      const metrics = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        viewportWidth: window.innerWidth,
+        cls: (window as Window & { __layoutShiftScore?: number }).__layoutShiftScore ?? 0,
+      }));
+      expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.viewportWidth);
+      expect(metrics.cls).toBeLessThan(0.25);
+    }
+
+    expect(browserErrors).toEqual([]);
   });
 });

@@ -57,18 +57,18 @@ export function computeExtendedSunEvents(
 ): ExtendedSunEvents {
   const zone = resolveTimezone(timezone);
   const dateTime = DateTime.fromISO(`${dateISO}T12:00:00`, { zone });
-  const base = computeSunEvents(lat, lng, dateISO, zone);
-  const unavailableNote = base.note ?? 'This event does not occur for the selected date and location.';
 
   if (!dateTime.isValid) {
     return {
-      ...base,
       timezone: zone,
+      note: 'Invalid date.',
       morningGoldenHour: { available: false, note: 'Invalid date.' },
       eveningGoldenHour: { available: false, note: 'Invalid date.' },
     };
   }
 
+  const base = computeSunEvents(lat, lng, dateISO, zone);
+  const unavailableNote = base.note ?? 'This event does not occur for the selected date and location.';
   const times = SunCalc.getTimes(dateTime.toJSDate(), lat, lng);
 
   return {
@@ -80,6 +80,9 @@ export function computeExtendedSunEvents(
     civilDuskLocal: isValidDate(times.dusk)
       ? DateTime.fromJSDate(times.dusk, { zone }).toFormat('HH:mm')
       : undefined,
+    sunriseBoundary: toBoundaryAtLocation(times.sunrise, zone, lat, lng),
+    solarNoonBoundary: toBoundaryAtLocation(times.solarNoon, zone, lat, lng),
+    sunsetBoundary: toBoundaryAtLocation(times.sunset, zone, lat, lng),
     morningGoldenHour: buildWindow(
       times.sunrise,
       times.goldenHourEnd,
