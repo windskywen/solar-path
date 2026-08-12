@@ -37,8 +37,8 @@ describe('adaptive solar scene metrics', () => {
   it('uses a building-scale default camera and limits the supported zoom range', () => {
     expect(SOLAR_SCENE_CAMERA).toEqual({
       zoom: 15,
-      minZoom: 15,
-      maxZoom: 20,
+      minZoom: 14,
+      maxZoom: 17,
       pitch: 58,
       bearing: 135,
     });

@@ -1,11 +1,15 @@
 import type { Metadata } from 'next';
 import HomePage from '@/components/home/HomePage';
+import { SolarStoreProvider } from '@/store/solar-store';
 import { buildPageMetadata } from '@/lib/metadata';
 import {
   buildOrganizationStructuredData,
   buildWebPageStructuredData,
 } from '@/lib/structured-data';
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, absoluteUrl } from '@/lib/site';
+import { getTodayISO } from '@/lib/utils/timezone';
+
+export const revalidate = 3600;
 
 const homeDescription =
   'Track sunrise, sunset, golden hour, solar azimuth, altitude, and 3D daylight views for any location with a live sun path map.';
@@ -14,12 +18,7 @@ export const metadata: Metadata = buildPageMetadata({
   title: 'Sun Path Map & Solar Tracker',
   description: homeDescription,
   path: '/',
-  keywords: [
-    ...SITE_KEYWORDS,
-    'sun path chart',
-    'daylight analysis tool',
-    'sun tracker map',
-  ],
+  keywords: [...SITE_KEYWORDS, 'sun path chart', 'daylight analysis tool', 'sun tracker map'],
 });
 
 const homeStructuredData = [
@@ -41,11 +40,7 @@ const homeStructuredData = [
     applicationCategory: 'UtilitiesApplication',
     operatingSystem: 'Web',
     browserRequirements: 'Requires JavaScript and a modern web browser.',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     featureList: [
       'Interactive sun path map',
       'Solar azimuth and altitude charts',
@@ -55,27 +50,23 @@ const homeStructuredData = [
       'Location search and coordinate lookup',
     ],
     image: absoluteUrl('/opengraph-image'),
-    publisher: {
-      '@type': 'Organization',
-      name: SITE_NAME,
-      url: absoluteUrl('/'),
-    },
+    publisher: { '@type': 'Organization', name: SITE_NAME, url: absoluteUrl('/') },
   },
-  buildWebPageStructuredData({
-    path: '/',
-    title: 'Sun Path Map & Solar Tracker',
-    description: homeDescription,
-  }),
+  buildWebPageStructuredData({ path: '/', title: 'Sun Path Map & Solar Tracker', description: homeDescription }),
 ];
 
 export default function Page() {
+  const initialDateISO = getTodayISO('UTC');
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeStructuredData) }}
       />
-      <HomePage />
+      <SolarStoreProvider initialDateISO={initialDateISO}>
+        <HomePage initialDateISO={initialDateISO} />
+      </SolarStoreProvider>
     </>
   );
 }

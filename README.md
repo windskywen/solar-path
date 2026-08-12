@@ -63,10 +63,14 @@ A web application that visualizes the sun's path across the sky for any location
    NEXT_PUBLIC_ADSENSE_ENABLED=false
    NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-0000000000000000
    NEXT_PUBLIC_ADSENSE_SIDEBAR_SLOT_ID=
+   NEXT_PUBLIC_ADSENSE_TOOL_SLOT_ID=
+   NEXT_PUBLIC_ADSENSE_ARTICLE_SLOT_ID=
    ```
-   Set `NEXT_PUBLIC_ADSENSE_ENABLED=true` and a real `NEXT_PUBLIC_ADSENSE_CLIENT_ID` to enable site-wide Auto ads. `NEXT_PUBLIC_ADSENSE_SIDEBAR_SLOT_ID` is only needed if you also want to render the manual sidebar ad unit.
+   During review, keep `NEXT_PUBLIC_ADSENSE_ENABLED=false`. The publisher ID is still emitted through the `google-adsense-account` meta tag, but the script and all ad slots stay absent. Keep Auto Ads disabled.
 
-   The app loads the AdSense script from the root layout and serves `public/ads.txt` from the site root, so both should be deployed together.
+   Only after AdSense marks the site **Ready**, create three responsive manual units, set the slot IDs, and change `NEXT_PUBLIC_ADSENSE_ENABLED=true`. The existing sidebar variable controls the home-page unit; the tool and article variables control calculator and guide placements. The script is scoped to publisher routes, while About, Methodology, Contact, Privacy, and Terms remain ad-free. The app also serves `public/ads.txt` from the site root.
+
+   Follow [the AdSense release checklist](docs/adsense-release-checklist.md) before review and again before enabling ads.
 
 7. Start the development server:
    ```bash

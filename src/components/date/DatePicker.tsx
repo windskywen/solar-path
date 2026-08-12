@@ -7,13 +7,15 @@
  * Defaults to today's date and allows selecting any Gregorian date.
  */
 
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import { useDateISO, useSolarActions } from '@/store/solar-store';
 import { getTodayISO } from '@/lib/utils/timezone';
 
 export interface DatePickerProps {
   /** Additional CSS classes */
   className?: string;
+  /** Server-generated UTC date used for the hydration-safe first render */
+  initialDateISO: string;
   /** Callback when date changes */
   onChange?: (dateISO: string) => void;
 }
@@ -42,17 +44,26 @@ function isToday(dateISO: string): boolean {
   return dateISO === getTodayISO();
 }
 
+function subscribeToUtcDate() {
+  return () => {};
+}
+
 /**
  * DatePicker provides date selection for solar calculations
  */
-export function DatePicker({ className = '', onChange }: DatePickerProps) {
+export function DatePicker({ className = '', initialDateISO, onChange }: DatePickerProps) {
   const dateISO = useDateISO();
   const { setDateISO } = useSolarActions();
   const dateInputRef = useRef<HTMLInputElement>(null);
 
-  // Calculate relative dates
-  const today = useMemo(() => getTodayISO(), []);
-  const dateIsToday = useMemo(() => isToday(dateISO), [dateISO]);
+  // Keep the hydration snapshot equal to the server date, then expose the
+  // current UTC date to the client without a mount-effect state update.
+  const today = useSyncExternalStore(
+    subscribeToUtcDate,
+    () => getTodayISO('UTC'),
+    () => initialDateISO
+  );
+  const dateIsToday = useMemo(() => dateISO === today, [dateISO, today]);
 
   const handleDateChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,25 +191,29 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
       <div className="flex flex-wrap gap-2">
         <QuickDateButton
           label="Jun Sol"
-          dateISO={`${new Date().getFullYear()}-06-21`}
+          fullLabel="June Solstice"
+          dateISO={`${today.slice(0, 4)}-06-21`}
           currentDate={dateISO}
           onClick={setDateISO}
         />
         <QuickDateButton
           label="Mar Eq"
-          dateISO={`${new Date().getFullYear()}-03-20`}
+          fullLabel="March Equinox"
+          dateISO={`${today.slice(0, 4)}-03-20`}
           currentDate={dateISO}
           onClick={setDateISO}
         />
         <QuickDateButton
           label="Dec Sol"
-          dateISO={`${new Date().getFullYear()}-12-21`}
+          fullLabel="December Solstice"
+          dateISO={`${today.slice(0, 4)}-12-21`}
           currentDate={dateISO}
           onClick={setDateISO}
         />
         <QuickDateButton
           label="Sep Eq"
-          dateISO={`${new Date().getFullYear()}-09-22`}
+          fullLabel="September Equinox"
+          dateISO={`${today.slice(0, 4)}-09-22`}
           currentDate={dateISO}
           onClick={setDateISO}
         />
@@ -212,11 +227,13 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
  */
 function QuickDateButton({
   label,
+  fullLabel,
   dateISO,
   currentDate,
   onClick,
 }: {
   label: string;
+  fullLabel: string;
   dateISO: string;
   currentDate: string;
   onClick: (date: string) => void;
@@ -233,7 +250,8 @@ function QuickDateButton({
           : '[border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] text-[var(--solar-text)] hover:[background:var(--solar-button-hover-bg)]'
       }`}
     >
-      {label}
+      <span className="sr-only">{fullLabel}</span>
+      <span aria-hidden="true">{label}</span>
     </button>
   );
 }

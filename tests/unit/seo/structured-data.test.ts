@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  buildArticleStructuredData,
   buildBreadcrumbStructuredData,
   buildFaqStructuredData,
   buildOrganizationStructuredData,
@@ -31,7 +32,7 @@ describe('structured data builders', () => {
       url: 'https://solarpathtracker.example/',
       contactPoint: [
         {
-          url: 'https://solarpathtracker.example/about#contact',
+          url: 'https://solarpathtracker.example/contact',
         },
       ],
     });
@@ -45,6 +46,32 @@ describe('structured data builders', () => {
     ).toMatchObject({
       '@type': 'WebPage',
       url: 'https://solarpathtracker.example/golden-hour-calculator',
+    });
+  });
+
+  it('builds article dates, organization author, keywords, and canonical entity URL', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://solarpathtracker.example';
+
+    expect(
+      buildArticleStructuredData({
+        path: '/guides/example',
+        title: 'Example Guide',
+        description: 'A reproducible example.',
+        publishedDate: '2026-08-10',
+        modifiedDate: '2026-08-11',
+        keywords: ['solar example'],
+      })
+    ).toMatchObject({
+      '@type': 'Article',
+      url: 'https://solarpathtracker.example/guides/example',
+      mainEntityOfPage: 'https://solarpathtracker.example/guides/example',
+      datePublished: '2026-08-10',
+      dateModified: '2026-08-11',
+      author: {
+        '@type': 'Organization',
+        name: 'Solar Path Tracker',
+      },
+      keywords: ['solar example'],
     });
   });
 

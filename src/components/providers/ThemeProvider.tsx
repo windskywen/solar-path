@@ -6,7 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react';
 import {
@@ -26,49 +26,59 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
+const THEME_CHANGE_EVENT = 'solar-theme-change';
 
-function getInitialTheme(): ThemeMode {
-  if (typeof document === 'undefined') {
+function getThemeSnapshot(): ThemeMode {
+  try {
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return isThemeMode(storedTheme) ? storedTheme : DEFAULT_THEME;
+  } catch {
     return DEFAULT_THEME;
   }
+}
 
-  return isThemeMode(document.documentElement.dataset.theme)
-    ? document.documentElement.dataset.theme
-    : DEFAULT_THEME;
+function getServerThemeSnapshot(): ThemeMode {
+  return DEFAULT_THEME;
+}
+
+function subscribeToTheme(onStoreChange: () => void) {
+  window.addEventListener('storage', onStoreChange);
+  window.addEventListener(THEME_CHANGE_EVENT, onStoreChange);
+
+  return () => {
+    window.removeEventListener('storage', onStoreChange);
+    window.removeEventListener(THEME_CHANGE_EVENT, onStoreChange);
+  };
+}
+
+function persistTheme(theme: ThemeMode) {
+  applyThemeToDocument(theme);
+
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {}
+
+  window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>(getInitialTheme);
+  const theme = useSyncExternalStore(
+    subscribeToTheme,
+    getThemeSnapshot,
+    getServerThemeSnapshot
+  );
 
   useEffect(() => {
     applyThemeToDocument(theme);
-
-    try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-    } catch {}
   }, [theme]);
 
-  useEffect(() => {
-    const handleStorage = () => {
-      try {
-        const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-        if (isThemeMode(storedTheme)) {
-          setThemeState(storedTheme);
-        }
-      } catch {}
-    };
-
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
-
   const setTheme = useCallback((nextTheme: ThemeMode) => {
-    setThemeState(nextTheme);
+    persistTheme(nextTheme);
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setThemeState((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'));
-  }, []);
+    persistTheme(theme === 'dark' ? 'light' : 'dark');
+  }, [theme]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({

@@ -1,51 +1,79 @@
 import type { MetadataRoute } from 'next';
+import { GUIDES } from '@/lib/guides';
 import { absoluteUrl } from '@/lib/site';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
+const UPDATED_2026_08_12 = new Date('2026-08-12T00:00:00Z');
 
-  return [
+export default function sitemap(): MetadataRoute.Sitemap {
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: absoluteUrl('/'),
-      lastModified,
+      lastModified: UPDATED_2026_08_12,
       changeFrequency: 'daily',
       priority: 1,
     },
     {
-      url: absoluteUrl('/about'),
-      lastModified,
+      url: absoluteUrl('/sunrise-sunset-calculator'),
+      lastModified: UPDATED_2026_08_12,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: absoluteUrl('/golden-hour-calculator'),
+      lastModified: UPDATED_2026_08_12,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: absoluteUrl('/solar-azimuth-altitude'),
+      lastModified: UPDATED_2026_08_12,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: absoluteUrl('/guides'),
+      lastModified: UPDATED_2026_08_12,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: absoluteUrl('/methodology'),
+      lastModified: UPDATED_2026_08_12,
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
+      url: absoluteUrl('/about'),
+      lastModified: UPDATED_2026_08_12,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: absoluteUrl('/contact'),
+      lastModified: UPDATED_2026_08_12,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
       url: absoluteUrl('/privacy'),
-      lastModified,
+      lastModified: UPDATED_2026_08_12,
       changeFrequency: 'monthly',
       priority: 0.5,
     },
     {
       url: absoluteUrl('/terms'),
-      lastModified,
+      lastModified: UPDATED_2026_08_12,
       changeFrequency: 'monthly',
       priority: 0.5,
     },
-    {
-      url: absoluteUrl('/sunrise-sunset-calculator'),
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: absoluteUrl('/golden-hour-calculator'),
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: absoluteUrl('/solar-azimuth-altitude'),
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
   ];
+
+  const guidePages: MetadataRoute.Sitemap = GUIDES.map((guide) => ({
+    url: absoluteUrl(`/guides/${guide.slug}`),
+    lastModified: new Date(`${guide.modifiedDate}T00:00:00Z`),
+    changeFrequency: 'monthly',
+    priority: 0.75,
+  }));
+
+  return [...staticPages, ...guidePages];
 }

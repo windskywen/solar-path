@@ -14,7 +14,10 @@ interface ProvidersProps {
  *
  * Includes:
  * - React Query for server state management
- * - Zustand store is automatically available (no provider needed)
+ * - Theme state shared across public pages
+ *
+ * The interactive home owns its hydration-safe Zustand provider at the route
+ * boundary; calculators intentionally keep independent local state.
  */
 export function Providers({ children }: ProvidersProps) {
   // Create QueryClient in state to avoid recreation on re-render

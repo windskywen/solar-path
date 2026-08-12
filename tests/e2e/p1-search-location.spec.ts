@@ -70,9 +70,9 @@ test.describe('User Story 2: Search Location', () => {
     await searchInput.fill('Tokyo');
 
     // Wait for debounce (400ms) + API response
-    await expect(page.getByText(/Tokyo/i).locator(':visible').first()).toBeVisible({
-      timeout: 5000,
-    });
+    await expect(
+      page.getByRole('listbox', { name: /Search results/i }).getByRole('button').filter({ hasText: /Tokyo/i })
+    ).toHaveCount(1, { timeout: 5000 });
   });
 
   test('search results include TomTom attribution and a coordinate link', async ({ page }) => {
@@ -182,12 +182,12 @@ test.describe('User Story 2: Search Location', () => {
     // Search for a coordinate
     await searchInput.fill('35.6762, 139.6503');
 
-    // Wait for results (may show Tokyo or nearby locations)
-    await page.waitForTimeout(1000);
-
-    // Should get some results or show coordinates
-    const bodyContent = await page.textContent('body');
-    expect(bodyContent).toMatch(/Tokyo|Japan|35\.67|139\.65/);
+    await expect(
+      page
+        .getByRole('listbox', { name: /Search results/i })
+        .getByRole('button')
+        .filter({ hasText: 'Tokyo, Japan' })
+    ).toHaveCount(1, { timeout: 5000 });
   });
 
   test('search handles special characters', async ({ page }) => {
@@ -359,6 +359,12 @@ test.describe('User Story 2: Search Location', () => {
 });
 
 test.describe('Search Rate Limiting', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/geocode?**', fulfillGeocode);
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+  });
+
   test('handles rate limit gracefully', async ({ page }) => {
     // Make many rapid searches to potentially trigger rate limit
     const searchInput = await page.getByPlaceholder(/Search location/i);
@@ -372,8 +378,8 @@ test.describe('Search Rate Limiting', () => {
     await searchInput.fill('Final City');
     await page.waitForTimeout(1000);
 
-    // Should either show results or rate limit message (not crash)
-    const bodyContent = await page.textContent('body');
-    expect(bodyContent).toBeDefined();
+    await expect(
+      page.getByRole('listbox', { name: /Search results/i }).getByRole('button').filter({ hasText: /Final City/i })
+    ).toHaveCount(1, { timeout: 5000 });
   });
 });
