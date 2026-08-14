@@ -12,6 +12,11 @@
 
 import { test, expect } from '@playwright/test';
 
+// MapLibre's main map needs a deterministic WebGL backend in Windows headless Chromium.
+// Keep the software renderer scoped to this map-heavy date suite so the 3D terrain suite
+// continues to exercise its normal browser configuration.
+test.use({ launchOptions: { args: ['--use-angle=swiftshader'] } });
+
 test.describe('User Story 3: Date Selection', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
@@ -124,7 +129,7 @@ test.describe('User Story 3: Date Selection', () => {
 
   test('solar data updates when date changes', async ({ page }) => {
     // Wait for initial data
-    await expect(page.getByText(/Sunrise/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Sunrise', { exact: true })).toBeVisible({ timeout: 10000 });
 
     // Capture initial sunrise time
     const initialContent = await page.textContent('body');
@@ -137,7 +142,7 @@ test.describe('User Story 3: Date Selection', () => {
     await page.waitForTimeout(1000);
 
     // Day length should be visible and potentially different
-    await expect(page.getByText(/Day Length/i)).toBeVisible();
+    await expect(page.getByText('Day Length', { exact: true })).toBeVisible();
   });
 
   test('map preserves center when date changes', async ({ page }) => {

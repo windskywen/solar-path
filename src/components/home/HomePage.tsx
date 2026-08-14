@@ -229,8 +229,8 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
   const focusedToolLinks = [
     {
       href: '/sunrise-sunset-calculator',
-      label: 'Daylight Times Calculator',
-      description: 'Check first light, last light, civil twilight, and the duration of daylight in a focused result table.',
+      label: 'Sunrise & Sunset Calculator',
+      description: 'Check sunrise, sunset, civil twilight, daylight length, and event direction for a location and date.',
     },
     {
       href: '/golden-hour-calculator',
@@ -239,8 +239,8 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
     },
     {
       href: '/solar-azimuth-altitude',
-      label: 'Solar Azimuth & Altitude Calculator',
-      description: 'Measure solar angles for facade studies, outdoor comfort, and preliminary solar site checks.',
+      label: 'Sun Position & Angle Calculator',
+      description: 'Measure sun direction, azimuth, altitude, and the daily angle curve for a selected time.',
     },
   ] as const;
 
@@ -302,7 +302,7 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                 <p className={eyebrow}>Cinematic daylight atlas</p>
                 <div className="space-y-3">
                   <h1 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--solar-text-strong)] sm:text-4xl lg:text-[3.75rem] lg:leading-[0.95]">
-                    Sun path map and solar tracker for any location.
+                    Sun path map and sun tracker for any location.
                   </h1>
                   <p className="max-w-2xl text-sm leading-6 text-[var(--solar-text)] sm:text-base">
                     Search a place, pick a date, and read daylight events, golden hour, solar

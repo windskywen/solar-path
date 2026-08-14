@@ -9,6 +9,9 @@ interface ProvidersProps {
   children: ReactNode;
 }
 
+const showQueryDevtools =
+  process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_E2E_TEST !== 'true';
+
 /**
  * Application providers wrapper
  *
@@ -43,7 +46,7 @@ export function Providers({ children }: ProvidersProps) {
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         {children}
-        {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
+        {showQueryDevtools && <ReactQueryDevtools initialIsOpen={false} />}
       </QueryClientProvider>
     </ThemeProvider>
   );

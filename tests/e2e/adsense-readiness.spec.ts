@@ -224,7 +224,7 @@ test.describe('Publisher content, SEO, and review-mode advertising', () => {
     ];
 
     for (const route of routes) {
-      await page.goto(route);
+      await page.goto(route, { waitUntil: 'domcontentloaded' });
       await expect(page.locator('meta[name="google-adsense-account"]')).toHaveAttribute(
         'content',
         'ca-pub-5483347501870595'
@@ -272,6 +272,15 @@ test.describe('Publisher content, SEO, and review-mode advertising', () => {
       }
     });
     page.on('pageerror', (error) => browserErrors.push(error.message));
+
+    // Vercel Analytics is served by platform infrastructure. Stub only those
+    // external scripts so local browser checks still surface application errors.
+    await page.route('**/_vercel/insights/script.js', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: '' })
+    );
+    await page.route('https://va.vercel-scripts.com/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: '' })
+    );
 
     for (const route of ['/sunrise-sunset-calculator', '/privacy']) {
       await page.goto(route);

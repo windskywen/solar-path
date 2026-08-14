@@ -7,6 +7,12 @@ export interface CalculatorContentSection {
   paragraphs: readonly string[];
 }
 
+export interface CalculatorRelatedLink {
+  href: string;
+  label: string;
+  description: string;
+}
+
 interface CalculatorPageFrameProps {
   eyebrow: string;
   title: string;
@@ -15,6 +21,7 @@ interface CalculatorPageFrameProps {
   initialDateISO: string;
   sections: readonly CalculatorContentSection[];
   faqs: readonly { question: string; answer: string }[];
+  relatedLinks?: readonly CalculatorRelatedLink[];
 }
 
 const glassPanel =
@@ -28,6 +35,7 @@ export function CalculatorPageFrame({
   initialDateISO,
   sections,
   faqs,
+  relatedLinks,
 }: CalculatorPageFrameProps) {
   return (
     <>
@@ -75,6 +83,27 @@ export function CalculatorPageFrame({
             ))}
           </div>
         </section>
+
+        {relatedLinks?.length ? (
+          <aside className={`${glassPanel} mt-4 p-4 sm:p-6`} aria-labelledby="calculator-related-tools-heading">
+            <p className="text-[0.66rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-kicker)]">Continue planning</p>
+            <h2 id="calculator-related-tools-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]">
+              Use another live tool
+            </h2>
+            <div className="mt-5 grid gap-4 lg:grid-cols-3">
+              {relatedLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="rounded-[22px] border p-4 transition-colors [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] hover:[border-color:var(--solar-pill-border)]"
+                >
+                  <h3 className="font-semibold text-[var(--solar-text-strong)]">{link.label}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[var(--solar-text)]">{link.description}</p>
+                </Link>
+              ))}
+            </div>
+          </aside>
+        ) : null}
       </main>
     </>
   );

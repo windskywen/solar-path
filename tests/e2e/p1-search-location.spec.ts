@@ -353,8 +353,8 @@ test.describe('User Story 2: Search Location', () => {
     await page.waitForTimeout(2000);
 
     // Sun events should still be visible with potentially different values
-    await expect(page.getByText(/Sunrise/i)).toBeVisible();
-    await expect(page.getByText(/Sunset/i)).toBeVisible();
+    await expect(page.getByText('Sunrise', { exact: true })).toBeVisible();
+    await expect(page.getByText('Sunset', { exact: true })).toBeVisible();
   });
 });
 
