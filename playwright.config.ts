@@ -41,6 +41,7 @@ export default defineConfig({
       NEXT_PUBLIC_ADSENSE_SIDEBAR_SLOT_ID: adsenseEnabledForTest ? '1111111111' : '',
       NEXT_PUBLIC_ADSENSE_TOOL_SLOT_ID: adsenseEnabledForTest ? '2222222222' : '',
       NEXT_PUBLIC_ADSENSE_ARTICLE_SLOT_ID: adsenseEnabledForTest ? '3333333333' : '',
+      NEXT_PUBLIC_E2E_TEST: 'true',
     },
   },
 });

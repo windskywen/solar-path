@@ -3,18 +3,19 @@ import { GUIDES } from '@/lib/guides';
 import { absoluteUrl } from '@/lib/site';
 
 const UPDATED_2026_08_12 = new Date('2026-08-12T00:00:00Z');
+const UPDATED_2026_08_13 = new Date('2026-08-13T00:00:00Z');
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: absoluteUrl('/'),
-      lastModified: UPDATED_2026_08_12,
+      lastModified: UPDATED_2026_08_13,
       changeFrequency: 'daily',
       priority: 1,
     },
     {
       url: absoluteUrl('/sunrise-sunset-calculator'),
-      lastModified: UPDATED_2026_08_12,
+      lastModified: UPDATED_2026_08_13,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
@@ -26,7 +27,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: absoluteUrl('/solar-azimuth-altitude'),
-      lastModified: UPDATED_2026_08_12,
+      lastModified: UPDATED_2026_08_13,
       changeFrequency: 'weekly',
       priority: 0.9,
     },

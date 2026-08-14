@@ -52,8 +52,9 @@ async function denyGeolocation(page: Page) {
       ) => error?.(permissionError),
     });
   });
-  await page.reload();
-  await page.waitForLoadState('networkidle');
+  // Dev-only analytics and map tiles can keep a connection active after reload.
+  // The GPS interaction only needs the document and its client code to be ready.
+  await page.reload({ waitUntil: 'domcontentloaded' });
 }
 
 test.describe('User Story 1: GPS Location', () => {

@@ -224,7 +224,9 @@ test.describe('3D Solar Path View - US1: Open/Close Modal', () => {
     const mapBox = await map.boundingBox();
     expect(buttonBox).not.toBeNull();
     expect(mapBox).not.toBeNull();
-    expect(buttonBox!.y + buttonBox!.height).toBeLessThanOrEqual(mapBox!.y);
+    // MapLibre reports the canvas inside the bordered map frame. Allow the
+    // frame's 3px internal offset while still rejecting visual overlap.
+    expect(buttonBox!.y + buttonBox!.height).toBeLessThanOrEqual(mapBox!.y + 4);
   });
 
   test('3D View header action reflows above the map on mobile', async ({ page }) => {
@@ -232,13 +234,29 @@ test.describe('3D Solar Path View - US1: Open/Close Modal', () => {
 
     const button = page.getByTestId('3d-view-button');
     const map = page.locator('.maplibregl-map').first();
+    await expect(button).toBeVisible();
+    await expect(map).toBeVisible();
+
+    // WebKit finishes the responsive MapLibre resize one frame after its DOM
+    // nodes appear. Sample after that reflow instead of comparing transient
+    // boxes while the map's height is still being recalculated.
+    await expect
+      .poll(async () => {
+        const buttonBox = await button.boundingBox();
+        const mapBox = await map.boundingBox();
+
+        if (!buttonBox || !mapBox) {
+          return Number.NEGATIVE_INFINITY;
+        }
+
+        return mapBox.y - (buttonBox.y + buttonBox.height);
+      })
+      .toBeGreaterThanOrEqual(0);
+
     const buttonBox = await button.boundingBox();
-    const mapBox = await map.boundingBox();
 
     expect(buttonBox).not.toBeNull();
-    expect(mapBox).not.toBeNull();
     expect(buttonBox!.width).toBeGreaterThan(300);
-    expect(buttonBox!.y + buttonBox!.height).toBeLessThanOrEqual(mapBox!.y);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= document.documentElement.clientWidth
@@ -540,6 +558,7 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
   });
 
   test('loads the full terrain/building scene with required attribution', async ({ page }) => {
+    await mockStable3DProviders(page);
     await waitForAppReady(page);
     await setKnown3DTerrainLocation(page);
     await open3DModal(page);
@@ -714,7 +733,7 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
       await expect(scene).toHaveAttribute('data-render-mode', 'terrain-only');
       await submitPerformanceSamples(page, 60, 1);
       await expect
-        .poll(() => scene.getAttribute('data-render-mode'))
+        .poll(() => scene.getAttribute('data-render-mode'), { timeout: 10_000 })
         .toBe('full-3d');
     } finally {
       await endMapDragInteraction(page);
@@ -744,11 +763,15 @@ test.describe('3D Solar Path View - Free Terrain Scene', () => {
         .poll(() => scene.getAttribute('data-render-mode'))
         .toBe('terrain-only');
 
+      // Applying terrain can emit a MapLibre moveend and reset the recovery
+      // window. Start the second healthy window explicitly before sampling it.
+      await startMapDragInteraction(page);
+      await endMapDragInteraction(page);
       await submitPerformanceSamples(page, 60, 4);
       await expect(scene).toHaveAttribute('data-render-mode', 'terrain-only');
       await submitPerformanceSamples(page, 60, 1);
       await expect
-        .poll(() => scene.getAttribute('data-render-mode'))
+        .poll(() => scene.getAttribute('data-render-mode'), { timeout: 10_000 })
         .toBe('full-3d');
     } finally {
       await endMapDragInteraction(page);

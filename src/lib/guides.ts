@@ -27,6 +27,12 @@ export interface GuideSourceDefinition {
   note: string;
 }
 
+export interface GuideRelatedToolDefinition {
+  href: string;
+  label: string;
+  description: string;
+}
+
 export interface GuideDefinition {
   slug: GuideSlug;
   title: string;
@@ -53,6 +59,7 @@ export interface GuideDefinition {
   useCases: readonly string[];
   limitations: readonly string[];
   sources: readonly GuideSourceDefinition[];
+  relatedTools?: readonly GuideRelatedToolDefinition[];
   relatedGuides: readonly [GuideSlug, GuideSlug, GuideSlug];
 }
 
@@ -82,7 +89,7 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Learn how time, solar azimuth, altitude, horizon crossings, and seasonal curves fit together in a practical sun path diagram.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-12',
+    modifiedDate: '2026-08-13',
     keywords: ['how to read a sun path diagram', 'solar azimuth', 'solar altitude', 'sun path chart'],
     introduction: [
       'A sun path diagram compresses a moving three-dimensional relationship into a readable daily curve. The horizontal question is direction: where around the compass is the Sun? The vertical question is height: how far above or below the horizon is it? A useful reading always joins those two angles to a local date and time.',
@@ -152,6 +159,13 @@ export const GUIDES: readonly GuideDefinition[] = [
       'A magnetic compass can differ from true north; account for local magnetic declination when measuring on site.',
     ],
     sources: SHARED_SOURCES,
+    relatedTools: [
+      {
+        href: '/',
+        label: 'Open the interactive Sun Path Map',
+        description: 'Enter a location, date, and time to read the full solar path alongside azimuth and altitude.',
+      },
+    ],
     relatedGuides: [
       'solar-azimuth-altitude-worked-example',
       'brisbane-winter-vs-summer-sun-path',
@@ -165,7 +179,7 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Compare Brisbane’s June and December solar paths using fixed, reproducible sunrise, sunset, direction, altitude, and daylight data.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-12',
+    modifiedDate: '2026-08-13',
     keywords: ['Brisbane winter sun path', 'Brisbane summer sun path', 'Brisbane daylight hours', 'seasonal sun angles'],
     introduction: [
       'Brisbane does not experience the extreme seasonal daylight swing of high-latitude cities, but the change is still large enough to alter facade exposure, shade depth, outdoor comfort, and the useful hours for direct sunlight. The difference is not only that summer days are longer: the daily arc also rises much higher in the sky.',
@@ -227,6 +241,18 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Cloud cover, surface temperatures, glazing properties, and reflected heat are outside the calculation.',
     ],
     sources: SHARED_SOURCES,
+    relatedTools: [
+      {
+        href: '/',
+        label: 'Compare a sun path for your own location',
+        description: 'Use the live map to inspect seasonal direction, height, and daylight for a place you choose.',
+      },
+      {
+        href: '/sunrise-sunset-calculator',
+        label: 'Check sunrise and sunset direction',
+        description: 'Calculate the event times, daylight length, and bearings for the same location and date.',
+      },
+    ],
     relatedGuides: [
       'east-vs-west-facing-homes-australia',
       'how-to-read-a-sun-path-diagram',
@@ -240,7 +266,7 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Use solar azimuth and altitude to compare morning east-facing exposure with afternoon west-facing exposure in an Australian context.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-12',
+    modifiedDate: '2026-08-13',
     keywords: ['east vs west facing house Australia', 'afternoon sun Australia', 'house orientation sunlight', 'west-facing windows'],
     introduction: [
       '“East-facing” and “west-facing” are useful starting labels, but they do not describe a full property. A facade receives direct sun when the solar bearing falls within its visible half of the sky and no obstacle blocks the rays. Solar altitude then determines how steeply that light arrives and how readily an overhang, neighbouring structure, or vegetation can intercept it.',
@@ -307,6 +333,13 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Local terrain, neighbouring development, trees, curtains, glass, and external shading can dominate the visible result.',
     ],
     sources: SHARED_SOURCES,
+    relatedTools: [
+      {
+        href: '/solar-azimuth-altitude',
+        label: 'Calculate a facade sun angle',
+        description: 'Check sun direction, azimuth, and altitude for the property location, date, and time that matter.',
+      },
+    ],
     relatedGuides: [
       'brisbane-winter-vs-summer-sun-path',
       'estimating-shadow-direction-from-solar-angles',
@@ -320,7 +353,7 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Plan Brisbane golden-hour light by combining the exact event window with boundary azimuth, altitude, and seasonal direction.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-12',
+    modifiedDate: '2026-08-13',
     keywords: ['Brisbane golden hour direction', 'Brisbane photography light', 'golden hour azimuth', 'golden hour calculator Brisbane'],
     introduction: [
       'A golden-hour time without a direction is incomplete planning information. The Sun may be low and warm, yet sit behind the subject, behind the photographer, or behind a blocked horizon. Combining the window with its azimuth explains which side of a scene is geometrically positioned for direct low-angle light.',
@@ -382,6 +415,18 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Never look directly at the Sun through an optical viewfinder or unapproved equipment.',
     ],
     sources: SHARED_SOURCES,
+    relatedTools: [
+      {
+        href: '/',
+        label: 'Open the Sun Path Map',
+        description: 'Inspect the full solar arc and hourly bearings before checking a golden-hour window.',
+      },
+      {
+        href: '/sunrise-sunset-calculator',
+        label: 'Check sunrise and sunset times',
+        description: 'Compare exact daylight boundaries and event direction for a selected location and date.',
+      },
+    ],
     relatedGuides: [
       'how-to-read-a-sun-path-diagram',
       'brisbane-winter-vs-summer-sun-path',
@@ -395,7 +440,7 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Follow a fixed Brisbane example from local time to solar azimuth, altitude, compass direction, daylight state, and practical interpretation.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-12',
+    modifiedDate: '2026-08-13',
     keywords: ['solar azimuth altitude example', 'calculate sun angle example', 'solar bearing explained', 'sun altitude worked example'],
     introduction: [
       'Solar azimuth and altitude are a coordinate pair. Azimuth locates the Sun around the horizon, while altitude locates it above or below that horizon. A useful worked example keeps the location, date, timezone, and local time explicit so another reader can reproduce the result.',
@@ -460,6 +505,13 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Solar angles do not by themselves calculate panel energy yield, optimal tilt, glare, or code compliance.',
     ],
     sources: SHARED_SOURCES,
+    relatedTools: [
+      {
+        href: '/solar-azimuth-altitude',
+        label: 'Use the Sun Position & Angle Calculator',
+        description: 'Reproduce the inputs with your own location, date, and local time to inspect the result live.',
+      },
+    ],
     relatedGuides: [
       'how-to-read-a-sun-path-diagram',
       'estimating-shadow-direction-from-solar-angles',
@@ -473,7 +525,7 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Learn how to reverse solar azimuth for shadow direction and use solar altitude for a simple level-ground shadow-length estimate.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-12',
+    modifiedDate: '2026-08-13',
     keywords: ['shadow direction from solar azimuth', 'shadow length solar altitude', 'sun angle shadow calculation', 'estimate building shadow'],
     introduction: [
       'A sun-facing object casts its shadow away from the Sun. On a compass plan, the first estimate is therefore simple: add 180° to solar azimuth and wrap the result back into the 0–360° range. If the Sun is at 70°, the level-plan shadow bearing is approximately 250°.',
@@ -543,6 +595,13 @@ export const GUIDES: readonly GuideDefinition[] = [
       'This is not a substitute for surveyed shadow diagrams, development-approval evidence, or safety-critical engineering.',
     ],
     sources: SHARED_SOURCES,
+    relatedTools: [
+      {
+        href: '/solar-azimuth-altitude',
+        label: 'Calculate sun position and direction',
+        description: 'Use the live azimuth and altitude result as the starting point for a simple shadow-direction check.',
+      },
+    ],
     relatedGuides: [
       'solar-azimuth-altitude-worked-example',
       'how-to-read-a-sun-path-diagram',

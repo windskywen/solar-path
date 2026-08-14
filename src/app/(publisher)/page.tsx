@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import HomePage from '@/components/home/HomePage';
+import { HomeSeoContent } from '@/components/home/HomeSeoContent';
 import { SolarStoreProvider } from '@/store/solar-store';
 import { buildPageMetadata } from '@/lib/metadata';
 import {
@@ -12,10 +13,10 @@ import { getTodayISO } from '@/lib/utils/timezone';
 export const revalidate = 3600;
 
 const homeDescription =
-  'Track sunrise, sunset, golden hour, solar azimuth, altitude, and 3D daylight views for any location with a live sun path map.';
+  'Use an interactive sun path map to check solar path, sun direction, azimuth, altitude, sunrise, sunset, and 3D daylight for any location, date, and time.';
 
 export const metadata: Metadata = buildPageMetadata({
-  title: 'Sun Path Map & Solar Tracker',
+  title: 'Sun Path Map & Sun Tracker',
   description: homeDescription,
   path: '/',
   keywords: [...SITE_KEYWORDS, 'sun path chart', 'daylight analysis tool', 'sun tracker map'],
@@ -52,7 +53,7 @@ const homeStructuredData = [
     image: absoluteUrl('/opengraph-image'),
     publisher: { '@type': 'Organization', name: SITE_NAME, url: absoluteUrl('/') },
   },
-  buildWebPageStructuredData({ path: '/', title: 'Sun Path Map & Solar Tracker', description: homeDescription }),
+  buildWebPageStructuredData({ path: '/', title: 'Sun Path Map & Sun Tracker', description: homeDescription }),
 ];
 
 export default function Page() {
@@ -67,6 +68,7 @@ export default function Page() {
       <SolarStoreProvider initialDateISO={initialDateISO}>
         <HomePage initialDateISO={initialDateISO} />
       </SolarStoreProvider>
+      <HomeSeoContent />
     </>
   );
 }

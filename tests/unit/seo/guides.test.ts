@@ -33,6 +33,26 @@ describe('guide registry', () => {
     }
   });
 
+  it('maps every Tier S or Tier A supporting guide to an existing live tool', () => {
+    const expectedTools: Record<string, readonly string[]> = {
+      'how-to-read-a-sun-path-diagram': ['/'],
+      'brisbane-winter-vs-summer-sun-path': ['/', '/sunrise-sunset-calculator'],
+      'east-vs-west-facing-homes-australia': ['/solar-azimuth-altitude'],
+      'golden-hour-direction-brisbane': ['/', '/sunrise-sunset-calculator'],
+      'solar-azimuth-altitude-worked-example': ['/solar-azimuth-altitude'],
+      'estimating-shadow-direction-from-solar-angles': ['/solar-azimuth-altitude'],
+    };
+
+    for (const guide of GUIDES) {
+      expect(guide.modifiedDate).toBe('2026-08-13');
+      expect(guide.relatedTools?.map((tool) => tool.href)).toEqual(expectedTools[guide.slug]);
+      for (const tool of guide.relatedTools ?? []) {
+        expect(tool.label.length).toBeGreaterThan(8);
+        expect(tool.description.length).toBeGreaterThan(20);
+      }
+    }
+  });
+
   it('keeps every fixed example reproducible through the production solar engine', () => {
     for (const guide of GUIDES) {
       expect(guide.example.dates.length).toBeGreaterThan(0);
@@ -81,6 +101,11 @@ describe('public sitemap', () => {
       );
       expect(entry).toBeDefined();
       expect(entry?.lastModified).toEqual(new Date(`${guide.modifiedDate}T00:00:00Z`));
+    }
+
+    for (const route of ['/', '/sunrise-sunset-calculator', '/solar-azimuth-altitude']) {
+      const entry = entries.find((candidate) => candidate.url === `https://solarpathtracker.example${route}`);
+      expect(entry?.lastModified).toEqual(new Date('2026-08-13T00:00:00Z'));
     }
   });
 });
