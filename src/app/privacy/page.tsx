@@ -38,7 +38,7 @@ export default function PrivacyPage() {
             while being transparent about the third-party services that help operate the site.
           </p>
           <p className="text-xs text-[var(--solar-text-muted)]">
-            Last updated: <time dateTime="2026-08-12">12 August 2026</time>
+            Last updated: <time dateTime="2026-08-20">20 August 2026</time>
           </p>
         </div>
       </section>
@@ -202,14 +202,23 @@ export default function PrivacyPage() {
                 approximate IP-based location lookup for the initial map suggestion.
               </li>
               <li>
-                <strong className="text-[var(--solar-text-strong)]">Vercel Analytics:</strong>{' '}
-                helps us understand aggregated site usage and performance trends.
+                <strong className="text-[var(--solar-text-strong)]">
+                  Vercel Analytics and Speed Insights:
+                </strong>{' '}
+                help us understand aggregated site usage and anonymous Web Vitals. Performance
+                measurements may be grouped by route, device type, browser, and country so we can
+                identify slow experiences without building individual visitor profiles.
               </li>
             </ul>
             <p>
               We do not sell personal data. We use temporary caching and service-provider requests
               to deliver the search, approximate location, analytics, and advertising features that
               support the app.
+            </p>
+            <p>
+              Vercel Speed Insights does not provide us with visitor IP addresses or a way to
+              reconstruct an individual browsing session. Its measurements are used to improve page
+              loading stability and interaction responsiveness.
             </p>
           </div>
         </section>

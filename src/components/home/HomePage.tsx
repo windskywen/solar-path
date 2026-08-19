@@ -1,18 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { Suspense, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { MapPanel } from '@/components/map/MapPanel';
 import { SolarRaysLayer, SolarRaysLegend } from '@/components/map/SolarRaysLayer';
-import { Solar3DViewModal } from '@/components/solar3d';
 import { LocationInput } from '@/components/location/LocationInput';
 import { DatePicker } from '@/components/date';
 import { SunEventsPanel, InsightsPanel } from '@/components/insights';
 import { SolarDataTable, MetricsPanel } from '@/components/data';
-import { ChartsPanel } from '@/components/charts';
+import { DeferredChartsPanel } from '@/components/charts/DeferredChartsPanel';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
 import { SidebarAdPanel } from '@/components/ads/SidebarAdPanel';
-import { useSolarData, useSolarPositionForHour } from '@/hooks/useSolarData';
+import { useSolarData } from '@/hooks/useSolarData';
 import { useIpGeo } from '@/hooks/useIpGeo';
 import {
   useLocation,
@@ -22,8 +22,15 @@ import {
   useSolarActions,
 } from '@/store/solar-store';
 import { SkipLinks } from '@/components/a11y';
-import { generateInsights } from '@/lib/solar/insights';
-import { getTimezoneFromCoordinates, getTodayISO } from '@/lib/utils/timezone';
+import { getTodayISO } from '@/lib/utils/timezone';
+
+const Solar3DViewModal = dynamic(
+  () =>
+    import('@/components/solar3d/Solar3DViewModal').then(
+      (module) => module.Solar3DViewModal
+    ),
+  { ssr: false }
+);
 
 function formatDisplayDate(dateISO: string): string {
   try {
@@ -154,8 +161,9 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
   const timezone = useTimezone();
   const dateISO = useDateISO();
   const selectedHour = useSelectedHour();
-  const { setDateISO, setLocation, setSelectedHour, setTimezone } = useSolarActions();
+  const { setDateISO, setLocation, setSelectedHour } = useSolarActions();
   const [is3DViewOpen, setIs3DViewOpen] = useState(false);
+  const [hasRequested3DView, setHasRequested3DView] = useState(false);
 
   // Get initial location from IP
   const { location: ipLocation, isLoading: ipLoading } = useIpGeo();
@@ -177,26 +185,16 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
     }
   }, [ipLocation, ipLoading, location, setLocation]);
 
-  // Auto-update timezone when location changes
-  useEffect(() => {
-    if (location) {
-      const locationTimezone = getTimezoneFromCoordinates(location.lat, location.lng);
-      setTimezone(locationTimezone);
-    }
-  }, [location, setTimezone]);
-
   // Compute solar data
   const solarData = useSolarData();
   const can3DViewOpen = location !== null && solarData.hourly.length > 0;
 
-  // Get selected hour's position for metrics panel
-  const selectedPosition = useSolarPositionForHour(selectedHour);
-
-  // Generate insights
-  const insights =
-    location && solarData
-      ? generateInsights(location.lat, solarData.hourly, solarData.events)
-      : null;
+  // Reuse the dataset already computed above instead of running the solar pipeline again.
+  const selectedPosition = useMemo(() => {
+    if (selectedHour === null) return undefined;
+    return solarData.hourly.find((position) => position.hour === selectedHour);
+  }, [selectedHour, solarData.hourly]);
+  const insights = location ? solarData.insights : null;
 
   const displayDate = formatDisplayDate(dateISO);
   const displayTimezone = timezone.replace('_', ' ');
@@ -387,7 +385,10 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
 
               <Solar3DViewButton
                 disabled={!can3DViewOpen}
-                onClick={() => setIs3DViewOpen(true)}
+                onClick={() => {
+                  setHasRequested3DView(true);
+                  setIs3DViewOpen(true);
+                }}
               />
             </div>
 
@@ -406,7 +407,14 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                 <SolarRaysLegend className="absolute bottom-2 left-2 z-10 sm:bottom-5 sm:left-5" />
               </Suspense>
             </div>
-            <Solar3DViewModal open={is3DViewOpen} onOpenChange={setIs3DViewOpen} />
+            {hasRequested3DView ? (
+              <Solar3DViewModal
+                open={is3DViewOpen}
+                onOpenChange={setIs3DViewOpen}
+                hourly={solarData.hourly}
+                events={solarData.events}
+              />
+            ) : null}
           </section>
 
           {/* Data rail */}
@@ -433,7 +441,7 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                   <SunEventsPanel events={solarData?.events ?? null} timezone={timezone} />
 
                   {solarData ? (
-                    <ChartsPanel
+                    <DeferredChartsPanel
                       positions={solarData.hourly}
                       selectedHour={selectedHour}
                       onHourClick={setSelectedHour}
