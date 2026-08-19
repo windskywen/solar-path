@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { CalculatorLocationPicker } from './CalculatorLocationPicker';
-import { ChartsPanel } from '@/components/charts/ChartsPanel';
+import { DeferredChartsPanel } from '@/components/charts/DeferredChartsPanel';
 import { ToolAdPlacement } from '@/components/ads/ToolAdPlacement';
 import { computeHourlyPositions } from '@/lib/solar/computation';
 import {
@@ -208,7 +208,7 @@ export function SolarCalculator({ mode, initialDateISO }: SolarCalculatorProps) 
         {mode === 'sunrise' ? (
           <div className="space-y-4">
             <SunriseResults events={events} timezone={timezone} />
-            <ChartsPanel positions={hourly} selectedHour={null} defaultView="altitude" />
+            <DeferredChartsPanel positions={hourly} selectedHour={null} defaultView="altitude" />
           </div>
         ) : null}
 
@@ -218,7 +218,7 @@ export function SolarCalculator({ mode, initialDateISO }: SolarCalculatorProps) 
               <EventWindowCard title="Morning golden hour" window={events.morningGoldenHour} />
               <EventWindowCard title="Evening golden hour" window={events.eveningGoldenHour} />
             </div>
-            <ChartsPanel positions={hourly} selectedHour={null} defaultView="altitude" />
+            <DeferredChartsPanel positions={hourly} selectedHour={null} defaultView="altitude" />
           </div>
         ) : null}
 
@@ -230,7 +230,7 @@ export function SolarCalculator({ mode, initialDateISO }: SolarCalculatorProps) 
               <ResultCard label="Altitude" value={`${position.altitudeDeg >= 0 ? '+' : ''}${position.altitudeDeg.toFixed(1)}°`} helper="Angle above or below the horizon" />
               <ResultCard label="Daylight state" value={position.daylightState} helper="Hourly classification used by the main tool" />
             </div>
-            <ChartsPanel
+            <DeferredChartsPanel
               positions={hourly}
               selectedHour={selectedHour}
               defaultView="both"

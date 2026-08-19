@@ -80,6 +80,9 @@ test.describe('Independent calculators', () => {
     await expect(page.getByText(/This fixed reference is independent/i)).toBeVisible();
     await expect(page.getByText('Solar noon', { exact: true })).toBeVisible();
     await expect(page.getByText(/Altitude [+-]?\d+\.\d°/).first()).toBeVisible();
+    const sunriseCharts = page.getByTestId('deferred-charts-panel');
+    await sunriseCharts.scrollIntoViewIfNeeded();
+    await expect(sunriseCharts).toHaveAttribute('data-state', 'loaded');
     await expect(page.getByText('Curve deck')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Altitude' })).toBeVisible();
 
@@ -120,6 +123,9 @@ test.describe('Independent calculators', () => {
     await expect(page.getByText('-33.868800, 151.209300').first()).toBeVisible();
     await expect(page.getByText('16:00', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('Australia/Sydney').first()).toBeVisible();
+    const angleCharts = page.getByTestId('deferred-charts-panel');
+    await angleCharts.scrollIntoViewIfNeeded();
+    await expect(angleCharts).toHaveAttribute('data-state', 'loaded');
     await expect(page.getByText('Curve deck')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Both' })).toBeVisible();
   });

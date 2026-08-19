@@ -64,14 +64,14 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
   const location = useLocation();
   const { setLocation } = useSolarActions();
 
-  // Initialize view state with location if available
-  const [viewState, setViewState] = useState<ViewState>(() => ({
+  // Let MapLibre own camera state so pan and zoom do not rerender this React subtree.
+  const initialViewState: ViewState = {
     ...DEFAULT_VIEW,
     ...(location && {
       longitude: location.lng,
       latitude: location.lat,
     }),
-  }));
+  };
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   // Update view when location changes (jump to new location instantly)
@@ -80,9 +80,9 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
 
     mapRef.current.jumpTo({
       center: [location.lng, location.lat],
-      zoom: viewState.zoom,
+      zoom: mapRef.current.getZoom(),
     });
-  }, [location, viewState.zoom]);
+  }, [location]);
 
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {
@@ -128,8 +128,7 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
     <div className={`relative w-full h-full ${className}`}>
       <Map
         ref={mapRef}
-        {...viewState}
-        onMove={(evt) => setViewState(evt.viewState)}
+        initialViewState={initialViewState}
         onClick={handleMapClick}
         onLoad={() => setIsMapLoaded(true)}
         mapStyle={MAP_STYLE}

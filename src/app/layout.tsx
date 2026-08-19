@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { getAdSenseSettings } from '@/lib/adsense';
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_LOCALE, SITE_NAME, absoluteUrl, getSiteUrl } from '@/lib/site';
@@ -66,7 +67,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
   themeColor: THEME_META_COLORS.dark,
 };
 
@@ -85,6 +85,7 @@ export default function RootLayout({
           </div>
         </Providers>
         <Analytics />
+        <SpeedInsights sampleRate={1} />
       </body>
     </html>
   );

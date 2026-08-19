@@ -14,7 +14,6 @@ import { useCallback, useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import dynamic from 'next/dynamic';
 import { useLocation, useDateISO, useTimezone, useSelectedHour } from '@/store/solar-store';
-import { useSolarData } from '@/hooks/useSolarData';
 import {
   filterVisibleHours,
   buildSolar3DPoints,
@@ -22,6 +21,7 @@ import {
   isSelectedHourVisible,
 } from '@/lib/solar3d/visibility';
 import type { Solar3DSnapshot, Solar3DViewData, Solar3DTooltipData } from '@/types/solar3d';
+import type { HourlySolarPosition, SunEvents } from '@/types/solar';
 
 // Dynamically import the 3D canvas to avoid SSR issues with MapLibre/deck.gl
 const Solar3DMapCanvas = dynamic(
@@ -79,6 +79,12 @@ export interface Solar3DViewModalProps {
    * Called with false when user closes via Esc or close button.
    */
   onOpenChange: (open: boolean) => void;
+
+  /** Hourly data already computed by the home page. */
+  hourly: HourlySolarPosition[];
+
+  /** Event data already computed by the home page. */
+  events: SunEvents;
 }
 
 /**
@@ -86,13 +92,17 @@ export interface Solar3DViewModalProps {
  *
  * Near-fullscreen modal displaying 3D solar path visualization.
  */
-export function Solar3DViewModal({ open, onOpenChange }: Solar3DViewModalProps) {
+export function Solar3DViewModal({
+  open,
+  onOpenChange,
+  hourly,
+  events,
+}: Solar3DViewModalProps) {
   // Get current store state for snapshot
   const location = useLocation();
   const dateISO = useDateISO();
   const timezone = useTimezone();
   const selectedHour = useSelectedHour();
-  const { hourly, events } = useSolarData();
 
   // Tooltip state
   const [tooltip, setTooltip] = useState<Solar3DTooltipData>(null);
