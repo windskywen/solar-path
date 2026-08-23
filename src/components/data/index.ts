@@ -7,3 +7,4 @@
 export { SolarDataTable, type SolarDataTableProps } from './SolarDataTable';
 export { MetricsPanel, MetricsPanelCompact, type MetricsPanelProps } from './MetricsPanel';
 export { CopyButton, CopyableValue, type CopyButtonProps } from './CopyButton';
+export { CsvDownloadButton } from './CsvDownloadButton';

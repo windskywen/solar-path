@@ -105,7 +105,7 @@ describe('MapPanel', () => {
     });
   });
 
-  it('keeps the existing rounded map-click location contract', () => {
+  it('keeps the existing rounded map-click location contract', async () => {
     const onMapClick = vi.fn();
     render(<MapPanel onMapClick={onMapClick} />);
 
@@ -116,12 +116,14 @@ describe('MapPanel', () => {
       handleClick({ lngLat: { lat: -27.46981234, lng: 153.02514567 } });
     });
 
-    expect(mapHarness.setLocation).toHaveBeenCalledWith({
-      lat: -27.469812,
-      lng: 153.025146,
-      name: '-27.4698, 153.0251',
-      source: 'manual',
+    await waitFor(() => {
+      expect(mapHarness.setLocation).toHaveBeenCalledWith({
+        lat: -27.469812,
+        lng: 153.025146,
+        name: '-27.4698, 153.0251',
+        source: 'manual',
+      });
+      expect(onMapClick).toHaveBeenCalledWith(-27.469812, 153.025146);
     });
-    expect(onMapClick).toHaveBeenCalledWith(-27.469812, 153.025146);
   });
 });

@@ -76,6 +76,17 @@ function isWebGLSupported(): boolean {
   }
 }
 
+function getInitialPerformanceMode(): Solar3DPerformanceMode {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return 'full-3d';
+  }
+
+  // Start compact viewports with the same solar geometry over a flat map.
+  // Healthy devices progressively restore terrain and buildings through the
+  // existing FPS governor; constrained devices avoid an expensive first scene.
+  return window.matchMedia('(max-width: 767px)').matches ? 'flat' : 'full-3d';
+}
+
 // Lightweight fallback when the public 3D style or sources are unavailable.
 const FALLBACK_MAP_STYLE = {
   version: 8 as const,
@@ -168,7 +179,7 @@ function WebGLFallback({ viewData }: { viewData: Solar3DViewData }) {
         className="flex h-full w-full items-center justify-center [background:var(--solar-3d-root-bg)] p-6 sm:p-8"
         data-testid="solar-3d-summary"
       >
-        <div className="max-w-lg rounded-[30px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-7 text-center [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
+        <div className="max-w-lg rounded-[30px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-7 text-center [box-shadow:var(--solar-3d-surface-shadow)] sm:backdrop-blur-xl">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] text-[var(--solar-text)]">
             <svg
               className="h-8 w-8"
@@ -211,7 +222,7 @@ function WebGLFallback({ viewData }: { viewData: Solar3DViewData }) {
       className="flex h-full w-full items-center justify-center overflow-auto [background:var(--solar-3d-root-bg)] p-6 sm:p-8"
       data-testid="solar-3d-summary"
     >
-      <div className="max-w-lg rounded-[30px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-7 text-left [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
+      <div className="max-w-lg rounded-[30px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-7 text-left [box-shadow:var(--solar-3d-surface-shadow)] sm:backdrop-blur-xl">
         <div className="mb-6 flex items-center gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border [border-color:var(--solar-warning-border)] [background:var(--solar-warning-bg)] text-[var(--solar-warning-text)] shadow-[0_0_36px_rgba(251,191,36,0.16)]">
             <svg
@@ -310,8 +321,8 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
   const [mapInstanceKey, setMapInstanceKey] = useState(0);
   const [mapProvider, setMapProvider] = useState<'openfreemap' | 'fallback'>('openfreemap');
   const [performanceMode, setPerformanceMode] =
-    useState<Solar3DPerformanceMode>('full-3d');
-  const performanceModeRef = useRef<Solar3DPerformanceMode>('full-3d');
+    useState<Solar3DPerformanceMode>(getInitialPerformanceMode);
+  const performanceModeRef = useRef<Solar3DPerformanceMode>(performanceMode);
   const [terrainElevation, setTerrainElevation] = useState(0);
   const [sceneZoom, setSceneZoom] = useState<number>(SOLAR_SCENE_CAMERA.zoom);
   const [viewportSize, setViewportSize] = useState(() => ({
@@ -819,6 +830,7 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
 
     map.on('movestart', startInteractionMonitoring);
     map.on('moveend', startRecoveryMonitoring);
+    startRecoveryMonitoring();
 
     return () => {
       stopMonitoring();
@@ -1281,7 +1293,7 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
   if (isEmpty) {
     return (
       <div className="flex h-full w-full items-center justify-center [background:var(--solar-3d-root-bg)] p-6 sm:p-8">
-        <div className="max-w-lg rounded-[30px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-7 text-center [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
+        <div className="max-w-lg rounded-[30px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-7 text-center [box-shadow:var(--solar-3d-surface-shadow)] sm:backdrop-blur-xl">
             <svg
               className="mx-auto mb-4 h-16 w-16 text-[var(--solar-text-faint)]"
               xmlns="http://www.w3.org/2000/svg"
@@ -1426,7 +1438,7 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
       ))}
 
       <div className="pointer-events-none absolute left-3 right-3 top-3 z-20 sm:left-4 sm:right-auto">
-        <div className="inline-flex max-w-[18rem] items-center gap-3 rounded-full border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-legend-bg)] px-3 py-2 [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
+        <div className="inline-flex max-w-[18rem] items-center gap-3 rounded-full border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-legend-bg)] px-3 py-2 [box-shadow:var(--solar-3d-surface-shadow)] sm:backdrop-blur-xl">
           <div className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-400/10 text-[var(--solar-accent)] shadow-[0_0_24px_rgba(56,189,248,0.18)]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -1460,11 +1472,11 @@ export function Solar3DMapCanvas({ viewData, onHover, resetKey = 0 }: Solar3DMap
 
       {isInitializing && !isMapLoaded && (
         <div
-          className="absolute inset-0 z-30 flex items-center justify-center [background:var(--solar-3d-root-bg)] transition-opacity duration-500 backdrop-blur-sm"
+          className="absolute inset-0 z-30 flex items-center justify-center [background:var(--solar-3d-root-bg)] transition-opacity duration-500 sm:backdrop-blur-sm"
           style={{ opacity: isMapLoaded ? 0.5 : 1 }}
           data-testid="3d-map-loading"
         >
-          <div className="rounded-[28px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-5 text-center [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
+          <div className="rounded-[28px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-5 text-center [box-shadow:var(--solar-3d-surface-shadow)] sm:backdrop-blur-xl">
             <div className="relative mx-auto flex h-20 w-20 items-center justify-center">
               <div className="absolute inset-0 rounded-full border border-amber-300/25 bg-amber-300/10 blur-[1px]" />
               <div className="absolute inset-3 rounded-full border border-cyan-300/25 bg-cyan-400/10" />

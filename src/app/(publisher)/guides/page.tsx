@@ -60,7 +60,11 @@ export default function GuidesIndexPage() {
               key={guide.slug}
               className="rounded-[28px] border p-4 [border-color:var(--solar-glass-border)] [background:var(--solar-rail-bg)] [box-shadow:var(--solar-rail-shadow)] backdrop-blur-xl sm:p-6"
             >
-              <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-kicker)]">Guide {String(index + 1).padStart(2, '0')}</p>
+              <div className="flex flex-wrap items-center gap-2 text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[var(--solar-kicker)]">
+                <span>Guide {String(index + 1).padStart(2, '0')}</span>
+                <span aria-hidden="true">·</span>
+                <span className="rounded-full border px-2.5 py-1 [border-color:var(--solar-pill-border)] [background:var(--solar-pill-bg)] text-[var(--solar-text-strong)]">{guide.contentTypeLabel}</span>
+              </div>
               <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]">
                 <Link href={`/guides/${guide.slug}`} className="transition-colors hover:text-[var(--solar-accent)]">
                   {guide.title}

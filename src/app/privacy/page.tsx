@@ -38,7 +38,7 @@ export default function PrivacyPage() {
             while being transparent about the third-party services that help operate the site.
           </p>
           <p className="text-xs text-[var(--solar-text-muted)]">
-            Last updated: <time dateTime="2026-08-20">20 August 2026</time>
+            Last updated: <time dateTime="2026-08-24">24 August 2026</time>
           </p>
         </div>
       </section>
@@ -58,8 +58,9 @@ export default function PrivacyPage() {
           <div className="space-y-4 p-4 text-sm leading-6 text-[var(--solar-text)] sm:p-5">
             {adsEnabled ? (
               <p>
-                Google AdSense is currently enabled on eligible tool and guide pages. Advertising
-                remains limited to the placements and page types described below.
+                Google AdSense is currently enabled only on the home page after a valid solar
+                dataset exists, the three calculator pages after successful results and evidence,
+                and the six individual guide articles after their page-specific evidence.
               </p>
             ) : (
               <p>
@@ -114,8 +115,10 @@ export default function PrivacyPage() {
             </p>
             <p>
               AdSense Auto Ads are not used. When advertising is active, it is limited to manually
-              placed units after completed results or worked examples. About, Privacy, Terms,
-              Contact, and Methodology pages do not load the AdSense script or display ads.
+              placed responsive units after completed results or page-specific evidence, with no
+              more than one unit per eligible page. The Guides index, an empty home result, About,
+              Privacy, Terms, Contact, Methodology, not-found, loading, and error states do not load
+              the AdSense script, create an empty slot, or display ads.
             </p>
             <p>
               Where consent is required in the EEA, United Kingdom, or Switzerland, advertising

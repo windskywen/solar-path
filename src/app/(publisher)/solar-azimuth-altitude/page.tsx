@@ -28,6 +28,6 @@ export default function SolarAzimuthAltitudePage() {
   ]} relatedLinks={[
     { href: '/', label: 'Open the Sun Path Map', description: 'Inspect the complete solar path and hourly bearings for the same location and date.' },
     { href: '/sunrise-sunset-calculator', label: 'Sunrise & Sunset Calculator', description: 'Check the day’s event times, daylight length, and sunrise or sunset direction.' },
-    { href: '/guides/solar-azimuth-altitude-worked-example', label: 'Read a worked sun-position example', description: 'Follow a reproducible Brisbane example from inputs to azimuth, altitude, and interpretation.' },
+    { href: '/guides/solar-azimuth-altitude-worked-example', label: 'Read a worked sun-position example', description: 'Compare the canonical NREL SPA Golden case with this site’s expected, actual, delta, and tolerance values.' },
   ]} /></>;
 }

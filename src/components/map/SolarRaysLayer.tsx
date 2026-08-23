@@ -8,7 +8,7 @@
  * Rays are color-coded by daylight state.
  */
 
-import { useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import type { HourlySolarPosition, LocationPoint } from '@/types/solar';
@@ -47,7 +47,7 @@ export interface SolarRaysLayerProps {
 /**
  * SolarRaysLayer renders 24 solar position rays on the map
  */
-export function SolarRaysLayer({
+export const SolarRaysLayer = memo(function SolarRaysLayer({
   location,
   positions,
   selectedHour,
@@ -146,7 +146,7 @@ export function SolarRaysLayer({
       </Source>
     </>
   );
-}
+});
 
 /**
  * Hook to handle ray click events on the map

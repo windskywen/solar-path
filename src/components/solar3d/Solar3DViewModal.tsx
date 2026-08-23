@@ -10,7 +10,7 @@
  * - Preserves main map camera on close (FR3D-004)
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import dynamic from 'next/dynamic';
 import { useLocation, useDateISO, useTimezone, useSelectedHour } from '@/store/solar-store';
@@ -30,7 +30,7 @@ const Solar3DMapCanvas = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex h-full w-full items-center justify-center [background:var(--solar-3d-root-bg)] p-6">
-        <div className="rounded-[28px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-5 text-center [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
+        <div className="rounded-[28px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-6 py-5 text-center [box-shadow:var(--solar-3d-surface-shadow)] sm:backdrop-blur-xl">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-400/10 shadow-[0_0_40px_rgba(56,189,248,0.18)]">
             <svg
               className="h-6 w-6 animate-spin text-[var(--solar-accent)]"
@@ -110,7 +110,7 @@ export function Solar3DViewModal({
   // Capture snapshot when modal opens
   // This creates a static copy of the data that won't change while modal is open
   const snapshot: Solar3DSnapshot | null = useMemo(() => {
-    if (!open || !location) return null;
+    if (!location) return null;
 
     return {
       location,
@@ -120,7 +120,7 @@ export function Solar3DViewModal({
       events,
       selectedHour,
     };
-  }, [open, location, dateISO, timezone, hourly, events, selectedHour]);
+  }, [location, dateISO, timezone, hourly, events, selectedHour]);
 
   // Derive 3D view data from snapshot
   const viewData: Solar3DViewData | null = useMemo(() => {
@@ -151,6 +151,30 @@ export function Solar3DViewModal({
     setResetKey((prev) => prev + 1);
   }, []);
 
+  const mapCanvas = useMemo(
+    () =>
+      viewData ? (
+        <Solar3DMapCanvas viewData={viewData} onHover={handleHover} resetKey={resetKey} />
+      ) : null,
+    [handleHover, resetKey, viewData]
+  );
+
+  useEffect(() => {
+    if (!open) return;
+
+    let resizeFrame: number | null = null;
+    const revealFrame = window.requestAnimationFrame(() => {
+      resizeFrame = window.requestAnimationFrame(() => {
+        window.dispatchEvent(new Event('resize'));
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(revealFrame);
+      if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame);
+    };
+  }, [open]);
+
   const locationLabel = viewData
     ? viewData.snapshot.location.name ||
       `${viewData.snapshot.location.lat.toFixed(4)}°, ${viewData.snapshot.location.lng.toFixed(4)}°`
@@ -166,20 +190,25 @@ export function Solar3DViewModal({
       : null;
 
   const actionButtonClassName =
-    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.72rem] font-medium text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:[--tw-ring-color:var(--solar-switch-ring)] sm:text-xs';
+    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.72rem] font-medium text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] transition-all duration-300 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:[--tw-ring-color:var(--solar-switch-ring)] sm:text-xs sm:backdrop-blur-xl';
 
   const iconButtonClassName =
-    'inline-flex size-8 items-center justify-center rounded-full border text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:[--tw-ring-color:var(--solar-switch-ring)] sm:size-9';
+    'inline-flex size-8 items-center justify-center rounded-full border text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] [transform:translateZ(0)] hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:[--tw-ring-color:var(--solar-switch-ring)] sm:size-9';
 
   const detailPillClassName =
-    'inline-flex min-w-0 items-center gap-1.5 rounded-full border [border-color:var(--solar-pill-border)] [background:var(--solar-pill-bg)] px-2.5 py-1 text-[0.68rem] font-medium text-[var(--solar-pill-text)] [box-shadow:var(--solar-surface-shadow)] backdrop-blur-xl';
+    'inline-flex min-w-0 items-center gap-1.5 rounded-full border [border-color:var(--solar-pill-border)] [background:var(--solar-pill-bg)] px-2.5 py-1 text-[0.68rem] font-medium text-[var(--solar-pill-text)] [box-shadow:var(--solar-surface-shadow)] sm:backdrop-blur-xl';
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-[#02040c]/72 backdrop-blur-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+      <Dialog.Portal forceMount>
+        <Dialog.Overlay
+          forceMount
+          className="fixed inset-0 z-50 bg-[#02040c] data-[state=open]:animate-in data-[state=closed]:pointer-events-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 sm:bg-[#02040c]/72 sm:backdrop-blur-md"
+        />
 
         <Dialog.Content
+          forceMount
+          style={{ display: open ? undefined : 'none' }}
           className="solar-3d-viewer fixed inset-0 z-50 overflow-hidden [background:var(--solar-3d-root-bg)] text-[var(--solar-text)] shadow-[0_40px_160px_rgba(2,6,23,0.82)] focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 sm:inset-4 sm:rounded-[28px] sm:border sm:[border-color:var(--solar-3d-surface-border)] sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95"
           aria-describedby="solar-3d-description"
         >
@@ -204,7 +233,7 @@ export function Solar3DViewModal({
 
           <div className="relative flex h-full flex-col">
             <header
-              className="relative z-20 border-b [border-color:var(--solar-divider)] [background:var(--solar-3d-header-bg)] px-4 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] backdrop-blur-xl sm:px-4 sm:py-2"
+              className="relative z-20 border-b [border-color:var(--solar-divider)] [background:var(--solar-3d-header-bg)] px-4 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] sm:px-4 sm:py-2 sm:backdrop-blur-xl"
               data-testid="solar-3d-header"
             >
               <div className="flex items-center justify-between gap-3">
@@ -231,7 +260,7 @@ export function Solar3DViewModal({
                         </div>
                       )}
                       {selectedHourLabel && (
-                        <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full border [border-color:var(--solar-warning-border)] [background:var(--solar-warning-bg)] px-2.5 py-1 text-[0.68rem] font-medium text-[var(--solar-warning-text)] shadow-[0_10px_28px_rgba(251,191,36,0.12)] backdrop-blur-xl">
+                        <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full border [border-color:var(--solar-warning-border)] [background:var(--solar-warning-bg)] px-2.5 py-1 text-[0.68rem] font-medium text-[var(--solar-warning-text)] shadow-[0_10px_28px_rgba(251,191,36,0.12)] sm:backdrop-blur-xl">
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-300 shadow-[0_0_16px_rgba(252,211,77,0.75)]" />
                           <span>Selected {selectedHourLabel}</span>
                         </div>
@@ -310,15 +339,9 @@ export function Solar3DViewModal({
             >
               <div className="relative h-full overflow-hidden rounded-[26px] border [border-color:var(--solar-3d-canvas-border)] [background:var(--solar-3d-canvas-bg)] [box-shadow:var(--solar-3d-canvas-shadow)]">
                 <div className="absolute inset-0">
-                  {viewData ? (
-                    <Solar3DMapCanvas
-                      viewData={viewData}
-                      onHover={handleHover}
-                      resetKey={resetKey}
-                    />
-                  ) : (
+                  {mapCanvas ?? (
                     <div className="flex h-full w-full items-center justify-center [background:var(--solar-3d-root-bg)] p-6">
-                      <div className="max-w-sm rounded-[24px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-5 py-4 text-center [box-shadow:var(--solar-3d-surface-shadow)] backdrop-blur-xl">
+                      <div className="max-w-sm rounded-[24px] border [border-color:var(--solar-3d-surface-border)] [background:var(--solar-3d-surface-bg)] px-5 py-4 text-center [box-shadow:var(--solar-3d-surface-shadow)] sm:backdrop-blur-xl">
                         <p className="text-[0.65rem] font-medium uppercase tracking-[0.3em] text-[var(--solar-text-faint)]">
                           Viewer unavailable
                         </p>
@@ -348,7 +371,7 @@ export function Solar3DViewModal({
             </div>
 
             {viewData && (
-              <div className="relative z-20 border-t [border-color:var(--solar-divider)] [background:var(--solar-3d-footer-bg)] px-4 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] pt-2.5 backdrop-blur-xl sm:px-6 sm:pb-4 sm:pt-3">
+              <div className="relative z-20 border-t [border-color:var(--solar-divider)] [background:var(--solar-3d-footer-bg)] px-4 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] pt-2.5 sm:px-6 sm:pb-4 sm:pt-3 sm:backdrop-blur-xl">
                 <div className="flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-[0.65rem] font-medium uppercase tracking-[0.3em] text-[var(--solar-text-faint)]">
@@ -369,7 +392,7 @@ export function Solar3DViewModal({
                   </div>
 
                   <div className="grid grid-cols-2 gap-1.5 sm:min-w-[320px] sm:gap-2">
-                      <div className="rounded-[18px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-2.5 py-2 [box-shadow:var(--solar-surface-shadow)] backdrop-blur-xl sm:px-3 sm:py-2.5">
+                      <div className="rounded-[18px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-2.5 py-2 [box-shadow:var(--solar-surface-shadow)] sm:px-3 sm:py-2.5 sm:backdrop-blur-xl">
                         <p className="text-[0.62rem] uppercase tracking-[0.24em] text-[var(--solar-text-faint)]">
                           Orbit
                         </p>
@@ -377,7 +400,7 @@ export function Solar3DViewModal({
                           Live 3D camera
                         </p>
                       </div>
-                      <div className="rounded-[18px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-2.5 py-2 [box-shadow:var(--solar-surface-shadow)] backdrop-blur-xl sm:px-3 sm:py-2.5">
+                      <div className="rounded-[18px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-2.5 py-2 [box-shadow:var(--solar-surface-shadow)] sm:px-3 sm:py-2.5 sm:backdrop-blur-xl">
                         <p className="text-[0.62rem] uppercase tracking-[0.24em] text-[var(--solar-text-faint)]">
                           Points
                         </p>

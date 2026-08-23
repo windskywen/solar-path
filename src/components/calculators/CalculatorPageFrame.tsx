@@ -1,5 +1,8 @@
 import Link from 'next/link';
+import { AdSenseScript } from '@/components/ads/AdSenseScript';
+import { ToolAdPlacement } from '@/components/ads/ToolAdPlacement';
 import { ContentPageHeader } from '@/components/layout/ContentPageHeader';
+import { CalculatorEvidence } from './CalculatorEvidence';
 import { SolarCalculator, type SolarCalculatorMode } from './SolarCalculator';
 
 export interface CalculatorContentSection {
@@ -39,6 +42,7 @@ export function CalculatorPageFrame({
 }: CalculatorPageFrameProps) {
   return (
     <>
+      <AdSenseScript />
       <ContentPageHeader />
       <main className="relative z-10 mx-auto w-full max-w-screen-2xl px-3 py-4 sm:px-4 lg:px-6">
         <section className={`${glassPanel} px-4 py-6 sm:px-6 sm:py-8`}>
@@ -54,6 +58,14 @@ export function CalculatorPageFrame({
 
         <div className="mt-4">
           <SolarCalculator mode={mode} initialDateISO={initialDateISO} />
+        </div>
+
+        <div className="mt-4">
+          <CalculatorEvidence mode={mode} />
+        </div>
+
+        <div className="mt-4">
+          <ToolAdPlacement />
         </div>
 
         <section className={`${glassPanel} mt-4 p-4 sm:p-6`} aria-labelledby="understand-results-heading">

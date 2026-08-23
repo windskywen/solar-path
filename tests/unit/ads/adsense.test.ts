@@ -1,11 +1,14 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  ADSENSE_ELIGIBLE_PATHS,
   getAdSenseSettings,
   hasAdSenseScriptConfig,
   hasArticleAdSlotConfig,
   hasSidebarAdSlotConfig,
   hasToolAdSlotConfig,
+  isAdSenseEligiblePath,
 } from '@/lib/adsense';
+import { GUIDE_SLUGS } from '@/lib/guides';
 
 const originalEnv = {
   enabled: process.env.NEXT_PUBLIC_ADSENSE_ENABLED,
@@ -52,6 +55,23 @@ afterEach(() => {
 });
 
 describe('adsense settings', () => {
+  it('uses an explicit ten-page allowlist and excludes index, trust, and error states', () => {
+    expect(ADSENSE_ELIGIBLE_PATHS).toHaveLength(10);
+    expect(ADSENSE_ELIGIBLE_PATHS).toEqual(
+      expect.arrayContaining([
+        '/',
+        '/sunrise-sunset-calculator',
+        '/golden-hour-calculator',
+        '/solar-azimuth-altitude',
+        ...GUIDE_SLUGS.map((slug) => `/guides/${slug}`),
+      ])
+    );
+
+    for (const path of ['/guides', '/about', '/contact', '/methodology', '/privacy', '/terms', '/404', '/error']) {
+      expect(isAdSenseEligiblePath(path)).toBe(false);
+    }
+  });
+
   it('enables the global script when the publisher ID is configured', () => {
     process.env.NEXT_PUBLIC_ADSENSE_ENABLED = 'true';
     process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = 'ca-pub-5483347501870595';

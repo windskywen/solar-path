@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import sitemap from '@/app/sitemap';
-import { GUIDES, GUIDE_SLUGS, getGuide } from '@/lib/guides';
+import { buildGuideEvidenceCsvDataset } from '@/lib/guide-evidence';
+import { GUIDES, GUIDE_EVIDENCE_KEYS, GUIDE_SLUGS, getGuide } from '@/lib/guides';
 import { computeSolarPositionAtLocalTime } from '@/lib/solar/extended-events';
+import { serializeCsv } from '@/lib/utils/csv';
 
 const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
@@ -19,6 +21,8 @@ describe('guide registry', () => {
     expect(GUIDES.map((guide) => guide.slug)).toEqual(GUIDE_SLUGS);
     expect(new Set(GUIDES.map((guide) => guide.title)).size).toBe(6);
     expect(new Set(GUIDES.map((guide) => guide.description)).size).toBe(6);
+    expect(GUIDES.map((guide) => guide.evidenceKey)).toEqual(GUIDE_EVIDENCE_KEYS);
+    expect(new Set(GUIDES.map((guide) => guide.contentTypeLabel)).size).toBe(6);
   });
 
   it('uses the organization author and exactly three valid related guides', () => {
@@ -44,12 +48,30 @@ describe('guide registry', () => {
     };
 
     for (const guide of GUIDES) {
-      expect(guide.modifiedDate).toBe('2026-08-13');
+      expect(guide.modifiedDate).toBe('2026-08-24');
       expect(guide.relatedTools?.map((tool) => tool.href)).toEqual(expectedTools[guide.slug]);
       for (const tool of guide.relatedTools ?? []) {
         expect(tool.label.length).toBeGreaterThan(8);
         expect(tool.description.length).toBeGreaterThan(20);
       }
+    }
+  });
+
+  it('provides a unique source-backed CSV contract for every evidence page', () => {
+    const filenames = new Set<string>();
+    for (const guide of GUIDES) {
+      expect(guide.evidenceSources.length).toBeGreaterThan(0);
+      expect(guide.csvDefinition.columns.length).toBeGreaterThan(3);
+
+      const dataset = buildGuideEvidenceCsvDataset(guide);
+      expect(dataset.columns).toEqual(guide.csvDefinition.columns);
+      expect(dataset.rows.length).toBeGreaterThan(0);
+      expect(filenames.has(dataset.filename)).toBe(false);
+      filenames.add(dataset.filename);
+
+      const serialized = serializeCsv(dataset);
+      expect(serialized.startsWith('\uFEFF')).toBe(true);
+      expect(serialized).toContain(guide.csvDefinition.columns.join(','));
     }
   });
 
@@ -105,7 +127,7 @@ describe('public sitemap', () => {
 
     for (const route of ['/', '/sunrise-sunset-calculator', '/solar-azimuth-altitude']) {
       const entry = entries.find((candidate) => candidate.url === `https://solarpathtracker.example${route}`);
-      expect(entry?.lastModified).toEqual(new Date('2026-08-13T00:00:00Z'));
+      expect(entry?.lastModified).toEqual(new Date('2026-08-24T00:00:00Z'));
     }
   });
 });

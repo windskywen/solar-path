@@ -9,6 +9,17 @@ export const GUIDE_SLUGS = [
 
 export type GuideSlug = (typeof GUIDE_SLUGS)[number];
 
+export const GUIDE_EVIDENCE_KEYS = [
+  'sun-path-diagram',
+  'seasonal-comparison',
+  'facade-orientation-matrix',
+  'golden-hour-shot-plan',
+  'nrel-spa-benchmark',
+  'shadow-direction-model',
+] as const;
+
+export type GuideEvidenceKey = (typeof GUIDE_EVIDENCE_KEYS)[number];
+
 export interface GuideSectionDefinition {
   heading: string;
   paragraphs: readonly string[];
@@ -35,6 +46,14 @@ export interface GuideRelatedToolDefinition {
 
 export interface GuideDefinition {
   slug: GuideSlug;
+  evidenceKey: GuideEvidenceKey;
+  contentTypeLabel: string;
+  csvDefinition: {
+    filenameStem: string;
+    description: string;
+    columns: readonly string[];
+  };
+  evidenceSources: readonly GuideSourceDefinition[];
   title: string;
   description: string;
   author: 'Solar Path Tracker';
@@ -84,12 +103,24 @@ const SHARED_SOURCES: readonly GuideSourceDefinition[] = [
 export const GUIDES: readonly GuideDefinition[] = [
   {
     slug: 'how-to-read-a-sun-path-diagram',
+    evidenceKey: 'sun-path-diagram',
+    contentTypeLabel: 'Annotated diagram',
+    csvDefinition: {
+      filenameStem: 'brisbane-equinox-sun-path',
+      description: 'The plotted Brisbane equinox points shown in the original diagram and accessible data table.',
+      columns: ['local_time', 'azimuth_deg', 'altitude_deg', 'daylight_state'],
+    },
+    evidenceSources: [{
+      label: 'NREL Solar Position Algorithm report',
+      url: 'https://docs.nrel.gov/docs/fy08osti/34302.pdf',
+      note: 'Independent reference for solar-position inputs and angular conventions; NREL does not endorse this site.',
+    }],
     title: 'How to Read a Sun Path Diagram',
     description:
       'Learn how time, solar azimuth, altitude, horizon crossings, and seasonal curves fit together in a practical sun path diagram.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-13',
+    modifiedDate: '2026-08-24',
     keywords: ['how to read a sun path diagram', 'solar azimuth', 'solar altitude', 'sun path chart'],
     introduction: [
       'A sun path diagram compresses a moving three-dimensional relationship into a readable daily curve. The horizontal question is direction: where around the compass is the Sun? The vertical question is height: how far above or below the horizon is it? A useful reading always joins those two angles to a local date and time.',
@@ -174,12 +205,24 @@ export const GUIDES: readonly GuideDefinition[] = [
   },
   {
     slug: 'brisbane-winter-vs-summer-sun-path',
+    evidenceKey: 'seasonal-comparison',
+    contentTypeLabel: 'Seasonal comparison',
+    csvDefinition: {
+      filenameStem: 'brisbane-solstice-comparison',
+      description: 'Complete June and December 24-hour solar curves with event and day-length context.',
+      columns: ['season', 'date', 'local_time', 'azimuth_deg', 'altitude_deg', 'daylight_state', 'sunrise', 'solar_noon', 'sunset', 'day_length'],
+    },
+    evidenceSources: [{
+      label: 'USNO Astronomical Applications API documentation',
+      url: 'https://aa.usno.navy.mil/data/api.html',
+      note: 'External event-time reference documented in the site validation registry; USNO does not endorse this site.',
+    }],
     title: 'Brisbane Winter vs Summer Sun Path',
     description:
       'Compare Brisbane’s June and December solar paths using fixed, reproducible sunrise, sunset, direction, altitude, and daylight data.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-13',
+    modifiedDate: '2026-08-24',
     keywords: ['Brisbane winter sun path', 'Brisbane summer sun path', 'Brisbane daylight hours', 'seasonal sun angles'],
     introduction: [
       'Brisbane does not experience the extreme seasonal daylight swing of high-latitude cities, but the change is still large enough to alter facade exposure, shade depth, outdoor comfort, and the useful hours for direct sunlight. The difference is not only that summer days are longer: the daily arc also rises much higher in the sky.',
@@ -261,12 +304,24 @@ export const GUIDES: readonly GuideDefinition[] = [
   },
   {
     slug: 'east-vs-west-facing-homes-australia',
+    evidenceKey: 'facade-orientation-matrix',
+    contentTypeLabel: 'Orientation matrix',
+    csvDefinition: {
+      filenameStem: 'australia-east-west-facade-matrix',
+      description: 'Darwin, Brisbane, and Hobart winter/summer bearings at 08:00 and 16:00 for geometric facade checks.',
+      columns: ['city', 'season', 'date', 'local_time', 'azimuth_deg', 'altitude_deg', 'geometric_facade_exposure'],
+    },
+    evidenceSources: [{
+      label: 'NREL Solar Position Algorithm report',
+      url: 'https://docs.nrel.gov/docs/fy08osti/34302.pdf',
+      note: 'Independent description of solar-position geometry; the facade labels here are site-authored interpretations of bearing only.',
+    }],
     title: 'East vs West-Facing Homes in Australia: Reading the Solar Difference',
     description:
       'Use solar azimuth and altitude to compare morning east-facing exposure with afternoon west-facing exposure in an Australian context.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-13',
+    modifiedDate: '2026-08-24',
     keywords: ['east vs west facing house Australia', 'afternoon sun Australia', 'house orientation sunlight', 'west-facing windows'],
     introduction: [
       '“East-facing” and “west-facing” are useful starting labels, but they do not describe a full property. A facade receives direct sun when the solar bearing falls within its visible half of the sky and no obstacle blocks the rays. Solar altitude then determines how steeply that light arrives and how readily an overhang, neighbouring structure, or vegetation can intercept it.',
@@ -348,12 +403,24 @@ export const GUIDES: readonly GuideDefinition[] = [
   },
   {
     slug: 'golden-hour-direction-brisbane',
+    evidenceKey: 'golden-hour-shot-plan',
+    contentTypeLabel: 'Directional shot plan',
+    csvDefinition: {
+      filenameStem: 'brisbane-golden-hour-shot-plan',
+      description: 'Winter and summer boundaries for the site-defined 0 to 6 degree golden-hour windows.',
+      columns: ['season', 'window', 'boundary', 'local_time', 'azimuth_deg', 'altitude_deg', 'field_note'],
+    },
+    evidenceSources: [{
+      label: 'USNO Astronomical Applications API documentation',
+      url: 'https://aa.usno.navy.mil/data/api.html',
+      note: 'Independent event-time reference used by the site validation report; the 0 to 6 degree golden-hour definition is this site’s stated convention.',
+    }],
     title: 'Golden Hour Direction in Brisbane',
     description:
       'Plan Brisbane golden-hour light by combining the exact event window with boundary azimuth, altitude, and seasonal direction.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-13',
+    modifiedDate: '2026-08-24',
     keywords: ['Brisbane golden hour direction', 'Brisbane photography light', 'golden hour azimuth', 'golden hour calculator Brisbane'],
     introduction: [
       'A golden-hour time without a direction is incomplete planning information. The Sun may be low and warm, yet sit behind the subject, behind the photographer, or behind a blocked horizon. Combining the window with its azimuth explains which side of a scene is geometrically positioned for direct low-angle light.',
@@ -435,12 +502,24 @@ export const GUIDES: readonly GuideDefinition[] = [
   },
   {
     slug: 'solar-azimuth-altitude-worked-example',
+    evidenceKey: 'nrel-spa-benchmark',
+    contentTypeLabel: 'Independent benchmark',
+    csvDefinition: {
+      filenameStem: 'nrel-spa-golden-2003',
+      description: 'NREL SPA expected angles, Solar Path Tracker results, and absolute circular differences for the canonical Golden case.',
+      columns: ['angle', 'external_expected_deg', 'solar_path_tracker_deg', 'absolute_delta_deg', 'tolerance_deg', 'result'],
+    },
+    evidenceSources: [{
+      label: 'NREL Solar Position Algorithm report',
+      url: 'https://docs.nrel.gov/docs/fy08osti/34302.pdf',
+      note: 'Published canonical position case used as an external comparison; NREL does not certify or endorse this site.',
+    }],
     title: 'Solar Azimuth and Altitude: A Worked Example',
     description:
-      'Follow a fixed Brisbane example from local time to solar azimuth, altitude, compass direction, daylight state, and practical interpretation.',
+      'Compare the NREL SPA canonical Golden, Colorado position with Solar Path Tracker azimuth, altitude, and explicit angular differences.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-13',
+    modifiedDate: '2026-08-24',
     keywords: ['solar azimuth altitude example', 'calculate sun angle example', 'solar bearing explained', 'sun altitude worked example'],
     introduction: [
       'Solar azimuth and altitude are a coordinate pair. Azimuth locates the Sun around the horizon, while altitude locates it above or below that horizon. A useful worked example keeps the location, date, timezone, and local time explicit so another reader can reproduce the result.',
@@ -463,34 +542,34 @@ export const GUIDES: readonly GuideDefinition[] = [
       },
     ],
     example: {
-      title: 'Brisbane on 11 August 2026',
+      title: 'NREL SPA canonical Golden, Colorado case',
       description:
-        'The example fixes Brisbane at −27.4698, 153.0251 in Australia/Brisbane time and samples the path from morning through late afternoon.',
-      locationName: 'Brisbane, Queensland, Australia',
-      latitude: -27.4698,
-      longitude: 153.0251,
-      timezone: 'Australia/Brisbane',
+        'The external case fixes Golden at 39.742476, −105.1786 and 19:30:30 UTC on 17 October 2003. The legacy minute sample below remains reproducible while the evidence component uses the exact second.',
+      locationName: 'Golden, Colorado, United States',
+      latitude: 39.742476,
+      longitude: -105.1786,
+      timezone: 'America/Denver',
       dates: [
         {
-          label: 'Worked-example date',
-          dateISO: '2026-08-11',
-          localTimes: ['07:00', '09:00', '12:00', '15:00', '17:00'],
+          label: 'NREL SPA reference instant (minute display)',
+          dateISO: '2003-10-17',
+          localTimes: ['13:30'],
         },
       ],
-      chartDateISO: '2026-08-11',
+      chartDateISO: '2003-10-17',
       chartView: 'both',
       interpretation: [
-        'At the morning samples, the Sun is on the eastern side of the daily arc. Around midday it reaches the northern portion of the sky and a higher altitude. By late afternoon the bearing moves westward while altitude falls.',
-        'The shadow bearing is calculated as the opposite direction, 180° from solar azimuth. The shadow-length ratio assumes a vertical object on level ground and shows why low-altitude light creates long shadows.',
-        'The daylight state is a site convention: below 0° is night, 0–6° is the approximate hourly golden band, and above 6° is day. Exact sunrise and golden-hour events are calculated separately rather than inferred from a whole-hour row.',
+        'The comparison uses external expected values instead of comparing the production engine with another output generated by itself.',
+        'Azimuth difference uses circular distance so values near 0° and 360° are compared correctly. Altitude uses ordinary absolute difference.',
+        'Passing the 0.5° tolerance supports this fixed angular case only and does not imply NREL approval or surveyed site accuracy.',
       ],
     },
     sectionsAfterExample: [
       {
         heading: 'Reproduce the calculation in the tool',
         paragraphs: [
-          'Open the Solar Azimuth & Altitude Calculator, enter the Brisbane coordinates, choose 11 August 2026, and select one of the listed local times. The result cards should agree with the table apart from display rounding.',
-          'Then change one input at a time. Moving the date reveals seasonal change; moving the time traces the daily curve; moving the location reveals the latitude and longitude effect. This controlled comparison is more informative than changing every input together.',
+          'Open the Solar Azimuth & Altitude Calculator, enter 39.742476, −105.1786, choose 17 October 2003, and select 13:30 in America/Denver. The minute-level interface should closely reproduce the evidence table; the validation registry evaluates the exact 19:30:30 UTC instant.',
+          'Keep the external expected values separate from the site result. The downloadable benchmark CSV records expected, actual, delta, tolerance, and pass/fail so a dependency upgrade can be checked without silently changing the reference.',
         ],
       },
     ],
@@ -520,12 +599,24 @@ export const GUIDES: readonly GuideDefinition[] = [
   },
   {
     slug: 'estimating-shadow-direction-from-solar-angles',
+    evidenceKey: 'shadow-direction-model',
+    contentTypeLabel: 'Shadow calculation table',
+    csvDefinition: {
+      filenameStem: 'perth-shadow-direction-model',
+      description: 'Perth equinox bearings and theoretical shadow lengths for a two-metre vertical object from 08:00 to 16:00.',
+      columns: ['date', 'local_time', 'object_height_m', 'solar_azimuth_deg', 'solar_altitude_deg', 'shadow_bearing_deg', 'shadow_length_m', 'availability'],
+    },
+    evidenceSources: [{
+      label: 'NOAA Solar Calculation Details',
+      url: 'https://gml.noaa.gov/grad/solcalc/calcdetails.html',
+      note: 'Independent background on solar azimuth and elevation conventions; NOAA does not endorse this site.',
+    }],
     title: 'Estimating Shadow Direction from Solar Angles',
     description:
       'Learn how to reverse solar azimuth for shadow direction and use solar altitude for a simple level-ground shadow-length estimate.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-13',
+    modifiedDate: '2026-08-24',
     keywords: ['shadow direction from solar azimuth', 'shadow length solar altitude', 'sun angle shadow calculation', 'estimate building shadow'],
     introduction: [
       'A sun-facing object casts its shadow away from the Sun. On a compass plan, the first estimate is therefore simple: add 180° to solar azimuth and wrap the result back into the 0–360° range. If the Sun is at 70°, the level-plan shadow bearing is approximately 250°.',
@@ -548,26 +639,26 @@ export const GUIDES: readonly GuideDefinition[] = [
       },
     ],
     example: {
-      title: 'Shadow bearings and ratios through a Brisbane day',
+      title: 'Two-metre shadow bearings through a Perth equinox day',
       description:
-        'The fixed equinox reference samples the solar angles at five local times. Shadow bearing and the ideal level-ground length ratio are derived from those engine values.',
-      locationName: 'Brisbane, Queensland, Australia',
-      latitude: -27.4698,
-      longitude: 153.0251,
-      timezone: 'Australia/Brisbane',
+        'The fixed Perth reference samples five local times. Shadow bearing and a two-metre level-ground length are derived only when solar altitude is above zero.',
+      locationName: 'Perth, Western Australia, Australia',
+      latitude: -31.9523,
+      longitude: 115.8613,
+      timezone: 'Australia/Perth',
       dates: [
         {
           label: 'March equinox reference',
           dateISO: '2026-03-20',
-          localTimes: ['07:00', '09:00', '12:00', '15:00', '17:00'],
+          localTimes: ['08:00', '10:00', '12:00', '14:00', '16:00'],
         },
       ],
       chartDateISO: '2026-03-20',
       chartView: 'altitude',
       interpretation: [
-        'The shadow bearings remain opposite their corresponding solar bearings and rotate as the Sun crosses the sky. Morning shadows generally extend toward the western side; afternoon shadows extend toward the eastern side.',
-        'The smallest ratio occurs near the highest sampled altitude. The early and late ratios are larger because the rays meet level ground more obliquely.',
-        'A row with the Sun at or below the horizon would not receive a finite direct-sun ratio. The table labels that case unavailable instead of presenting a misleading negative length.',
+        'The Perth shadow bearings remain opposite their corresponding solar bearings and rotate as the Sun crosses the sky. Morning shadows extend toward the western side; afternoon shadows extend toward the eastern side.',
+        'The shortest calculated two-metre-object shadow occurs near the highest sampled altitude. The 08:00 and 16:00 values are longer because rays meet level ground more obliquely.',
+        'A row with altitude at or below zero never receives a shadow length. The data contract uses an unavailable state instead of a negative or fabricated distance.',
       ],
     },
     sectionsAfterExample: [

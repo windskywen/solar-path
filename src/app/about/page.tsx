@@ -4,6 +4,7 @@ import { ContentPageHeader } from '@/components/layout/ContentPageHeader';
 import { buildPageMetadata } from '@/lib/metadata';
 import {
   buildBreadcrumbStructuredData,
+  buildOrganizationStructuredData,
   buildWebPageStructuredData,
 } from '@/lib/structured-data';
 
@@ -11,7 +12,7 @@ const title = 'About';
 const description =
   'Learn why Solar Path Tracker exists, how its solar results are calculated and checked, which data sources it uses, and how to report an error.';
 const path = '/about';
-const lastUpdated = '2026-08-12';
+const lastUpdated = '2026-08-24';
 
 export const metadata: Metadata = buildPageMetadata({
   title,
@@ -26,6 +27,7 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 const structuredData = [
+  buildOrganizationStructuredData(),
   buildWebPageStructuredData({ path, title, description }),
   buildBreadcrumbStructuredData([
     { name: 'Home', path: '/' },
@@ -53,7 +55,7 @@ export default function AboutPage() {
           <p className={`${eyebrow} mt-6`}>Purpose and accountability</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-[var(--solar-text-strong)] sm:text-5xl">About Solar Path Tracker</h1>
           <p className="mt-5 max-w-4xl text-base leading-7 text-[var(--solar-text)] sm:text-lg">Solar Path Tracker turns a location, date, and local time into a readable sun path, solar angles, astronomical events, and educational worked examples. It is designed for first-pass daylight research before an on-site or professional assessment.</p>
-          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>12 August 2026</time></p>
+          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>24 August 2026</time></p>
         </header>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -94,6 +96,25 @@ export default function AboutPage() {
               <h3 className="font-semibold text-[var(--solar-text-strong)]">Definitions and limits</h3>
               <p className="mt-3 text-sm leading-7 text-[var(--solar-text)]">The public <Link href="/methodology" className="text-[var(--solar-accent)] underline underline-offset-4">Methodology</Link> documents timezone conversion, azimuth normalization, altitude and event definitions, golden-hour differences, polar handling, rounding, and excluded real-world factors.</p>
             </article>
+          </div>
+        </section>
+
+        <section id="editorial-process" className={`${panel} mt-4 scroll-mt-24 p-4 sm:p-6`} aria-labelledby="editorial-process-heading">
+          <p className={eyebrow}>Editorial ownership</p>
+          <h2 id="editorial-process-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]">Editorial and technical review process</h2>
+          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+            <div className="space-y-4 text-sm leading-7 text-[var(--solar-text)]">
+              <p><strong className="text-[var(--solar-text-strong)]">Solar Path Tracker is an independently operated educational and research tool.</strong> Its public author identity is the Solar Path Tracker organization. The site does not use a fabricated personal author or imply that its maintainers hold professional solar, architectural, surveying, or engineering certification.</p>
+              <p>The <strong className="text-[var(--solar-text-strong)]">site maintainer</strong> is responsible for technical maintenance, reproducible datasets, worked examples, source checks, calculation tests, accessibility checks, and corrections to published content. Guide bylines link to this section so readers can see the role behind the review without requiring a private individual&apos;s name.</p>
+            </div>
+            <div className="space-y-4 text-sm leading-7 text-[var(--solar-text)]">
+              <p>Reported discrepancies are reproduced from the submitted coordinates, local date and time, timezone, page, displayed output, and comparison source. A confirmed calculation or explanation error is corrected in code or content, covered by an automated regression check where practical, and released with the page&apos;s visible modified date changed only when that page actually changes.</p>
+              <p>Model limits remain visible even when a benchmark passes: the engine describes unobstructed astronomical geometry and does not inspect terrain, buildings, vegetation, clouds, equipment, or a surveyed horizon. For consequential decisions, compare the output with an independent source and a qualified on-site assessment.</p>
+            </div>
+          </div>
+          <div className="mt-5 rounded-[22px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">
+            <h3 className="font-semibold text-[var(--solar-text-strong)]">Request a correction</h3>
+            <p className="mt-2 text-sm leading-7 text-[var(--solar-text)]">Email <a href="mailto:solarpathtracker@gmail.com" className="font-semibold text-[var(--solar-accent)] underline underline-offset-4">solarpathtracker@gmail.com</a> or use the <Link href="/contact" className="font-semibold text-[var(--solar-accent)] underline underline-offset-4">Contact page</Link>. Include enough inputs to reproduce the result; private location details should be reduced to the precision needed for the check.</p>
           </div>
         </section>
 

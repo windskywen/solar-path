@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { AdSenseScript } from '@/components/ads/AdSenseScript';
 import { GuideArticle } from '@/components/guides/GuideArticle';
 import { GUIDES, getGuide } from '@/lib/guides';
 import { buildPageMetadata } from '@/lib/metadata';
@@ -66,6 +67,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
   return (
     <>
+      <AdSenseScript />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
