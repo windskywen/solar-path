@@ -112,8 +112,8 @@ export interface SolarDataset {
   timezone: string;
   /** Array of 24 hourly positions */
   hourly: HourlySolarPosition[];
-  /** Sunrise/sunset/day length */
-  events: SunEvents;
+  /** Sunrise, twilight, golden-hour boundaries, and day length */
+  events: ExtendedSunEvents;
   /** Deterministic insights */
   insights: SolarInsights;
 }

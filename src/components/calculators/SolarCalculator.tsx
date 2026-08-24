@@ -3,18 +3,22 @@
 import { useMemo, useState } from 'react';
 import { CalculatorLocationPicker } from './CalculatorLocationPicker';
 import { DeferredChartsPanel } from '@/components/charts/DeferredChartsPanel';
-import { ToolAdPlacement } from '@/components/ads/ToolAdPlacement';
+import { CsvDownloadButton } from '@/components/data/CsvDownloadButton';
 import { computeHourlyPositions } from '@/lib/solar/computation';
 import {
   computeExtendedSunEvents,
   computeSolarPositionAtLocalTime,
   getCardinalDirection,
 } from '@/lib/solar/extended-events';
+import { SOLAR_MODEL_INFO } from '@/lib/solar/model-info';
 import { getTimezoneFromCoordinates } from '@/lib/utils/timezone';
+import type { CsvDataset } from '@/lib/utils/csv';
 import type {
   ExtendedSunEvents,
+  HourlySolarPosition,
   LocationPoint,
   SolarEventBoundary,
+  SolarPositionAtTime,
   SolarEventWindow,
 } from '@/types/solar';
 
@@ -36,6 +40,107 @@ const BRISBANE_REFERENCE_TIMEZONE = 'Australia/Brisbane';
 
 const panelClass =
   'rounded-[28px] border [border-color:var(--solar-glass-border)] [background:var(--solar-rail-bg)] [box-shadow:var(--solar-glass-shadow)]';
+const CALCULATION_LIMIT =
+  'Astronomical geometry only; terrain, buildings, weather, and the surveyed visible horizon are excluded.';
+
+function buildCalculatorCsvDataset({
+  mode,
+  location,
+  dateISO,
+  timezone,
+  events,
+  position,
+  hourly,
+}: {
+  mode: SolarCalculatorMode;
+  location: LocationPoint;
+  dateISO: string;
+  timezone: string;
+  events: ExtendedSunEvents;
+  position: SolarPositionAtTime;
+  hourly: readonly HourlySolarPosition[];
+}): CsvDataset {
+  const metadata = [
+    { key: 'model_id', value: SOLAR_MODEL_INFO.id },
+    { key: 'location_name', value: location.name ?? 'Selected location' },
+    { key: 'latitude', value: location.lat },
+    { key: 'longitude', value: location.lng },
+    { key: 'date', value: dateISO },
+    { key: 'timezone', value: timezone },
+  ] as const;
+
+  if (mode === 'sunrise') {
+    const boundaryAt = (localTime: string | undefined): SolarEventBoundary | undefined => {
+      if (!localTime) return undefined;
+      const calculated = computeSolarPositionAtLocalTime(
+        location.lat,
+        location.lng,
+        dateISO,
+        localTime,
+        timezone
+      );
+      return {
+        localTime: calculated.localTimeLabel,
+        azimuthDeg: calculated.azimuthDeg,
+        altitudeDeg: calculated.altitudeDeg,
+      };
+    };
+    const rows: CsvDataset['rows'] = [
+      ['civil_dawn', events.civilDawnLocal ?? 'Unavailable', boundaryAt(events.civilDawnLocal)?.azimuthDeg.toFixed(2) ?? '', boundaryAt(events.civilDawnLocal)?.altitudeDeg.toFixed(2) ?? '', '', 'Sun at approximately -6 degrees altitude'],
+      ['sunrise', events.sunriseBoundary?.localTime ?? 'Unavailable', events.sunriseBoundary?.azimuthDeg.toFixed(2) ?? '', events.sunriseBoundary?.altitudeDeg.toFixed(2) ?? '', '', 'Standard SunCalc sunrise boundary'],
+      ['solar_noon', events.solarNoonBoundary?.localTime ?? 'Unavailable', events.solarNoonBoundary?.azimuthDeg.toFixed(2) ?? '', events.solarNoonBoundary?.altitudeDeg.toFixed(2) ?? '', '', 'Highest calculated solar altitude for the local date'],
+      ['sunset', events.sunsetBoundary?.localTime ?? 'Unavailable', events.sunsetBoundary?.azimuthDeg.toFixed(2) ?? '', events.sunsetBoundary?.altitudeDeg.toFixed(2) ?? '', '', 'Standard SunCalc sunset boundary'],
+      ['civil_dusk', events.civilDuskLocal ?? 'Unavailable', boundaryAt(events.civilDuskLocal)?.azimuthDeg.toFixed(2) ?? '', boundaryAt(events.civilDuskLocal)?.altitudeDeg.toFixed(2) ?? '', '', 'Sun at approximately -6 degrees altitude'],
+      ['day_length', '', '', '', events.dayLengthLabel ?? 'Unavailable', events.note ?? CALCULATION_LIMIT],
+    ];
+
+    return {
+      filename: `sunrise-sunset-${dateISO}`,
+      metadata,
+      columns: ['event', 'local_time', 'azimuth_deg', 'altitude_deg', 'value', 'note'],
+      rows,
+    };
+  }
+
+  if (mode === 'golden-hour') {
+    const boundaries = [
+      { label: 'morning_start', boundary: events.morningGoldenHour.start, note: 'Sunrise boundary; start of the 0 to 6 degree window' },
+      { label: 'morning_end', boundary: events.morningGoldenHour.end, note: 'Sun reaches approximately +6 degrees altitude' },
+      { label: 'evening_start', boundary: events.eveningGoldenHour.start, note: 'Sun descends through approximately +6 degrees altitude' },
+      { label: 'evening_end', boundary: events.eveningGoldenHour.end, note: 'Sunset boundary; end of the 0 to 6 degree window' },
+    ];
+
+    return {
+      filename: `golden-hour-${dateISO}`,
+      metadata: [...metadata, { key: 'golden_hour_definition', value: 'Solar altitude from 0 degrees to +6 degrees' }],
+      columns: ['boundary', 'local_time', 'azimuth_deg', 'altitude_deg', 'definition_note', 'model_limit'],
+      rows: boundaries.map(({ label, boundary, note }) => [
+        label,
+        boundary?.localTime ?? 'Unavailable',
+        boundary?.azimuthDeg.toFixed(2) ?? '',
+        boundary?.altitudeDeg.toFixed(2) ?? '',
+        boundary ? note : events.note ?? 'Boundary does not occur for the selected date and location',
+        CALCULATION_LIMIT,
+      ]),
+    };
+  }
+
+  return {
+    filename: `solar-angles-${dateISO}-${position.localTimeLabel.replace(':', '')}`,
+    metadata: [...metadata, { key: 'selected_local_time', value: position.localTimeLabel }],
+    columns: ['series', 'local_time', 'azimuth_deg', 'altitude_deg', 'daylight_state'],
+    rows: [
+      ['selected_time', position.localTimeLabel, position.azimuthDeg.toFixed(2), position.altitudeDeg.toFixed(2), position.daylightState],
+      ...hourly.map((entry) => [
+        '24_hour_curve',
+        entry.localTimeLabel,
+        entry.azimuthDeg.toFixed(2),
+        entry.altitudeDeg.toFixed(2),
+        entry.daylightState,
+      ]),
+    ],
+  };
+}
 
 function ResultCard({ label, value, helper }: { label: string; value: string; helper?: string }) {
   return (
@@ -159,6 +264,19 @@ export function SolarCalculator({ mode, initialDateISO }: SolarCalculatorProps) 
       ),
     []
   );
+  const csvDataset = useMemo(
+    () =>
+      buildCalculatorCsvDataset({
+        mode,
+        location,
+        dateISO,
+        timezone,
+        events,
+        position,
+        hourly,
+      }),
+    [dateISO, events, hourly, location, mode, position, timezone]
+  );
 
   return (
     <div className="space-y-4">
@@ -238,6 +356,16 @@ export function SolarCalculator({ mode, initialDateISO }: SolarCalculatorProps) 
             />
           </div>
         ) : null}
+
+        <div className="mt-5 rounded-[22px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]" data-testid="calculator-csv-evidence">
+          <h3 className="font-semibold text-[var(--solar-text-strong)]">Download this calculation</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--solar-text)]">
+            The CSV records the current location, date, timezone, model identifier, and every result shown for this calculator. It excludes raw geocoding-provider payloads.
+          </p>
+          <div className="mt-4">
+            <CsvDownloadButton dataset={csvDataset} label="Download calculator CSV" />
+          </div>
+        </div>
       </section>
 
       {mode === 'sunrise' ? (
@@ -273,8 +401,6 @@ export function SolarCalculator({ mode, initialDateISO }: SolarCalculatorProps) 
           </section>
         </div>
       ) : null}
-
-      <ToolAdPlacement />
     </div>
   );
 }

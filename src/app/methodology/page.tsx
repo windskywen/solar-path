@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ContentPageHeader } from '@/components/layout/ContentPageHeader';
+import { SolarValidationResults } from '@/components/validation/SolarValidationResults';
 import { buildPageMetadata } from '@/lib/metadata';
+import { SOLAR_MODEL_INFO } from '@/lib/solar/model-info';
+import { evaluateAllSolarValidationBenchmarks } from '@/lib/solar/validation-benchmarks';
 import {
   buildBreadcrumbStructuredData,
   buildWebPageStructuredData,
@@ -11,7 +14,7 @@ const title = 'Calculation Methodology';
 const description =
   'How Solar Path Tracker calculates solar position, event times, timezones, golden hour, daylight states, and polar conditions, including precision limits.';
 const path = '/methodology';
-const lastUpdated = '2026-08-12';
+const lastUpdated = '2026-08-24';
 
 export const metadata: Metadata = buildPageMetadata({
   title,
@@ -40,6 +43,8 @@ const eyebrow =
   'text-[0.64rem] font-semibold uppercase tracking-[0.3em] text-[var(--solar-kicker)]';
 
 export default function MethodologyPage() {
+  const validationResults = evaluateAllSolarValidationBenchmarks();
+
   return (
     <>
       <ContentPageHeader />
@@ -54,10 +59,44 @@ export default function MethodologyPage() {
           <p className={`${eyebrow} mt-6`}>Transparent calculations</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-[var(--solar-text-strong)] sm:text-5xl">{title}</h1>
           <p className="mt-5 max-w-4xl text-base leading-7 text-[var(--solar-text)] sm:text-lg">{description}</p>
-          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>12 August 2026</time></p>
+          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>24 August 2026</time></p>
         </header>
 
         <div className="mt-4 grid gap-4">
+          <section id="validation-report" className={`${panel} scroll-mt-24 p-4 sm:p-6`} aria-labelledby="validation-report-heading">
+            <p className={eyebrow}>Reproducible checks</p>
+            <h2 id="validation-report-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]">Independent validation report</h2>
+            <div className="mt-4 max-w-5xl space-y-4 text-sm leading-7 text-[var(--solar-text)] sm:text-base">
+              <p>
+                Solar Path Tracker identifies this calculation profile as <strong className="text-[var(--solar-text-strong)]">{SOLAR_MODEL_INFO.id}</strong>. The checks below run the same production solar engine used by the calculators against fixed, independently published reference values. They do not call NREL, USNO, NOAA, or any other external service while browsing, building, or downloading a CSV.
+              </p>
+              <p>
+                A pass means the calculated result is within the stated tolerance for this exact input—not that every site condition has been measured. These references do not certify, approve, or endorse Solar Path Tracker.
+              </p>
+            </div>
+
+            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-[20px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">
+                <dt className="text-xs uppercase tracking-[0.16em] text-[var(--solar-text-muted)]">Model</dt>
+                <dd className="mt-2 font-semibold text-[var(--solar-text-strong)]">{SOLAR_MODEL_INFO.id}</dd>
+              </div>
+              <div className="rounded-[20px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">
+                <dt className="text-xs uppercase tracking-[0.16em] text-[var(--solar-text-muted)]">Sun position</dt>
+                <dd className="mt-2 font-semibold text-[var(--solar-text-strong)]">SunCalc {SOLAR_MODEL_INFO.dependencies.suncalc}</dd>
+              </div>
+              <div className="rounded-[20px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">
+                <dt className="text-xs uppercase tracking-[0.16em] text-[var(--solar-text-muted)]">Local time</dt>
+                <dd className="mt-2 font-semibold text-[var(--solar-text-strong)]">Luxon {SOLAR_MODEL_INFO.dependencies.luxon}</dd>
+              </div>
+              <div className="rounded-[20px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">
+                <dt className="text-xs uppercase tracking-[0.16em] text-[var(--solar-text-muted)]">Timezone lookup</dt>
+                <dd className="mt-2 font-semibold text-[var(--solar-text-strong)]">tz-lookup {SOLAR_MODEL_INFO.dependencies.timezoneLookup}</dd>
+              </div>
+            </dl>
+
+            <SolarValidationResults results={validationResults} />
+          </section>
+
           <section className={`${panel} p-4 sm:p-6`} aria-labelledby="inputs-heading">
             <p className={eyebrow}>Inputs and time</p>
             <h2 id="inputs-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]">Location, date, and timezone handling</h2>

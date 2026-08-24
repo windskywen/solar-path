@@ -9,6 +9,8 @@ This checklist separates code readiness from the external Google account steps t
 - [ ] Leave `NEXT_PUBLIC_ADSENSE_SIDEBAR_SLOT_ID`, `NEXT_PUBLIC_ADSENSE_TOOL_SLOT_ID`, and `NEXT_PUBLIC_ADSENSE_ARTICLE_SLOT_ID` empty.
 - [ ] Deploy the production build and confirm the publisher pages contain the `google-adsense-account` meta tag.
 - [ ] Confirm no AdSense script, `<ins class="adsbygoogle">`, or empty advertisement container is rendered in review mode.
+- [ ] Confirm the home page exposes its reproducible report and CSV only after a valid solar dataset exists.
+- [ ] Confirm all three calculators and all six guide details expose page-specific evidence and a deterministic CSV.
 - [ ] Confirm `/ads.txt`, `/robots.txt`, and `/sitemap.xml` return HTTP 200.
 - [ ] Confirm the home page, all three calculators, all six guides, `/about`, `/methodology`, `/contact`, `/privacy`, and `/terms` return HTTP 200.
 - [ ] Run desktop and mobile checks for console errors, hydration errors, horizontal overflow, and layout shift.
@@ -34,8 +36,9 @@ This checklist separates code readiness from the external Google account steps t
 - [ ] Create one responsive manual unit for the home page, one for calculator pages, and one for guide articles.
 - [ ] Set the three slot environment variables with those unit IDs.
 - [ ] Set `NEXT_PUBLIC_ADSENSE_ENABLED=true` and redeploy.
-- [ ] Confirm the AdSense script loads exactly once on the home page, calculators, and guides.
-- [ ] Confirm `/about`, `/methodology`, `/contact`, `/privacy`, and `/terms` never load the AdSense script or render an ad slot.
+- [ ] Confirm the AdSense script loads exactly once only after a valid home dataset, on each calculator, and on each of the six individual guide pages.
+- [ ] Confirm `/guides`, `/about`, `/methodology`, `/contact`, `/privacy`, and `/terms` never load the AdSense script or render an ad slot.
+- [ ] Confirm an empty home result, 404, error, and loading states never load the script, render `<ins class="adsbygoogle">`, or reserve an empty advertisement container.
 - [ ] Confirm each eligible page has no more than one responsive unit, labelled `Advertisement`.
 - [ ] Confirm ads are not adjacent to maps, 3D controls, search, date inputs, result cards, or other interactive controls.
 - [ ] Repeat desktop/mobile console, overflow, CLS, and policy checks.

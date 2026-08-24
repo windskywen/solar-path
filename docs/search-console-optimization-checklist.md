@@ -33,6 +33,13 @@ The 12 August peak is an outlier and is excluded from the comparison windows bel
 - [ ] Preserve all map, search, date, hour, 3D, calculator, and geocoding contracts.
 - [ ] Keep `NEXT_PUBLIC_ADSENSE_ENABLED=false`, preserve the verification meta, and render no
       AdSense script or slot while review is pending.
+- [ ] At 390×844 with 4× CPU slowdown, record five Event Timing samples each for selecting a
+      search result, changing the date, clicking an hourly row, setting a map location, and the
+      first open/close of 3D. Treat the trace as diagnostic lab evidence, not field data.
+- [ ] Run that controlled suite against a production build with
+      `PLAYWRIGHT_MOBILE_PERFORMANCE=true`; development-mode React timing is not release evidence.
+- [ ] Apply a targeted interaction fix only when the five-run measurement exceeds 200 ms; do not
+      add a large dependency to chase a synthetic score.
 - [ ] After deployment, test production canonicals, sitemap, review-mode advertising, console errors,
       horizontal overflow, and layout shift.
 
@@ -40,6 +47,19 @@ Evaluate field performance after 100 mobile INP samples. If fewer than 100 sampl
 complete days, use all available field samples together with a controlled mobile trace. The target is
 mobile p75 INP at or below 200 ms. Start Search Console INP validation only after field evidence shows
 the fix is working.
+
+## Evidence-content release acceptance
+
+- [ ] Confirm `SPT-SUN-V1` dependency declarations match `package.json` and all five fixed NREL/USNO
+      validation groups pass their angular, event-time, and polar-state tolerances.
+- [ ] Confirm server HTML exposes the Methodology validation report and six distinct guide evidence
+      headings, tables or SVGs, sources, limitations, and accessible CSV downloads.
+- [ ] Confirm the home report and calculator CSVs contain current inputs and site-calculated values,
+      not raw TomTom or OpenStreetMap provider payloads.
+- [ ] Confirm the six guide evidence keys, content-type labels, source sets, filenames, and CSV
+      contracts are complete and unique.
+- [ ] Confirm `/guides` remains a navigation-only, ad-free index and no new public, city-template,
+      synonym, canonical, or sitemap route was introduced.
 
 ## Metadata decision gate
 
@@ -69,13 +89,16 @@ Do not create synonym-only routes, mass city pages, translations, or hreflang du
 
 ## Indexing and AdSense gates
 
-- [ ] After the performance release is live, inspect `/about` and `/privacy`, run Test Live URL, and
-      request indexing.
+- [ ] After the evidence release is live, use URL Inspection in this order: `/methodology`, `/`, the
+      three calculators, the NREL worked example, the Brisbane seasonal guide, the remaining four
+      guide details, `/guides`, `/about`, and `/privacy`.
+- [ ] For each changed core page, run Test Live URL and request indexing; wait until its last crawl
+      is later than the production deployment before treating crawl evidence as current.
 - [ ] Do not validate expected redirects, `ads.txt`, or favicon exclusions.
 - [ ] Do not resubmit the successful sitemap unless its URL or status changes.
 - [ ] If AdSense becomes Ready, follow the separate post-approval activation section in
       `docs/adsense-release-checklist.md`.
 - [ ] If AdSense is rejected, capture the exact account/Policy Center reason before changing content.
-- [ ] Build `/guides/global-daylight-golden-hour-comparison` only after the AdSense decision, or after
-      28 pending-review days, while keeping review-mode wiring unchanged.
+- [ ] Request another AdSense review only after deployed route, content-parity, validation, console,
+      mobile, CMP/account, and Policy Center checks are complete; approval is not guaranteed.
 - [ ] Do not send external outreach without separate authorization.

@@ -15,7 +15,8 @@ A web application that visualizes the sun's path across the sky for any location
 - **Responsive Design**: Works on desktop and mobile devices
 - **Accessibility**: Keyboard navigation, screen reader support, WCAG 2.1 AA compliant
 - **Trust Pages**: Built-in Privacy Policy and About/Contact routes for review readiness
-- **Manual Ad Slot Support**: Optional, env-gated AdSense placement below the hourly data rail
+- **Reproducible Evidence**: Static external benchmarks, page-specific guide datasets, and deterministic UTF-8 CSV downloads
+- **Manual Ad Slot Support**: Optional, env-gated AdSense placement with a strict ten-page allowlist and one responsive unit per eligible page
 - **SEO Foundations**: Metadata, structured data, `robots.txt`, `sitemap.xml`, and social share images
 
 ## Getting Started
@@ -68,7 +69,7 @@ A web application that visualizes the sun's path across the sky for any location
    ```
    During review, keep `NEXT_PUBLIC_ADSENSE_ENABLED=false`. The publisher ID is still emitted through the `google-adsense-account` meta tag, but the script and all ad slots stay absent. Keep Auto Ads disabled.
 
-   Only after AdSense marks the site **Ready**, create three responsive manual units, set the slot IDs, and change `NEXT_PUBLIC_ADSENSE_ENABLED=true`. The existing sidebar variable controls the home-page unit; the tool and article variables control calculator and guide placements. The script is scoped to publisher routes, while About, Methodology, Contact, Privacy, and Terms remain ad-free. The app also serves `public/ads.txt` from the site root.
+   Only after AdSense marks the site **Ready**, create three responsive manual units, set the slot IDs, and change `NEXT_PUBLIC_ADSENSE_ENABLED=true`. The sidebar variable controls the home unit after a valid solar dataset exists; tool and article variables control placements after calculator results/evidence and individual-guide evidence. The script is explicitly entered only by `/`, the three calculator routes, and the six guide-detail routes. `/guides`, empty home results, About, Methodology, Contact, Privacy, Terms, loading, error, and not-found states remain ad-free. The app also serves `public/ads.txt` from the site root.
 
    Follow [the AdSense release checklist](docs/adsense-release-checklist.md) before review and again before enabling ads.
 
@@ -89,6 +90,8 @@ A web application that visualizes the sun's path across the sky for any location
 | `npm run lint` | Run ESLint |
 | `npm test` | Run unit tests with Vitest |
 | `npm run test:e2e` | Run E2E tests with Playwright |
+
+The solar engine is identified as `SPT-SUN-V1`. `/methodology#validation-report` compares the production engine with fixed NREL SPA and USNO snapshots without adding an external runtime dependency. Home, calculator, and guide CSV files contain site-calculated values and current user inputs, not raw TomTom or OpenStreetMap provider payloads.
 
 ## Tech Stack
 

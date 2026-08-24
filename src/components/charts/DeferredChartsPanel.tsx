@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import type { ChartsPanelProps } from './ChartsPanel';
 
 const LazyChartsPanel = dynamic(
@@ -20,7 +20,7 @@ export interface DeferredChartsPanelProps extends ChartsPanelProps {
  * Keeps Recharts out of the initial route bundle until the chart is close to view.
  * The reserved height prevents the surrounding content from shifting when it loads.
  */
-export function DeferredChartsPanel({
+export const DeferredChartsPanel = memo(function DeferredChartsPanel({
   rootMargin = '300px 0px',
   minHeight,
   defaultView = 'altitude',
@@ -75,4 +75,4 @@ export function DeferredChartsPanel({
       )}
     </div>
   );
-}
+});

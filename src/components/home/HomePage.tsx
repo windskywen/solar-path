@@ -1,16 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { MapPanel } from '@/components/map/MapPanel';
 import { SolarRaysLayer, SolarRaysLegend } from '@/components/map/SolarRaysLayer';
 import { LocationInput } from '@/components/location/LocationInput';
 import { DatePicker } from '@/components/date';
 import { SunEventsPanel, InsightsPanel } from '@/components/insights';
 import { SolarDataTable, MetricsPanel } from '@/components/data';
+import { CalculationReportPanel } from '@/components/home/CalculationReportPanel';
 import { DeferredChartsPanel } from '@/components/charts/DeferredChartsPanel';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
+import { AdSenseScript } from '@/components/ads/AdSenseScript';
 import { SidebarAdPanel } from '@/components/ads/SidebarAdPanel';
 import { useSolarData } from '@/hooks/useSolarData';
 import { useIpGeo } from '@/hooks/useIpGeo';
@@ -23,14 +24,38 @@ import {
 } from '@/store/solar-store';
 import { SkipLinks } from '@/components/a11y';
 import { getTodayISO } from '@/lib/utils/timezone';
+import type { HourlySolarPosition, SunEvents } from '@/types/solar';
 
-const Solar3DViewModal = dynamic(
-  () =>
-    import('@/components/solar3d/Solar3DViewModal').then(
-      (module) => module.Solar3DViewModal
-    ),
-  { ssr: false }
-);
+type Solar3DViewModalModule = typeof import('@/components/solar3d/Solar3DViewModal');
+let solar3DViewModalPromise: Promise<Solar3DViewModalModule> | null = null;
+let solar3DViewPreloadScheduled = false;
+
+function loadSolar3DViewModal(): Promise<Solar3DViewModalModule> {
+  solar3DViewModalPromise ??= import('@/components/solar3d/Solar3DViewModal');
+  return solar3DViewModalPromise;
+}
+
+function preloadSolar3DViewModal() {
+  if (solar3DViewModalPromise || solar3DViewPreloadScheduled) return;
+  solar3DViewPreloadScheduled = true;
+
+  // A deliberate hover/focus gets the chunk two frames later. When intent and
+  // click happen in the same touch frame, the first frame is reserved for the
+  // lightweight shell, preventing cached module evaluation from blocking it.
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      window.setTimeout(() => {
+        solar3DViewPreloadScheduled = false;
+        void loadSolar3DViewModal();
+      }, 300);
+    });
+  });
+}
+
+const Solar3DViewModal = lazy(async () => {
+  const loadedModule = await loadSolar3DViewModal();
+  return { default: loadedModule.Solar3DViewModal };
+});
 
 function formatDisplayDate(dateISO: string): string {
   try {
@@ -81,13 +106,17 @@ function DataSkeleton() {
 interface Solar3DViewButtonProps {
   disabled: boolean;
   onClick: () => void;
+  onPreload: () => void;
 }
 
-function Solar3DViewButton({ disabled, onClick }: Solar3DViewButtonProps) {
+function Solar3DViewButton({ disabled, onClick, onPreload }: Solar3DViewButtonProps) {
   return (
     <button
       type="button"
       onClick={onClick}
+      onPointerEnter={onPreload}
+      onFocus={onPreload}
+      onTouchStart={onPreload}
       disabled={disabled}
       className="group relative flex min-h-20 w-full items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-3 text-left text-[var(--solar-cta-text)] [border-color:var(--solar-cta-border)] [background:var(--solar-cta-bg)] [box-shadow:var(--solar-cta-shadow)] transition-all duration-300 hover:-translate-y-0.5 hover:[background:var(--solar-cta-hover-bg)] hover:[box-shadow:var(--solar-cta-hover-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--solar-bg)] disabled:cursor-not-allowed disabled:[border-color:var(--solar-cta-disabled-border)] disabled:[background:var(--solar-cta-disabled-bg)] disabled:text-[var(--solar-cta-disabled-text)] disabled:shadow-none disabled:hover:translate-y-0 sm:w-[19rem] sm:px-4"
       aria-label="Open 3D solar path view"
@@ -149,6 +178,154 @@ function Solar3DViewButton({ disabled, onClick }: Solar3DViewButtonProps) {
   );
 }
 
+function Solar3DLoadingShell({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      onClose();
+    };
+
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 p-3" role="presentation">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="solar-3d-loading-title"
+        aria-describedby="solar-3d-loading-description"
+        className="flex min-h-[280px] w-full max-w-5xl flex-col rounded-[28px] border p-4 [border-color:var(--solar-glass-border)] [background:var(--solar-glass-bg)] [box-shadow:var(--solar-glass-shadow)] sm:p-5"
+        data-testid="3d-loading-shell"
+      >
+        <div className="flex items-start justify-between gap-4 border-b pb-4 [border-color:var(--solar-divider)]">
+          <div>
+            <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-kicker)]">3D daylight model</p>
+            <h2 id="solar-3d-loading-title" className="mt-2 text-xl font-semibold text-[var(--solar-text-strong)]">3D Solar Path View</h2>
+            <p id="solar-3d-loading-description" className="mt-2 text-sm text-[var(--solar-text)]">Preparing the interactive 3D scene. The dialog shell is ready while the first-use chunk loads.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            autoFocus
+            aria-label="Close 3D view"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xl text-[var(--solar-text-strong)] [border-color:var(--solar-pill-border)] [background:var(--solar-pill-bg)]"
+          >
+            ×
+          </button>
+        </div>
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <span className="mx-auto block h-10 w-10 animate-spin rounded-full border-2 border-sky-300/25 border-t-sky-300" aria-hidden="true" />
+            <p className="mt-4 text-sm font-semibold text-[var(--solar-text-strong)]">Loading 3D view…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface Solar3DControllerProps {
+  disabled: boolean;
+  hourly: HourlySolarPosition[];
+  events: SunEvents;
+}
+
+/**
+ * Keep first-use modal state below the home page so opening and closing the 3D
+ * viewer does not rerender the map, reports, tables, or charts in the same
+ * interaction.
+ */
+function Solar3DController({ disabled, hourly, events }: Solar3DControllerProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [hasRequested, setHasRequested] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const releaseTimerRef = useRef<number | null>(null);
+
+  const cancelRelease = () => {
+    if (releaseTimerRef.current === null) return;
+    window.clearTimeout(releaseTimerRef.current);
+    releaseTimerRef.current = null;
+  };
+
+  useEffect(
+    () => () => {
+      if (releaseTimerRef.current !== null) window.clearTimeout(releaseTimerRef.current);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let readyTimer: number | undefined;
+    const readyFrame = window.requestAnimationFrame(() => {
+      // Keep the lightweight, closable shell through the first presentation.
+      // Mount the real viewer later so module evaluation and scene setup cannot
+      // extend the opening interaction's next paint.
+      readyTimer = window.setTimeout(() => setIsReady(true), 350);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(readyFrame);
+      if (readyTimer !== undefined) window.clearTimeout(readyTimer);
+    };
+  }, [isOpen]);
+
+  const openViewer = () => {
+    cancelRelease();
+    setHasRequested(true);
+    setIsReady(false);
+    setIsOpen(true);
+  };
+
+  const handleViewerOpenChange = (nextOpen: boolean) => {
+    cancelRelease();
+    setIsOpen(nextOpen);
+    if (nextOpen) return;
+
+    // Preserve the already-painted closed state for a short grace period, then
+    // release WebGL resources and stop any remaining provider work.
+    releaseTimerRef.current = window.setTimeout(() => {
+      setHasRequested(false);
+      setIsReady(false);
+      releaseTimerRef.current = null;
+    }, 350);
+  };
+
+  return (
+    <>
+      <Solar3DViewButton
+        disabled={disabled}
+        onPreload={preloadSolar3DViewModal}
+        onClick={openViewer}
+      />
+      {hasRequested ? (
+        isOpen && !isReady ? (
+          <Solar3DLoadingShell onClose={() => handleViewerOpenChange(false)} />
+        ) : (
+          <Suspense
+            fallback={
+              isOpen ? (
+                <Solar3DLoadingShell onClose={() => handleViewerOpenChange(false)} />
+              ) : null
+            }
+          >
+            <Solar3DViewModal
+              open={isOpen}
+              onOpenChange={handleViewerOpenChange}
+              hourly={hourly}
+              events={events}
+            />
+          </Suspense>
+        )
+      ) : null}
+    </>
+  );
+}
+
 /**
  * Main application page
  */
@@ -162,8 +339,6 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
   const dateISO = useDateISO();
   const selectedHour = useSelectedHour();
   const { setDateISO, setLocation, setSelectedHour } = useSolarActions();
-  const [is3DViewOpen, setIs3DViewOpen] = useState(false);
-  const [hasRequested3DView, setHasRequested3DView] = useState(false);
 
   // Get initial location from IP
   const { location: ipLocation, isLoading: ipLoading } = useIpGeo();
@@ -187,6 +362,8 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
 
   // Compute solar data
   const solarData = useSolarData();
+  const deferredSolarData = useDeferredValue(solarData.data);
+  const deferredSelectedHour = useDeferredValue(selectedHour);
   const can3DViewOpen = location !== null && solarData.hourly.length > 0;
 
   // Reuse the dataset already computed above instead of running the solar pipeline again.
@@ -244,6 +421,8 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
 
   return (
     <>
+      {solarData.data ? <AdSenseScript /> : null}
+
       {/* Skip Links for keyboard navigation */}
       <SkipLinks
         links={[
@@ -383,38 +562,28 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                 </p>
               </div>
 
-              <Solar3DViewButton
+              <Solar3DController
                 disabled={!can3DViewOpen}
-                onClick={() => {
-                  setHasRequested3DView(true);
-                  setIs3DViewOpen(true);
-                }}
+                hourly={solarData.hourly}
+                events={solarData.events}
               />
             </div>
 
             <div className="relative flex-1 overflow-hidden rounded-[26px] border [border-color:var(--solar-map-frame-border)] [background:var(--solar-map-frame-bg)] [box-shadow:var(--solar-map-frame-shadow)]">
               <Suspense fallback={<MapSkeleton />}>
                 <MapPanel className="h-full w-full">
-                  {location && solarData && (
+                  {deferredSolarData ? (
                     <SolarRaysLayer
-                      location={location}
-                      positions={solarData.hourly}
-                      selectedHour={selectedHour}
+                      location={deferredSolarData.location}
+                      positions={deferredSolarData.hourly}
+                      selectedHour={deferredSelectedHour}
                       onRayClick={setSelectedHour}
                     />
-                  )}
+                  ) : null}
                 </MapPanel>
                 <SolarRaysLegend className="absolute bottom-2 left-2 z-10 sm:bottom-5 sm:left-5" />
               </Suspense>
             </div>
-            {hasRequested3DView ? (
-              <Solar3DViewModal
-                open={is3DViewOpen}
-                onOpenChange={setIs3DViewOpen}
-                hourly={solarData.hourly}
-                events={solarData.events}
-              />
-            ) : null}
           </section>
 
           {/* Data rail */}
@@ -442,8 +611,8 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
 
                   {solarData ? (
                     <DeferredChartsPanel
-                      positions={solarData.hourly}
-                      selectedHour={selectedHour}
+                      positions={deferredSolarData?.hourly ?? solarData.hourly}
+                      selectedHour={deferredSelectedHour}
                       onHourClick={setSelectedHour}
                     />
                   ) : (
@@ -526,7 +695,11 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                 </div>
               </section>
 
-              <SidebarAdPanel className={railPanel} />
+              {solarData.data ? (
+                <CalculationReportPanel data={solarData.data} className={railPanel} />
+              ) : null}
+
+              {solarData.data ? <SidebarAdPanel className={railPanel} /> : null}
             </Suspense>
           </div>
         </main>

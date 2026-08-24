@@ -9,6 +9,15 @@ const guideSlugs = [
   'estimating-shadow-direction-from-solar-angles',
 ] as const;
 
+const guideEvidence: Record<(typeof guideSlugs)[number], { key: string; heading: string }> = {
+  'how-to-read-a-sun-path-diagram': { key: 'sun-path-diagram', heading: 'Brisbane equinox sun-path diagram dataset' },
+  'brisbane-winter-vs-summer-sun-path': { key: 'seasonal-comparison', heading: 'Brisbane solstice 24-hour comparison' },
+  'east-vs-west-facing-homes-australia': { key: 'facade-orientation-matrix', heading: 'Australian east–west facade bearing matrix' },
+  'golden-hour-direction-brisbane': { key: 'golden-hour-shot-plan', heading: 'Brisbane winter and summer directional shot plan' },
+  'solar-azimuth-altitude-worked-example': { key: 'nrel-spa-benchmark', heading: 'NREL SPA canonical Golden, Colorado comparison' },
+  'estimating-shadow-direction-from-solar-angles': { key: 'shadow-direction-model', heading: 'Perth two-metre shadow direction test' },
+};
+
 const calculatorRoutes = [
   '/sunrise-sunset-calculator',
   '/golden-hour-calculator',
@@ -68,6 +77,9 @@ test.describe('Independent calculators', () => {
       await expect(page.getByLabel(/Solar path map/i)).toHaveCount(0);
       await expect(page.getByRole('button', { name: /GPS|current location/i })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /3D/i })).toHaveCount(0);
+      await expect(page.getByTestId('calculator-csv-evidence')).toBeVisible();
+      await expect(page.getByTestId('calculator-validation-evidence')).toBeVisible();
+      await expect(page.getByTestId('csv-download')).toHaveCount(1);
       await expect(page.locator('ins.adsbygoogle')).toHaveCount(0);
     });
   }
@@ -78,7 +90,7 @@ test.describe('Independent calculators', () => {
     await page.goto('/sunrise-sunset-calculator');
     await expect(page.getByRole('heading', { name: 'Brisbane · 21 June 2026' })).toBeVisible();
     await expect(page.getByText(/This fixed reference is independent/i)).toBeVisible();
-    await expect(page.getByText('Solar noon', { exact: true })).toBeVisible();
+    await expect(page.getByText('Solar noon', { exact: true }).first()).toBeVisible();
     await expect(page.getByText(/Altitude [+-]?\d+\.\d°/).first()).toBeVisible();
     const sunriseCharts = page.getByTestId('deferred-charts-panel');
     await sunriseCharts.scrollIntoViewIfNeeded();
@@ -91,7 +103,7 @@ test.describe('Independent calculators', () => {
 
     await expect(page.getByText(/Midnight sun - sun does not set/i).first()).toBeVisible();
     await expect(page.getByText('Unavailable', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('Solar noon', { exact: true })).toBeVisible();
+    await expect(page.getByText('Solar noon', { exact: true }).first()).toBeVisible();
 
     await page.locator('input[type="date"]').fill('2026-12-21');
     await expect(page.getByText(/Polar night - sun does not rise/i).first()).toBeVisible();
@@ -101,8 +113,8 @@ test.describe('Independent calculators', () => {
     page,
   }) => {
     await page.goto('/golden-hour-calculator');
-    await expect(page.getByText('Morning golden hour')).toBeVisible();
-    await expect(page.getByText('Evening golden hour')).toBeVisible();
+    await expect(page.getByText('Morning golden hour', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('Evening golden hour', { exact: true }).first()).toBeVisible();
     await expect(page.getByText(/Start direction/i).first()).toBeVisible();
     await expect(page.getByText(/Altitude/i).first()).toBeVisible();
 
@@ -160,9 +172,20 @@ test.describe('Independent calculators', () => {
 });
 
 test.describe('Publisher content, SEO, and review-mode advertising', () => {
-  test('all six guides expose engine data, charts, sources, and matching Article JSON-LD', async ({
+  test('home exposes a reproducible report and CSV only after a valid dataset exists', async ({
     page,
   }) => {
+    await page.goto('/');
+    await expect(page.getByTestId('home-calculation-evidence')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Reproducible calculation report' })).toBeVisible();
+    await expect(page.getByTestId('csv-download')).toHaveCount(1);
+    await expect(page.locator('ins.adsbygoogle')).toHaveCount(0);
+  });
+
+  test('all six guides expose distinct evidence, CSV, sources, byline, and matching Article JSON-LD', async ({
+    page,
+  }) => {
+    const evidenceHeadings = new Set<string>();
     for (const slug of guideSlugs) {
       const route = `/guides/${slug}`;
       await page.goto(route);
@@ -170,14 +193,18 @@ test.describe('Publisher content, SEO, and review-mode advertising', () => {
       const heading = page.getByRole('heading', { level: 1 });
       await expect(heading).toHaveCount(1);
       const visibleTitle = await heading.textContent();
-      await expect(page.getByRole('heading', { name: 'Astronomical event summary' })).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Fixed-time solar angle table' })).toBeVisible();
-      await expect(page.getByText('Curve deck')).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Calculation sources' })).toBeVisible();
+      const evidence = page.getByTestId('guide-evidence');
+      await expect(evidence).toHaveAttribute('data-evidence-key', guideEvidence[slug].key);
+      await expect(page.getByRole('heading', { name: guideEvidence[slug].heading })).toBeVisible();
+      evidenceHeadings.add(guideEvidence[slug].heading);
+      expect(await evidence.locator('table, svg').count()).toBeGreaterThan(0);
+      await expect(evidence.getByTestId('csv-download')).toHaveCount(1);
+      await expect(page.getByRole('heading', { name: 'Evidence and calculation sources' })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Related guides' })).toBeVisible();
       await expect(
-        page.getByRole('region', { name: 'Calculation sources' }).getByRole('link', { name: 'SunCalc' })
+        page.getByRole('region', { name: 'Evidence and calculation sources' }).getByRole('link', { name: 'SunCalc' })
       ).toBeVisible();
+      await expect(page.getByRole('link', { name: /Editorial and technical review by the site maintainer/ })).toHaveAttribute('href', '/about#editorial-process');
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', new RegExp(route));
 
       const structuredData = await page.locator('script[type="application/ld+json"]').first().textContent();
@@ -189,6 +216,36 @@ test.describe('Publisher content, SEO, and review-mode advertising', () => {
       });
       await expect(page.locator('ins.adsbygoogle')).toHaveCount(0);
     }
+    expect(evidenceHeadings.size).toBe(6);
+  });
+
+  test('methodology renders five fixed validation groups and source dates', async ({ page }) => {
+    await page.goto('/methodology');
+    await expect(page.getByRole('heading', { name: 'Independent validation report' })).toBeVisible();
+    const report = page.getByTestId('solar-validation-results');
+    await expect(report.locator('article')).toHaveCount(5);
+    await expect(report.getByText('NREL SPA canonical position · Golden, Colorado')).toBeVisible();
+    await expect(report.getByText('USNO polar-state snapshots · Longyearbyen')).toBeVisible();
+    await expect(report.getByText(/snapshot checked 2026-08-24/)).toHaveCount(5);
+    await expect(report.getByText('Within tolerance')).toHaveCount(5);
+  });
+
+  test('guide byline, About role, and Organization schema identify the same publisher', async ({ page }) => {
+    await page.goto('/guides/solar-azimuth-altitude-worked-example');
+    const byline = page.getByRole('link', { name: /Solar Path Tracker · Editorial and technical review by the site maintainer/ });
+    await expect(byline).toBeVisible();
+    await byline.click();
+    await expect(page).toHaveURL(/\/about#editorial-process$/);
+    await expect(page.getByRole('heading', { name: 'Editorial and technical review process' })).toBeVisible();
+    await expect(page.getByText(/independently operated educational and research tool/i)).toBeVisible();
+    await expect(page.getByText('solarpathtracker@gmail.com').first()).toBeVisible();
+
+    const structuredData = await page.locator('script[type="application/ld+json"]').first().textContent();
+    const graph = JSON.parse(structuredData ?? '[]') as Array<Record<string, unknown>>;
+    expect(graph.find((item) => item['@type'] === 'Organization')).toMatchObject({
+      name: 'Solar Path Tracker',
+      email: 'solarpathtracker@gmail.com',
+    });
   });
 
   test('every new public page has one H1, a canonical, and a unique title', async ({ page }) => {
@@ -220,8 +277,9 @@ test.describe('Publisher content, SEO, and review-mode advertising', () => {
   test('review mode emits account meta only and never creates script or slots', async ({ page }) => {
     const routes = [
       '/',
-      '/golden-hour-calculator',
-      '/guides/how-to-read-a-sun-path-diagram',
+      ...calculatorRoutes,
+      '/guides',
+      ...guideSlugs.map((slug) => `/guides/${slug}`),
       '/about',
       '/privacy',
       '/terms',
@@ -282,6 +340,9 @@ test.describe('Publisher content, SEO, and review-mode advertising', () => {
     // Vercel Analytics is served by platform infrastructure. Stub only those
     // external scripts so local browser checks still surface application errors.
     await page.route('**/_vercel/insights/script.js', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: '' })
+    );
+    await page.route('**/_vercel/speed-insights/script.js', (route) =>
       route.fulfill({ status: 200, contentType: 'application/javascript', body: '' })
     );
     await page.route('https://va.vercel-scripts.com/**', (route) =>

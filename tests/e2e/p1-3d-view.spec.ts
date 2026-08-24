@@ -492,8 +492,9 @@ test.describe('3D Solar Path View - Performance', () => {
   test('modal closes quickly', async ({ page }) => {
     await waitForAppReady(page);
     await open3DModal(page);
+    await expect(page.locator('.solar-3d-viewer')).toBeVisible({ timeout: 5000 });
 
-    const closeResponse = await page.locator('[role="dialog"]').evaluate(async (dialog) => {
+    const closeResponse = await page.locator('.solar-3d-viewer').evaluate(async (dialog) => {
       const closeButton = dialog.querySelector<HTMLButtonElement>(
         'button[aria-label="Close 3D view"]'
       );

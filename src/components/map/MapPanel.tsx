@@ -61,6 +61,8 @@ export interface MapPanelProps {
  */
 export function MapPanel({ className = '', onMapClick, children }: MapPanelProps) {
   const mapRef = useRef<MapRef>(null);
+  const locationFrameRef = useRef<number | null>(null);
+  const locationCommitFrameRef = useRef<number | null>(null);
   const location = useLocation();
   const { setLocation } = useSolarActions();
 
@@ -73,6 +75,16 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
     }),
   };
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+  useEffect(
+    () => () => {
+      if (locationFrameRef.current !== null) window.cancelAnimationFrame(locationFrameRef.current);
+      if (locationCommitFrameRef.current !== null) {
+        window.cancelAnimationFrame(locationCommitFrameRef.current);
+      }
+    },
+    []
+  );
 
   // Update view when location changes (jump to new location instantly)
   useEffect(() => {
@@ -92,16 +104,24 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
       const roundedLat = Math.round(lat * 1000000) / 1000000;
       const roundedLng = Math.round(lng * 1000000) / 1000000;
 
-      // Update store
-      setLocation({
-        lat: roundedLat,
-        lng: roundedLng,
-        name: `${roundedLat.toFixed(4)}, ${roundedLng.toFixed(4)}`,
-        source: 'manual',
+      // Let the native map click paint before recalculating every solar result.
+      // Two animation frames keep the visible result effectively immediate
+      // while moving the synchronous calculation out of the input event.
+      if (locationFrameRef.current !== null) window.cancelAnimationFrame(locationFrameRef.current);
+      if (locationCommitFrameRef.current !== null) {
+        window.cancelAnimationFrame(locationCommitFrameRef.current);
+      }
+      locationFrameRef.current = window.requestAnimationFrame(() => {
+        locationCommitFrameRef.current = window.requestAnimationFrame(() => {
+          setLocation({
+            lat: roundedLat,
+            lng: roundedLng,
+            name: `${roundedLat.toFixed(4)}, ${roundedLng.toFixed(4)}`,
+            source: 'manual',
+          });
+          onMapClick?.(roundedLat, roundedLng);
+        });
       });
-
-      // Call optional callback
-      onMapClick?.(roundedLat, roundedLng);
     },
     [setLocation, onMapClick]
   );

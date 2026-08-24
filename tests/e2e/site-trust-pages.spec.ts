@@ -47,7 +47,7 @@ test.describe('Site trust and content surfaces', () => {
     await page.goto('/about');
 
     await expect(page.getByRole('heading', { name: /About Solar Path Tracker/i })).toBeVisible();
-    await expect(page.getByText(/solarpathtracker@gmail.com/i)).toBeVisible();
+    await expect(page.getByText(/solarpathtracker@gmail.com/i).first()).toBeVisible();
     await expect(page.getByRole('heading', { name: /Typical use cases/i })).toBeVisible();
   });
 

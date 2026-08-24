@@ -32,6 +32,8 @@ export function LocationInput({ className = '' }: LocationInputProps) {
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const selectionFeedbackFrameRef = useRef<number | null>(null);
+  const selectionCommitFrameRef = useRef<number | null>(null);
 
   // Geocoding hook with debouncing
   const {
@@ -65,6 +67,18 @@ export function LocationInput({ className = '' }: LocationInputProps) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(
+    () => () => {
+      if (selectionFeedbackFrameRef.current !== null) {
+        window.cancelAnimationFrame(selectionFeedbackFrameRef.current);
+      }
+      if (selectionCommitFrameRef.current !== null) {
+        window.cancelAnimationFrame(selectionCommitFrameRef.current);
+      }
+    },
+    []
+  );
 
   /**
    * Handle GPS button click
@@ -157,9 +171,27 @@ export function LocationInput({ className = '' }: LocationInputProps) {
    */
   const handleSelectLocation = useCallback(
     (selectedLocation: LocationPoint) => {
-      setLocation(selectedLocation);
       clearSearch();
       setIsSearchOpen(false);
+
+      if (selectionFeedbackFrameRef.current !== null) {
+        window.cancelAnimationFrame(selectionFeedbackFrameRef.current);
+      }
+      if (selectionCommitFrameRef.current !== null) {
+        window.cancelAnimationFrame(selectionCommitFrameRef.current);
+      }
+
+      // Let the selected result close and the text input clear in the first
+      // paint. The store update follows on the next frame, so solar results
+      // remain visually immediate without making the selection interaction
+      // wait for map, table, report, and chart consumers to reconcile.
+      selectionFeedbackFrameRef.current = window.requestAnimationFrame(() => {
+        selectionCommitFrameRef.current = window.requestAnimationFrame(() => {
+          setLocation(selectedLocation);
+          selectionFeedbackFrameRef.current = null;
+          selectionCommitFrameRef.current = null;
+        });
+      });
     },
     [setLocation, clearSearch]
   );
