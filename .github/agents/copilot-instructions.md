@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2025-12-28
 
 ## Active Technologies
+- TypeScript 5.x, React 19.2, Next.js 16.1 (App Router) (002-3d-solar-path-view)
+- N/A (reads from Zustand store) (002-3d-solar-path-view)
 
 - TypeScript 5.x, Node.js 20+ + Next.js 15 (App Router), React 19, MapLibre GL JS, suncalc, Luxon, Zustand, Recharts, TanStack Query (001-solar-path-tracker)
 
@@ -23,6 +25,7 @@ npm test; npm run lint
 TypeScript 5.x, Node.js 20+: Follow standard conventions
 
 ## Recent Changes
+- 002-3d-solar-path-view: Added TypeScript 5.x, React 19.2, Next.js 16.1 (App Router)
 
 - 001-solar-path-tracker: Added TypeScript 5.x, Node.js 20+ + Next.js 15 (App Router), React 19, MapLibre GL JS, suncalc, Luxon, Zustand, Recharts, TanStack Query
 

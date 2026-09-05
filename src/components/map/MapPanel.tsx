@@ -61,28 +61,40 @@ export interface MapPanelProps {
  */
 export function MapPanel({ className = '', onMapClick, children }: MapPanelProps) {
   const mapRef = useRef<MapRef>(null);
+  const locationFrameRef = useRef<number | null>(null);
+  const locationCommitFrameRef = useRef<number | null>(null);
   const location = useLocation();
   const { setLocation } = useSolarActions();
 
-  // Initialize view state with location if available
-  const [viewState, setViewState] = useState<ViewState>(() => ({
+  // Let MapLibre own camera state so pan and zoom do not rerender this React subtree.
+  const initialViewState: ViewState = {
     ...DEFAULT_VIEW,
     ...(location && {
       longitude: location.lng,
       latitude: location.lat,
     }),
-  }));
+  };
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+  useEffect(
+    () => () => {
+      if (locationFrameRef.current !== null) window.cancelAnimationFrame(locationFrameRef.current);
+      if (locationCommitFrameRef.current !== null) {
+        window.cancelAnimationFrame(locationCommitFrameRef.current);
+      }
+    },
+    []
+  );
 
   // Update view when location changes (jump to new location instantly)
   useEffect(() => {
-    if (location && mapRef.current) {
-      mapRef.current.jumpTo({
-        center: [location.lng, location.lat],
-        zoom: viewState.zoom,
-      });
-    }
-  }, [location?.lat, location?.lng, viewState.zoom]);
+    if (!location || !mapRef.current) return;
+
+    mapRef.current.jumpTo({
+      center: [location.lng, location.lat],
+      zoom: mapRef.current.getZoom(),
+    });
+  }, [location]);
 
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {
@@ -92,16 +104,24 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
       const roundedLat = Math.round(lat * 1000000) / 1000000;
       const roundedLng = Math.round(lng * 1000000) / 1000000;
 
-      // Update store
-      setLocation({
-        lat: roundedLat,
-        lng: roundedLng,
-        name: `${roundedLat.toFixed(4)}, ${roundedLng.toFixed(4)}`,
-        source: 'manual',
+      // Let the native map click paint before recalculating every solar result.
+      // Two animation frames keep the visible result effectively immediate
+      // while moving the synchronous calculation out of the input event.
+      if (locationFrameRef.current !== null) window.cancelAnimationFrame(locationFrameRef.current);
+      if (locationCommitFrameRef.current !== null) {
+        window.cancelAnimationFrame(locationCommitFrameRef.current);
+      }
+      locationFrameRef.current = window.requestAnimationFrame(() => {
+        locationCommitFrameRef.current = window.requestAnimationFrame(() => {
+          setLocation({
+            lat: roundedLat,
+            lng: roundedLng,
+            name: `${roundedLat.toFixed(4)}, ${roundedLng.toFixed(4)}`,
+            source: 'manual',
+          });
+          onMapClick?.(roundedLat, roundedLng);
+        });
       });
-
-      // Call optional callback
-      onMapClick?.(roundedLat, roundedLng);
     },
     [setLocation, onMapClick]
   );
@@ -128,8 +148,7 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
     <div className={`relative w-full h-full ${className}`}>
       <Map
         ref={mapRef}
-        {...viewState}
-        onMove={(evt) => setViewState(evt.viewState)}
+        initialViewState={initialViewState}
         onClick={handleMapClick}
         onLoad={() => setIsMapLoaded(true)}
         mapStyle={MAP_STYLE}
@@ -164,8 +183,8 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
 
       {/* Map loading indicator */}
       {!isMapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted">
-          <div className="flex items-center gap-2 text-muted-foreground">
+        <div className="absolute inset-0 flex items-center justify-center [background:var(--solar-surface-soft-bg)]">
+          <div className="flex items-center gap-2 text-[var(--solar-text-muted)]">
             <svg
               className="animate-spin h-5 w-5"
               xmlns="http://www.w3.org/2000/svg"
@@ -190,6 +209,7 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
           </div>
         </div>
       )}
+
     </div>
   );
 }

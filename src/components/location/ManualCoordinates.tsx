@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { validateLatitude, validateLongitude } from '@/lib/geo/validation';
 import type { LocationPoint } from '@/types/solar';
 
@@ -22,6 +22,14 @@ export interface ManualCoordinatesProps {
   className?: string;
 }
 
+function formatCoordinates(lat?: number, lng?: number): string {
+  if (lat !== undefined && lng !== undefined) {
+    return `${lat}, ${lng}`;
+  }
+
+  return '';
+}
+
 /**
  * ManualCoordinates provides precision coordinate input via a single text field
  */
@@ -31,24 +39,23 @@ export function ManualCoordinates({
   onSubmit,
   className = '',
 }: ManualCoordinatesProps) {
-  const [input, setInput] = useState(() => {
-    if (initialLat !== undefined && initialLng !== undefined) {
-      return `${initialLat}, ${initialLng}`;
-    }
-    return '';
-  });
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const isEditingRef = useRef(false);
+  const lastSyncedCoordinatesRef = useRef(formatCoordinates(initialLat, initialLng));
 
-  // Sync input with props only when not actively editing
   useEffect(() => {
-    if (isEditingRef.current) return;
-
-    if (initialLat !== undefined && initialLng !== undefined) {
-      setInput(`${initialLat}, ${initialLng}`);
-    } else {
-      setInput('');
+    const nextCoordinates = formatCoordinates(initialLat, initialLng);
+    if (
+      !inputRef.current ||
+      isEditingRef.current ||
+      nextCoordinates === lastSyncedCoordinatesRef.current
+    ) {
+      return;
     }
+
+    inputRef.current.value = nextCoordinates;
+    lastSyncedCoordinatesRef.current = nextCoordinates;
   }, [initialLat, initialLng]);
 
   const handleFocus = () => {
@@ -59,13 +66,14 @@ export function ManualCoordinates({
     isEditingRef.current = false;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
+  const handleChange = () => {
     if (error) setError(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const input = inputRef.current?.value ?? '';
 
     // Parse input using regex to extract numbers
     // This handles various formats:
@@ -115,43 +123,43 @@ export function ManualCoordinates({
       <div>
         <label
           htmlFor="coords-input"
-          className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+          className="mb-2 block text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-text-muted)]"
         >
-          Coordinates (Lat, Lng)
+          Manual Coordinates
         </label>
+        <p className="mb-3 text-xs text-[var(--solar-text-faint)]">
+          Exact latitude and longitude when you already know the point.
+        </p>
         <div className="flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             id="coords-input"
-            value={input}
+            defaultValue={formatCoordinates(initialLat, initialLng)}
             onChange={handleChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholder="e.g. 23.996, 121.572"
             className={`
-              flex-1 px-3 py-2 text-sm rounded-lg
-              bg-white dark:bg-slate-800
-              border ${error ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'}
-              focus:outline-none focus:ring-2 focus:ring-blue-500
-              placeholder:text-slate-400
+              h-10 min-w-0 flex-1 rounded-2xl border px-3 text-sm text-[var(--solar-text-strong)]
+              outline-none transition-all placeholder:text-[var(--solar-input-placeholder)]
+              ${
+                error
+                  ? '[border-color:var(--solar-danger-border)] [background:var(--solar-danger-bg)] focus:[border-color:var(--solar-danger-border)] focus:ring-2 focus:ring-[var(--solar-danger-bg)]'
+                  : '[border-color:var(--solar-input-border)] [background:var(--solar-input-bg)] [box-shadow:var(--solar-input-shadow)] focus:[border-color:var(--solar-input-focus-border)] focus:ring-2 focus:ring-[var(--solar-input-focus-ring)]'
+              }
             `}
           />
           <button
             type="submit"
-            className="
-              px-4 py-2 text-sm font-medium
-              bg-blue-600 hover:bg-blue-700
-              text-white rounded-lg
-              transition-colors
-              whitespace-nowrap
-            "
+            className="flex h-10 flex-shrink-0 items-center justify-center rounded-2xl border px-3 text-sm font-semibold text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] whitespace-nowrap"
           >
             Set
           </button>
         </div>
-        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-        <p className="mt-1 text-[10px] text-slate-400">
-          Paste coordinates from Google Maps (Latitude, Longitude)
+        {error && <p className="mt-2 text-xs text-[var(--solar-danger-text)]">{error}</p>}
+        <p className="mt-2 text-[10px] text-[var(--solar-text-faint)]">
+          Paste coordinates from Google Maps
         </p>
       </div>
     </form>

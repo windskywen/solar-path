@@ -20,7 +20,7 @@ export interface LocationPoint {
   name?: string;
   /** How the location was obtained */
   source?: LocationSource;
-  /** OpenStreetMap verification link (for search results) */
+  /** Coordinate/reference link for a selected search result */
   osmUrl?: string;
 }
 
@@ -65,6 +65,37 @@ export interface SunEvents {
   note?: string;
 }
 
+export interface SolarEventBoundary {
+  localTime: string;
+  azimuthDeg: number;
+  altitudeDeg: number;
+}
+
+export interface SolarEventWindow {
+  available: boolean;
+  start?: SolarEventBoundary;
+  end?: SolarEventBoundary;
+  note?: string;
+}
+
+export interface ExtendedSunEvents extends SunEvents {
+  timezone: string;
+  civilDawnLocal?: string;
+  civilDuskLocal?: string;
+  sunriseBoundary?: SolarEventBoundary;
+  solarNoonBoundary?: SolarEventBoundary;
+  sunsetBoundary?: SolarEventBoundary;
+  morningGoldenHour: SolarEventWindow;
+  eveningGoldenHour: SolarEventWindow;
+}
+
+export interface SolarPositionAtTime {
+  localTimeLabel: string;
+  azimuthDeg: number;
+  altitudeDeg: number;
+  daylightState: DaylightState;
+}
+
 /** Contains deterministic rule-based observations about solar conditions */
 export interface SolarInsights {
   /** Array of insight messages */
@@ -81,8 +112,8 @@ export interface SolarDataset {
   timezone: string;
   /** Array of 24 hourly positions */
   hourly: HourlySolarPosition[];
-  /** Sunrise/sunset/day length */
-  events: SunEvents;
+  /** Sunrise, twilight, golden-hour boundaries, and day length */
+  events: ExtendedSunEvents;
   /** Deterministic insights */
   insights: SolarInsights;
 }
@@ -93,19 +124,30 @@ export interface SolarDataset {
 
 /** Represents a single search result from geocoding */
 export interface GeocodeResult {
+  /** Provider result id */
+  id: string;
   /** Human-readable location name */
   displayName: string;
   /** Latitude */
   lat: number;
   /** Longitude */
   lng: number;
-  /** OpenStreetMap verification link */
+  /** Provider result category */
+  resultType: string;
+  /** Coordinate/reference link */
   osmUrl: string;
 }
 
 /** Geocoding API response */
 export interface GeocodeResponse {
+  provider: 'geoapify' | 'tomtom';
+  attribution: string;
+  attributionUrl?: string;
+  fallbackAvailable: boolean;
   results: GeocodeResult[];
+  error?: string;
+  code?: GeocodeErrorCode;
+  retryAfter?: number;
 }
 
 /** Response from IP-based geolocation service */
@@ -127,7 +169,10 @@ export interface IpGeoResponse {
 export type GeocodeErrorCode =
   | 'INVALID_QUERY'
   | 'INVALID_LIMIT'
+  | 'INVALID_MODE'
+  | 'INVALID_BIAS'
   | 'RATE_LIMITED'
+  | 'PROVIDER_UNAVAILABLE'
   | 'UPSTREAM_ERROR';
 export type IpGeoErrorCode = 'IP_GEO_UNAVAILABLE';
 

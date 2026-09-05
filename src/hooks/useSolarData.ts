@@ -7,7 +7,7 @@
 import { useMemo } from 'react';
 import { useLocation, useDateISO, useTimezone } from '@/store/solar-store';
 import { computeHourlyPositions } from '@/lib/solar/computation';
-import { computeSunEvents } from '@/lib/solar/events';
+import { computeExtendedSunEvents } from '@/lib/solar/extended-events';
 import { generateInsights } from '@/lib/solar/insights';
 import type { SolarDataset, HourlySolarPosition, SunEvents, SolarInsights } from '@/types/solar';
 
@@ -38,7 +38,7 @@ export function useSolarData(): UseSolarDataResult {
     if (!location) return null;
 
     const hourly = computeHourlyPositions(location.lat, location.lng, dateISO, timezone);
-    const events = computeSunEvents(location.lat, location.lng, dateISO, timezone);
+    const events = computeExtendedSunEvents(location.lat, location.lng, dateISO, timezone);
     const insights = generateInsights(location.lat, hourly, events);
 
     return {

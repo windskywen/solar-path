@@ -14,12 +14,12 @@ import type { HourlySolarPosition, SunEvents, DaylightState } from '@/types/sola
 function createHourlyPositions(altitudes: number[], defaultAzimuth = 180): HourlySolarPosition[] {
   return altitudes.map((altitudeDeg, hour) => {
     let daylightState: DaylightState = 'day';
-    if (altitudeDeg < -6) daylightState = 'night';
-    else if (altitudeDeg < 0) daylightState = 'twilight';
+    if (altitudeDeg < 0) daylightState = 'night';
     else if (altitudeDeg < 10) daylightState = 'golden';
 
     return {
       hour,
+      localTimeLabel: `${hour.toString().padStart(2, '0')}:00`,
       azimuthDeg: defaultAzimuth,
       altitudeDeg,
       daylightState,

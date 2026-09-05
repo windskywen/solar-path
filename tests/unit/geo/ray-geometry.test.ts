@@ -211,11 +211,12 @@ describe('createRayFeature', () => {
   const center: LocationPoint = {
     lat: 40,
     lng: -74,
-    label: 'Test Location',
+    name: 'Test Location',
   };
 
   const position: HourlySolarPosition = {
     hour: 12,
+    localTimeLabel: '12:00',
     azimuthDeg: 180, // South
     altitudeDeg: 45,
     daylightState: 'day',
@@ -265,12 +266,13 @@ describe('createRayCollection', () => {
   const center: LocationPoint = {
     lat: 40,
     lng: -74,
-    label: 'Test',
+    name: 'Test',
   };
 
   function createMockPositions(): HourlySolarPosition[] {
     return Array.from({ length: 24 }, (_, hour) => ({
       hour,
+      localTimeLabel: `${hour.toString().padStart(2, '0')}:00`,
       azimuthDeg: (hour * 15) % 360,
       altitudeDeg: hour < 6 || hour > 18 ? -10 : 30,
       daylightState: (hour < 6 || hour > 18 ? 'night' : 'day') as DaylightState,
@@ -311,9 +313,10 @@ describe('createRayCollection', () => {
 });
 
 describe('createAdaptiveRayCollection', () => {
-  const center: LocationPoint = { lat: 40, lng: -74, label: 'Test' };
+  const center: LocationPoint = { lat: 40, lng: -74, name: 'Test' };
   const positions: HourlySolarPosition[] = Array.from({ length: 24 }, (_, h) => ({
     hour: h,
+    localTimeLabel: `${h.toString().padStart(2, '0')}:00`,
     azimuthDeg: h * 15,
     altitudeDeg: 30,
     daylightState: 'day' as DaylightState,

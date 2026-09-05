@@ -7,13 +7,15 @@
  * Defaults to today's date and allows selecting any Gregorian date.
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import { useDateISO, useSolarActions } from '@/store/solar-store';
 import { getTodayISO } from '@/lib/utils/timezone';
 
 export interface DatePickerProps {
   /** Additional CSS classes */
   className?: string;
+  /** Server-generated UTC date used for the hydration-safe first render */
+  initialDateISO: string;
   /** Callback when date changes */
   onChange?: (dateISO: string) => void;
 }
@@ -42,16 +44,26 @@ function isToday(dateISO: string): boolean {
   return dateISO === getTodayISO();
 }
 
+function subscribeToUtcDate() {
+  return () => {};
+}
+
 /**
  * DatePicker provides date selection for solar calculations
  */
-export function DatePicker({ className = '', onChange }: DatePickerProps) {
+export function DatePicker({ className = '', initialDateISO, onChange }: DatePickerProps) {
   const dateISO = useDateISO();
   const { setDateISO } = useSolarActions();
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
-  // Calculate relative dates
-  const today = useMemo(() => getTodayISO(), []);
-  const dateIsToday = useMemo(() => isToday(dateISO), [dateISO]);
+  // Keep the hydration snapshot equal to the server date, then expose the
+  // current UTC date to the client without a mount-effect state update.
+  const today = useSyncExternalStore(
+    subscribeToUtcDate,
+    () => getTodayISO('UTC'),
+    () => initialDateISO
+  );
+  const dateIsToday = useMemo(() => dateISO === today, [dateISO, today]);
 
   const handleDateChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,100 +97,123 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
     onChange?.(newDate);
   }, [dateISO, setDateISO, onChange]);
 
+  const handleOpenPicker = useCallback(() => {
+    const input = dateInputRef.current;
+    if (!input) return;
+
+    input.focus({ preventScroll: true });
+    if (typeof input.showPicker === 'function') {
+      input.showPicker();
+      return;
+    }
+
+    input.click();
+  }, []);
+
+  const iconButtonClass =
+    'flex h-11 w-11 items-center justify-center rounded-2xl border text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--solar-input-focus-ring)]';
+
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`space-y-3 ${className}`}>
       {/* Date display and navigation */}
       <div className="flex items-center gap-2">
-        {/* Previous day button */}
         <button
+          type="button"
           onClick={handlePrevDay}
-          className="p-2 rounded-lg hover:bg-muted transition-colors"
+          className={iconButtonClass}
           aria-label="Previous day"
         >
-          <svg
-            className="w-5 h-5 text-muted-foreground"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
+          <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
-        {/* Date input */}
-        <div className="flex-1 relative">
+        <div className="relative flex-1">
           <input
+            ref={dateInputRef}
             type="date"
             value={dateISO}
             onChange={handleDateChange}
-            className="w-full px-3 py-2 bg-background border border-input rounded-lg text-center font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="solar-date-input h-11 w-full rounded-2xl border px-4 pr-12 text-center text-sm font-semibold tracking-[0.02em] text-[var(--solar-text-strong)] [border-color:var(--solar-input-border)] [background:var(--solar-input-bg)] [box-shadow:var(--solar-input-shadow)] outline-none transition-all focus:[border-color:var(--solar-input-focus-border)] focus:ring-2 focus:ring-[var(--solar-input-focus-ring)] sm:text-base"
             aria-label="Select date"
           />
+          <button
+            type="button"
+            onClick={handleOpenPicker}
+            className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[var(--solar-accent)] transition-colors hover:bg-[var(--solar-accent-soft)] hover:text-[var(--solar-text-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--solar-input-focus-ring)]"
+            aria-label="Open calendar"
+          >
+            <svg
+              className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" strokeWidth="1.75" />
+              <path strokeWidth="1.75" strokeLinecap="round" d="M8 2v4M16 2v4M3 10h18" />
+            </svg>
+          </button>
         </div>
 
-        {/* Next day button */}
         <button
+          type="button"
           onClick={handleNextDay}
-          className="p-2 rounded-lg hover:bg-muted transition-colors"
+          className={iconButtonClass}
           aria-label="Next day"
         >
-          <svg
-            className="w-5 h-5 text-muted-foreground"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
 
       {/* Today button and formatted date */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">{formatDateDisplay(dateISO)}</span>
+      <div className="flex items-center justify-between gap-3 rounded-2xl border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] px-3 py-2.5 [box-shadow:var(--solar-surface-inset-shadow)]">
+        <span className="truncate text-xs text-[var(--solar-text)] sm:text-sm">{formatDateDisplay(dateISO)}</span>
 
-        {!dateIsToday && (
+        {!dateIsToday ? (
           <button
+            type="button"
             onClick={handleTodayClick}
-            className="text-sm text-primary hover:text-primary/80 font-medium"
+            className="whitespace-nowrap rounded-full border px-3 py-1 text-[0.7rem] font-semibold text-[var(--solar-accent)] transition-colors [border-color:var(--solar-input-focus-border)] [background:var(--solar-accent-soft)] hover:[background:var(--solar-row-hover)] sm:text-xs"
           >
             Go to Today
           </button>
-        )}
-
-        {dateIsToday && (
-          <span className="text-sm text-green-600 dark:text-green-400 font-medium">✓ Today</span>
+        ) : (
+          <span className="whitespace-nowrap rounded-full border px-3 py-1 text-[0.7rem] font-semibold [border-color:var(--solar-success-border)] [background:var(--solar-success-bg)] text-[var(--solar-success-text)] sm:text-xs">
+            ✓ Today
+          </span>
         )}
       </div>
 
       {/* Quick date buttons */}
-      <div className="flex gap-1 flex-wrap">
+      <div className="flex flex-wrap gap-2">
         <QuickDateButton
-          label="Solstice (Jun)"
-          dateISO={`${new Date().getFullYear()}-06-21`}
+          label="Jun Sol"
+          fullLabel="June Solstice"
+          dateISO={`${today.slice(0, 4)}-06-21`}
           currentDate={dateISO}
           onClick={setDateISO}
         />
         <QuickDateButton
-          label="Equinox (Mar)"
-          dateISO={`${new Date().getFullYear()}-03-20`}
+          label="Mar Eq"
+          fullLabel="March Equinox"
+          dateISO={`${today.slice(0, 4)}-03-20`}
           currentDate={dateISO}
           onClick={setDateISO}
         />
         <QuickDateButton
-          label="Solstice (Dec)"
-          dateISO={`${new Date().getFullYear()}-12-21`}
+          label="Dec Sol"
+          fullLabel="December Solstice"
+          dateISO={`${today.slice(0, 4)}-12-21`}
           currentDate={dateISO}
           onClick={setDateISO}
         />
         <QuickDateButton
-          label="Equinox (Sep)"
-          dateISO={`${new Date().getFullYear()}-09-22`}
+          label="Sep Eq"
+          fullLabel="September Equinox"
+          dateISO={`${today.slice(0, 4)}-09-22`}
           currentDate={dateISO}
           onClick={setDateISO}
         />
@@ -192,11 +227,13 @@ export function DatePicker({ className = '', onChange }: DatePickerProps) {
  */
 function QuickDateButton({
   label,
+  fullLabel,
   dateISO,
   currentDate,
   onClick,
 }: {
   label: string;
+  fullLabel: string;
   dateISO: string;
   currentDate: string;
   onClick: (date: string) => void;
@@ -205,17 +242,16 @@ function QuickDateButton({
 
   return (
     <button
+      type="button"
       onClick={() => onClick(dateISO)}
-      className={`
-        px-2 py-1 text-xs rounded-full transition-colors
-        ${
-          isActive
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted text-muted-foreground hover:bg-muted/80'
-        }
-      `}
+      className={`rounded-full border px-3 py-1.5 text-[0.7rem] font-semibold transition-all duration-200 sm:text-xs ${
+        isActive
+          ? '[border-color:var(--solar-input-focus-border)] [background:var(--solar-accent-soft)] text-[var(--solar-text-strong)] shadow-[0_0_24px_rgba(56,189,248,0.14)]'
+          : '[border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] text-[var(--solar-text)] hover:[background:var(--solar-button-hover-bg)]'
+      }`}
     >
-      {label}
+      <span className="sr-only">{fullLabel}</span>
+      <span aria-hidden="true">{label}</span>
     </button>
   );
 }
@@ -231,7 +267,7 @@ export function DateDisplayCompact({ className = '' }: { className?: string }) {
       <span className="text-muted-foreground">Date:</span>
       <span className="font-medium text-foreground">{formatDateDisplay(dateISO)}</span>
       {isToday(dateISO) && (
-        <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded">
+        <span className="rounded-full border px-2 py-0.5 text-xs [border-color:var(--solar-success-border)] [background:var(--solar-success-bg)] text-[var(--solar-success-text)]">
           Today
         </span>
       )}

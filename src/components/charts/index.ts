@@ -7,3 +7,7 @@
 export { AltitudeChart, type AltitudeChartProps } from './AltitudeChart';
 export { AzimuthChart, type AzimuthChartProps } from './AzimuthChart';
 export { ChartsPanel, type ChartsPanelProps } from './ChartsPanel';
+export {
+  DeferredChartsPanel,
+  type DeferredChartsPanelProps,
+} from './DeferredChartsPanel';

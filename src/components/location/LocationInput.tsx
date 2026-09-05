@@ -6,7 +6,7 @@
  * Provides location input via:
  * - GPS button (browser geolocation)
  * - Search input (geocoding with debounced search)
- * - Display of current coordinates with OSM verification link
+ * - Display of current coordinates with a coordinate link
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
@@ -32,16 +32,26 @@ export function LocationInput({ className = '' }: LocationInputProps) {
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const selectionFeedbackFrameRef = useRef<number | null>(null);
+  const selectionCommitFrameRef = useRef<number | null>(null);
 
   // Geocoding hook with debouncing
   const {
     query,
     setQuery,
     results,
+    provider,
+    attribution,
+    attributionUrl,
     isLoading: isSearching,
     error: searchError,
+    submitSearch,
     clear: clearSearch,
-  } = useGeocode({ limit: 5 });
+    canSearch,
+  } = useGeocode({
+    limit: 5,
+    bias: location ? { lat: location.lat, lng: location.lng } : undefined,
+  });
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -57,6 +67,18 @@ export function LocationInput({ className = '' }: LocationInputProps) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(
+    () => () => {
+      if (selectionFeedbackFrameRef.current !== null) {
+        window.cancelAnimationFrame(selectionFeedbackFrameRef.current);
+      }
+      if (selectionCommitFrameRef.current !== null) {
+        window.cancelAnimationFrame(selectionCommitFrameRef.current);
+      }
+    },
+    []
+  );
 
   /**
    * Handle GPS button click
@@ -149,9 +171,27 @@ export function LocationInput({ className = '' }: LocationInputProps) {
    */
   const handleSelectLocation = useCallback(
     (selectedLocation: LocationPoint) => {
-      setLocation(selectedLocation);
       clearSearch();
       setIsSearchOpen(false);
+
+      if (selectionFeedbackFrameRef.current !== null) {
+        window.cancelAnimationFrame(selectionFeedbackFrameRef.current);
+      }
+      if (selectionCommitFrameRef.current !== null) {
+        window.cancelAnimationFrame(selectionCommitFrameRef.current);
+      }
+
+      // Let the selected result close and the text input clear in the first
+      // paint. The store update follows on the next frame, so solar results
+      // remain visually immediate without making the selection interaction
+      // wait for map, table, report, and chart consumers to reconcile.
+      selectionFeedbackFrameRef.current = window.requestAnimationFrame(() => {
+        selectionCommitFrameRef.current = window.requestAnimationFrame(() => {
+          setLocation(selectedLocation);
+          selectionFeedbackFrameRef.current = null;
+          selectionCommitFrameRef.current = null;
+        });
+      });
     },
     [setLocation, clearSearch]
   );
@@ -179,53 +219,45 @@ export function LocationInput({ className = '' }: LocationInputProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       setIsSearchOpen(false);
+    } else if (e.key === 'Enter' && canSearch) {
+      e.preventDefault();
+      setIsSearchOpen(true);
+      void submitSearch();
     }
   };
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      <div className="grid grid-cols-2 gap-4">
-        {/* Left: Manual Coordinates */}
-        <div>
-          <ManualCoordinates
-            initialLat={location?.lat}
-            initialLng={location?.lng}
-            onSubmit={(newLocation) => {
-              setLocation(newLocation);
-              setError(null);
-              setGpsError(null);
-              clearSearch();
-            }}
-            className="w-full"
-          />
-        </div>
-
-        {/* Right: Search + GPS */}
-        <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">
+    <div className={`space-y-3 ${className}`}>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.32fr)_minmax(0,0.88fr)] md:gap-4">
+        {/* Primary: Search + GPS */}
+        <div className="rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-3 [box-shadow:var(--solar-surface-inset-shadow)] sm:p-4">
+          <label className="mb-2 block text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-text-muted)]">
             Search Location
           </label>
+          <p className="mb-3 text-xs text-[var(--solar-text-faint)]">
+            Search by address, district, landmark, or city name.
+          </p>
           <div className="flex gap-2">
             {/* Search Input */}
-            <div className="relative flex-1" ref={searchContainerRef}>
+            <div className="relative min-w-0 flex-1" ref={searchContainerRef}>
               <input
                 type="text"
                 value={query}
                 onChange={handleSearchChange}
                 onFocus={handleSearchFocus}
                 onKeyDown={handleKeyDown}
-                placeholder="City, address..."
-                className="w-full px-3 py-2 pl-9 bg-background 
-                           border border-input
-                           text-foreground text-sm
-                           rounded-lg focus:outline-none focus:ring-2 focus:ring-ring
-                           placeholder:text-muted-foreground"
+                placeholder="Search location, address, or city..."
+                autoComplete="off"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-controls="search-location-results"
+                aria-expanded={isSearchOpen && canSearch}
+                className="h-12 w-full rounded-2xl border px-3 py-2 pl-10 text-sm text-[var(--solar-text-strong)] [border-color:var(--solar-input-border)] [background:var(--solar-input-bg)] [box-shadow:var(--solar-input-shadow)] transition-all outline-none placeholder:text-[var(--solar-input-placeholder)] focus:[border-color:var(--solar-input-focus-border)] focus:ring-2 focus:ring-[var(--solar-input-focus-ring)]"
                 aria-label="Search for a location"
-                aria-expanded={isSearchOpen}
                 aria-haspopup="listbox"
               />
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--solar-input-icon)]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -239,7 +271,7 @@ export function LocationInput({ className = '' }: LocationInputProps) {
               </svg>
               {isSearching && (
                 <svg
-                  className="animate-spin absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary"
+                  className="animate-spin absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--solar-accent)]"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -261,30 +293,43 @@ export function LocationInput({ className = '' }: LocationInputProps) {
               )}
 
               {/* Search Results Dropdown */}
-              {isSearchOpen && query.length >= 2 && (
+              {isSearchOpen && canSearch && (
                 <SearchResults
                   results={results}
                   isLoading={isSearching}
                   query={query}
+                  provider={provider}
+                  attribution={attribution}
+                  attributionUrl={attributionUrl}
+                  error={searchError}
                   onSelect={handleSelectLocation}
+                  listboxId="search-location-results"
                 />
               )}
             </div>
 
+            <button
+              type="button"
+              onClick={() => {
+                setIsSearchOpen(true);
+                void submitSearch();
+              }}
+              disabled={!canSearch || isSearching}
+              className="h-12 flex-shrink-0 rounded-2xl border px-4 text-sm font-semibold text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Search for this location"
+            >
+              Search
+            </button>
+
             {/* GPS Button */}
             <button
+              type="button"
               onClick={handleUseGps}
               disabled={isLoading}
-              className="flex items-center justify-center px-4 py-2 
-                         bg-secondary 
-                         text-secondary-foreground 
-                         hover:bg-secondary/80 
-                         border border-border
-                         rounded-lg transition-colors
-                         disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Use current GPS location"
-              title="Use current GPS location"
-            >
+               className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] disabled:cursor-not-allowed disabled:opacity-50"
+               aria-label="Use current GPS location"
+               title="Use current GPS location"
+             >
               {isLoading ? (
                 <svg
                   className="animate-spin h-5 w-5"
@@ -326,37 +371,56 @@ export function LocationInput({ className = '' }: LocationInputProps) {
             </button>
           </div>
         </div>
+
+        {/* Secondary: Manual Coordinates */}
+        <div className="rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-3 [box-shadow:var(--solar-surface-inset-shadow)]">
+          <ManualCoordinates
+            initialLat={location?.lat}
+            initialLng={location?.lng}
+            onSubmit={(newLocation) => {
+              setLocation(newLocation);
+              setError(null);
+              setGpsError(null);
+              clearSearch();
+            }}
+            className="w-full"
+          />
+        </div>
       </div>
 
       {/* Error Messages */}
-      {(gpsError || searchError || error) && (
-        <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-lg">
-          <p className="text-xs text-destructive">{gpsError || searchError || error}</p>
+      {(gpsError || error) && (
+        <div className="rounded-2xl border [border-color:var(--solar-danger-soft-border)] [background:var(--solar-danger-soft-bg)] p-3">
+          <p className="text-xs text-[var(--solar-danger-soft-text)]">{gpsError || error}</p>
         </div>
       )}
 
       {/* Current Location Display */}
       {location && (
-        <div className="p-2 bg-card rounded-lg border border-border" data-testid="location-display">
+        <div
+          className="rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-soft-bg)] p-3 [box-shadow:var(--solar-surface-shadow)] backdrop-blur-xl"
+          data-testid="location-display"
+        >
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-primary rounded-full flex-shrink-0" />
+               <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--solar-accent)] shadow-[0_0_12px_rgba(14,165,233,0.45)]" />
             <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-xs font-medium text-foreground truncate">
-                  {location.name || 'Selected Location'}
-                </p>
-                <p className="text-[10px] text-muted-foreground font-mono">
-                  {location.lat.toFixed(4)}°, {location.lng.toFixed(4)}°
-                </p>
+                  <p className="truncate text-xs font-semibold text-[var(--solar-text-strong)]">
+                    {location.name || 'Selected Location'}
+                  </p>
+                  <p className="font-mono text-[10px] text-[var(--solar-text-muted)]">
+                    {location.lat.toFixed(4)}°, {location.lng.toFixed(4)}°
+                  </p>
               </div>
-              {/* OSM Verification Link */}
+              {/* Coordinate Link */}
               {location.osmUrl && (
                 <a
                   href={location.osmUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary"
-                  title="Verify on OpenStreetMap"
+                  className="text-[var(--solar-text-muted)] transition-colors hover:text-[var(--solar-accent)]"
+                  title="Open coordinates"
+                  aria-label="Open coordinates"
                 >
                   <svg
                     className="w-3.5 h-3.5"

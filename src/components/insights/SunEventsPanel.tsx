@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * SunEventsPanel Component
  *
@@ -65,14 +63,16 @@ function getDayLengthLabel(events: SunEvents): string | null {
 /**
  * SunEventsPanel displays sunrise, sunset, and day length
  */
-export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) {
+export function SunEventsPanel({ events, timezone, className = '' }: SunEventsPanelProps) {
   // Loading/empty state
   if (!events) {
-    return (
-      <div className={`bg-slate-50 dark:bg-slate-800 rounded-lg p-4 ${className}`}>
+      return (
+      <div
+        className={`rounded-[24px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-4 ${className}`}
+      >
         <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
-          <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
+          <div className="h-4 w-1/2 rounded [background-color:var(--solar-divider)]" />
+          <div className="h-24 rounded-[20px] [background:var(--solar-surface-soft-bg)]" />
         </div>
       </div>
     );
@@ -84,82 +84,98 @@ export function SunEventsPanel({ events, className = '' }: SunEventsPanelProps) 
   const dayLengthLabel = getDayLengthLabel(events);
   const isPolarDay = events.dayLengthHours === 24;
   const isPolarNight = events.dayLengthHours === 0;
+  const dayPercentage =
+    events.dayLengthHours !== null && events.dayLengthHours !== undefined
+      ? Math.min(100, Math.max(0, (events.dayLengthHours / 24) * 100))
+      : 0;
+  const metaLabel = timezone ? timezone.replace('_', ' ') : 'Local solar time';
+
+  const eventCards = [
+    {
+      label: 'Sunrise',
+      value: sunriseTime || '—',
+      icon: '🌅',
+      accent: 'from-amber-300/18 via-amber-200/10 to-transparent',
+    },
+    {
+      label: 'Sunset',
+      value: sunsetTime || '—',
+      icon: '🌇',
+      accent: 'from-orange-300/18 via-rose-200/10 to-transparent',
+    },
+    {
+      label: 'Day Length',
+      value: dayLengthLabel || '—',
+      icon: '⏱️',
+      accent: 'from-sky-300/18 via-cyan-200/10 to-transparent',
+    },
+  ];
 
   return (
-    <div className={`flex flex-col gap-4 ${className}`}>
-      {/* Special condition banner */}
+    <div className={`space-y-4 ${className}`}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-kicker)]">
+            Event timeline
+          </p>
+          <p className="mt-1 text-sm text-[var(--solar-text)]">Daily light window in local time</p>
+        </div>
+        <span className="text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[var(--solar-text-faint)]">
+          {metaLabel}
+        </span>
+      </div>
+
       {condition && (
         <div
-          className={`
-            rounded-lg p-2 text-center text-xs font-medium
-            ${
-              isPolarDay
-                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200'
-                : ''
-            }
-            ${isPolarNight ? 'bg-slate-800 dark:bg-slate-900 text-slate-200' : ''}
-          `}
+          className={`rounded-2xl border px-3 py-2 text-center text-xs font-medium ${
+            isPolarDay
+              ? '[border-color:var(--solar-warning-border)] [background:var(--solar-warning-bg)] text-[var(--solar-warning-text)]'
+              : isPolarNight
+                ? '[border-color:var(--solar-state-night-border)] [background:var(--solar-state-night-pill-bg)] text-[var(--solar-text)]'
+                : '[border-color:var(--solar-input-focus-border)] [background:var(--solar-accent-soft)] text-[var(--solar-accent)]'
+          }`}
         >
           {condition}
         </div>
       )}
 
-      {/* Sun events list - Horizontal Row */}
-      <div className="grid grid-cols-3 gap-2">
-        {/* Sunrise */}
-        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-          <div className="text-xl mb-1">🌅</div>
-          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
-            Sunrise
-          </p>
-          <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
-            {sunriseTime || '—'}
-          </p>
-        </div>
-
-        {/* Sunset */}
-        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-          <div className="text-xl mb-1">🌇</div>
-          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
-            Sunset
-          </p>
-          <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
-            {sunsetTime || '—'}
-          </p>
-        </div>
-
-        {/* Day Length */}
-        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-          <div className="text-xl mb-1">⏱️</div>
-          <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">
-            Day Length
-          </p>
-          <p className="text-sm font-bold text-slate-900 dark:text-white">
-            {dayLengthLabel || '—'}
-          </p>
-        </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {eventCards.map((card) => (
+          <div
+            key={card.label}
+            className="relative overflow-hidden rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-4 [box-shadow:var(--solar-surface-inset-shadow)]"
+          >
+            <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${card.accent}`} />
+            <div className="relative">
+              <div className="text-xl">{card.icon}</div>
+              <p className="mt-3 text-[0.64rem] font-semibold uppercase tracking-[0.26em] text-[var(--solar-text-muted)]">
+                {card.label}
+              </p>
+              <p className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[var(--solar-text-strong)] sm:text-xl">
+                {card.value}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Day length visual bar */}
       {events.dayLengthHours !== null && events.dayLengthHours !== undefined && (
-        <div className="">
-          <div className="flex justify-between text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-            <span>
-              Day ({Math.min(100, Math.max(0, Math.round((events.dayLengthHours / 24) * 100)))}%)
-            </span>
-            <span>
-              Night (
-              {100 - Math.min(100, Math.max(0, Math.round((events.dayLengthHours / 24) * 100)))}%)
-            </span>
+        <div className="rounded-[22px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-4 [box-shadow:var(--solar-surface-inset-shadow)]">
+          <div className="mb-2 flex items-center justify-between text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[var(--solar-text-muted)]">
+            <span>Day {Math.round(dayPercentage)}%</span>
+            <span>Night {100 - Math.round(dayPercentage)}%</span>
           </div>
-          <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700">
+
+          <div className="h-2.5 overflow-hidden rounded-full [background:var(--solar-surface-soft-bg)] ring-1 ring-[var(--solar-surface-border)]">
             <div
-              className="h-full bg-gradient-to-r from-amber-400 to-orange-400 transition-all duration-500"
-              style={{
-                width: `${Math.min(100, Math.max(0, (events.dayLengthHours / 24) * 100))}%`,
-              }}
+              className="h-full rounded-full bg-gradient-to-r from-amber-300 via-orange-300 to-sky-300 transition-all duration-500"
+              style={{ width: `${dayPercentage}%` }}
             />
           </div>
+
+          <p className="mt-3 text-xs text-[var(--solar-text-muted)]">
+            {dayLengthLabel || 'Solar event data available once the selected location resolves.'}
+          </p>
         </div>
       )}
     </div>
@@ -176,7 +192,7 @@ export function SunEventsPanelCompact({
   if (!events) {
     return (
       <div className={`flex items-center gap-4 text-sm ${className}`}>
-        <span className="text-slate-400">Loading...</span>
+        <span className="text-[var(--solar-text-muted)]">Loading...</span>
       </div>
     );
   }

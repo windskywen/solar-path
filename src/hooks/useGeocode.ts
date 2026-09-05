@@ -1,211 +1,297 @@
 /**
- * useGeocode Hook
+ * Global address autocomplete backed by /api/geocode.
  *
- * Provides geocoding functionality with debouncing, caching via React Query.
- * Uses the /api/geocode endpoint which proxies to OpenStreetMap Nominatim.
- *
- * @see contracts/api.md for API specification
+ * Geoapify autocomplete is debounced. Explicit Search / Enter requests use a
+ * full search mode that can automatically fall back to TomTom on empty results.
  */
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LocationPoint } from '@/types/solar';
+import type {
+  GeocodeProvider,
+  GeocodeResponse,
+  GeocodeResult,
+} from '@/lib/geocode/providers';
 
-// Debounce delay in ms (increased to reduce API calls while typing)
-const DEBOUNCE_DELAY = 800;
+const DEBOUNCE_DELAY = 500;
+const CJK_QUERY_LENGTH = 2;
+const OTHER_QUERY_LENGTH = 3;
+const CJK_PATTERN = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uac00-\ud7af]/u;
 
-// Minimum query length (increased for CJK characters which are more compact)
-const MIN_QUERY_LENGTH = 2;
-
-// Types matching API response
-export interface GeocodeResult {
-  displayName: string;
-  lat: number;
-  lng: number;
-  osmUrl: string;
+export function minimumGeocodeQueryLength(query: string): number {
+  return CJK_PATTERN.test(query) ? CJK_QUERY_LENGTH : OTHER_QUERY_LENGTH;
 }
 
-interface GeocodeResponse {
-  results: GeocodeResult[];
+export function isGeocodeQueryEligible(query: string): boolean {
+  const trimmedQuery = query.trim();
+  return trimmedQuery.length >= minimumGeocodeQueryLength(trimmedQuery);
 }
 
-interface GeocodeError {
-  error: string;
-  code: 'INVALID_QUERY' | 'INVALID_LIMIT' | 'RATE_LIMITED' | 'UPSTREAM_ERROR';
-  retryAfter?: number;
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedValue(value), delay);
+    return () => window.clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
 }
 
-/**
- * Fetch geocoding results from API
- */
-async function fetchGeocode(query: string, limit: number = 5): Promise<GeocodeResult[]> {
+interface FetchGeocodeOptions {
+  query: string;
+  limit: number;
+  mode: 'autocomplete' | 'search';
+  signal?: AbortSignal;
+  lat?: number;
+  lng?: number;
+}
+
+export async function fetchGeocode({
+  query,
+  limit,
+  mode,
+  signal,
+  lat,
+  lng,
+}: FetchGeocodeOptions): Promise<GeocodeResponse> {
   const params = new URLSearchParams({
     q: query,
     limit: limit.toString(),
+    mode,
   });
+
+  if (lat !== undefined && lng !== undefined) {
+    params.set('lat', lat.toString());
+    params.set('lng', lng.toString());
+  }
 
   const response = await fetch(`/api/geocode?${params}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
     },
+    cache: 'no-store',
+    signal,
   });
 
-  if (!response.ok) {
-    const errorData: GeocodeError = await response.json().catch(() => ({
-      error: `Geocode request failed: ${response.status}`,
-      code: 'UPSTREAM_ERROR' as const,
-    }));
-
-    if (errorData.code === 'RATE_LIMITED') {
-      throw new Error(`Rate limited. Please wait ${errorData.retryAfter || 60} seconds.`);
-    }
-
-    throw new Error(errorData.error || 'Geocoding failed');
+  const data = (await response.json().catch(() => null)) as GeocodeResponse | null;
+  if (
+    data &&
+    (data.provider === 'geoapify' || data.provider === 'tomtom') &&
+    Array.isArray(data.results)
+  ) {
+    return data;
   }
 
-  const data: GeocodeResponse = await response.json();
-  return data.results;
-}
-
-/**
- * Debounce hook implementation
- */
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useMemo(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
-  return debouncedValue;
+  throw new Error(`Geocode request failed: ${response.status}`);
 }
 
 export interface UseGeocodeOptions {
-  /** Maximum number of results to return (1-10) */
+  /** Maximum number of results to return (1-5) */
   limit?: number;
   /** Debounce delay in milliseconds */
   debounceMs?: number;
   /** Whether the hook is enabled */
   enabled?: boolean;
+  /** Current selected position used only as a soft result bias */
+  bias?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 export interface UseGeocodeResult {
-  /** Current search query */
   query: string;
-  /** Update search query */
   setQuery: (query: string) => void;
-  /** Search results */
   results: GeocodeResult[];
-  /** Whether a search is in progress */
+  provider: GeocodeProvider | null;
+  attribution: string;
+  attributionUrl?: string;
   isLoading: boolean;
-  /** Whether the query is being debounced */
   isDebouncing: boolean;
-  /** Error message if search failed */
   error: string | null;
-  /** Clear search query and results */
+  submitSearch: () => Promise<void>;
   clear: () => void;
-  /** Convert a geocode result to a LocationPoint */
+  canSearch: boolean;
   toLocationPoint: (result: GeocodeResult) => LocationPoint;
 }
 
-/**
- * Hook for geocoding location searches with debouncing
- *
- * @example
- * ```tsx
- * const { query, setQuery, results, isLoading } = useGeocode();
- *
- * return (
- *   <input
- *     value={query}
- *     onChange={(e) => setQuery(e.target.value)}
- *     placeholder="Search location..."
- *   />
- *   {isLoading && <span>Searching...</span>}
- *   {results.map((r) => (
- *     <div key={r.osmUrl} onClick={() => selectLocation(toLocationPoint(r))}>
- *       {r.displayName}
- *     </div>
- *   ))}
- * );
- * ```
- */
-export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
-  const { limit = 5, debounceMs = DEBOUNCE_DELAY, enabled = true } = options;
+interface SubmittedSearchState {
+  query: string;
+  response: GeocodeResponse;
+}
 
-  const [query, setQuery] = useState('');
+export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
+  const {
+    limit = 5,
+    debounceMs = DEBOUNCE_DELAY,
+    enabled = true,
+    bias,
+  } = options;
+  const queryClient = useQueryClient();
+  const [query, setQueryState] = useState('');
+  const [submittedState, setSubmittedState] = useState<SubmittedSearchState | null>(null);
+  const [submittedError, setSubmittedError] = useState<string | null>(null);
+  const [isSubmittedLoading, setIsSubmittedLoading] = useState(false);
+  const submittedAbortRef = useRef<AbortController | null>(null);
+  const submittedQueryRef = useRef<string | null>(null);
   const debouncedQuery = useDebounce(query, debounceMs);
 
-  // Determine if we should search
-  const shouldSearch = enabled && debouncedQuery.trim().length >= MIN_QUERY_LENGTH;
-  const isDebouncing = query !== debouncedQuery;
+  const trimmedQuery = query.trim();
+  const trimmedDebouncedQuery = debouncedQuery.trim();
+  const canSearch = enabled && isGeocodeQueryEligible(trimmedQuery);
+  const shouldSearch =
+    enabled &&
+    trimmedQuery === trimmedDebouncedQuery &&
+    isGeocodeQueryEligible(trimmedDebouncedQuery);
+  const isDebouncing = canSearch && query !== debouncedQuery;
 
-  // Use React Query for caching and request management
   const {
-    data: results = [],
-    isLoading: isQueryLoading,
-    error: queryError,
+    data: autocompleteResponse,
+    isFetching: isAutocompleteLoading,
+    error: autocompleteError,
   } = useQuery({
-    queryKey: ['geocode', debouncedQuery, limit],
-    queryFn: () => fetchGeocode(debouncedQuery.trim(), limit),
+    queryKey: [
+      'geocode',
+      'autocomplete',
+      trimmedDebouncedQuery,
+      limit,
+      bias?.lat ?? null,
+      bias?.lng ?? null,
+    ],
+    queryFn: ({ signal }) =>
+      fetchGeocode({
+        query: trimmedDebouncedQuery,
+        limit,
+        mode: 'autocomplete',
+        signal,
+        lat: bias?.lat,
+        lng: bias?.lng,
+      }),
     enabled: shouldSearch,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes (was cacheTime)
-    retry: (failureCount, error) => {
-      // Don't retry on rate limit
-      if (error.message.includes('Rate limited')) return false;
-      return failureCount < 2;
-    },
+    retry: false,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
 
-  // Clear function
-  const clear = useCallback(() => {
-    setQuery('');
-  }, []);
+  const setQuery = useCallback(
+    (nextQuery: string) => {
+      submittedAbortRef.current?.abort();
+      submittedAbortRef.current = null;
+      submittedQueryRef.current = null;
+      setSubmittedState(null);
+      setSubmittedError(null);
+      setIsSubmittedLoading(false);
+      void queryClient.cancelQueries({ queryKey: ['geocode', 'autocomplete'] });
+      setQueryState(nextQuery);
+    },
+    [queryClient]
+  );
 
-  // Convert geocode result to LocationPoint
-  const toLocationPoint = useCallback((result: GeocodeResult): LocationPoint => {
-    return {
+  const clear = useCallback(() => setQuery(''), [setQuery]);
+
+  useEffect(
+    () => () => {
+      submittedAbortRef.current?.abort();
+    },
+    []
+  );
+
+  const currentSubmittedResponse =
+    submittedState?.query === trimmedQuery ? submittedState.response : undefined;
+  const activeResponse = currentSubmittedResponse || (!isDebouncing ? autocompleteResponse : undefined);
+
+  const submitSearch = useCallback(async () => {
+    const submittedQuery = query.trim();
+    if (
+      !isGeocodeQueryEligible(submittedQuery) ||
+      submittedQueryRef.current === submittedQuery
+    ) return;
+
+    submittedAbortRef.current?.abort();
+    submittedQueryRef.current = submittedQuery;
+    const controller = new AbortController();
+    submittedAbortRef.current = controller;
+    setIsSubmittedLoading(true);
+    setSubmittedError(null);
+
+    try {
+      const response = await fetchGeocode({
+        query: submittedQuery,
+        limit,
+        mode: 'search',
+        signal: controller.signal,
+        lat: bias?.lat,
+        lng: bias?.lng,
+      });
+      setSubmittedState({ query: submittedQuery, response });
+      if (response.error) setSubmittedError(response.error);
+    } catch {
+      if (controller.signal.aborted) return;
+      setSubmittedError('Address search is unavailable. Use GPS or enter coordinates manually.');
+    } finally {
+      if (submittedAbortRef.current === controller) {
+        submittedAbortRef.current = null;
+        setIsSubmittedLoading(false);
+        window.setTimeout(() => {
+          if (submittedQueryRef.current === submittedQuery) {
+            submittedQueryRef.current = null;
+          }
+        }, 1_000);
+      }
+    }
+  }, [bias?.lat, bias?.lng, limit, query]);
+
+  const toLocationPoint = useCallback(
+    (result: GeocodeResult): LocationPoint => ({
       lat: result.lat,
       lng: result.lng,
       name: result.displayName,
       osmUrl: result.osmUrl,
       source: 'search',
-    };
-  }, []);
+    }),
+    []
+  );
 
-  // Determine loading state (includes debouncing)
-  const isLoading = shouldSearch && (isQueryLoading || isDebouncing);
-
-  // Extract error message
-  const error = queryError ? (queryError as Error).message : null;
+  const error =
+    submittedError ||
+    activeResponse?.error ||
+    (autocompleteError && canSearch
+      ? 'Address suggestions are temporarily unavailable. Press Search to retry.'
+      : null);
 
   return {
     query,
     setQuery,
-    results,
-    isLoading,
+    results: activeResponse?.results ?? [],
+    provider: activeResponse?.provider ?? null,
+    attribution: activeResponse?.attribution ?? '',
+    attributionUrl: activeResponse?.attributionUrl,
+    isLoading: canSearch && (isDebouncing || isAutocompleteLoading || isSubmittedLoading),
     isDebouncing,
     error,
+    submitSearch,
     clear,
+    canSearch,
     toLocationPoint,
   };
 }
 
-/**
- * Standalone geocode function for one-off lookups
- * (Not debounced, for direct API calls)
- */
-export async function geocodeLocation(query: string, limit: number = 5): Promise<GeocodeResult[]> {
-  if (query.trim().length < MIN_QUERY_LENGTH) {
-    return [];
-  }
-  return fetchGeocode(query.trim(), limit);
+export async function geocodeLocation(query: string, limit = 5): Promise<GeocodeResult[]> {
+  const trimmedQuery = query.trim();
+  if (!isGeocodeQueryEligible(trimmedQuery)) return [];
+
+  const response = await fetchGeocode({
+    query: trimmedQuery,
+    limit,
+    mode: 'autocomplete',
+  });
+  return response.results;
 }

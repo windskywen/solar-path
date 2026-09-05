@@ -14,6 +14,10 @@ A web application that visualizes the sun's path across the sky for any location
 - **Timezone Support**: Configure timezone for accurate local time calculations
 - **Responsive Design**: Works on desktop and mobile devices
 - **Accessibility**: Keyboard navigation, screen reader support, WCAG 2.1 AA compliant
+- **Trust Pages**: Built-in Privacy Policy and About/Contact routes for review readiness
+- **Reproducible Evidence**: Static external benchmarks, page-specific guide datasets, and deterministic UTF-8 CSV downloads
+- **Manual Ad Slot Support**: Optional, env-gated AdSense placement with a strict ten-page allowlist and one responsive unit per eligible page
+- **SEO Foundations**: Metadata, structured data, `robots.txt`, `sitemap.xml`, and social share images
 
 ## Getting Started
 
@@ -35,17 +39,46 @@ A web application that visualizes the sun's path across the sky for any location
    npm install
    ```
 
-3. Create environment file (optional, for IP geolocation):
+3. Create an environment file for local overrides and the address-search API key:
    ```bash
    cp .env.example .env.local
    ```
 
-4. Start the development server:
+4. Add a server-only TomTom Search API key:
+   ```bash
+   TOMTOM_SEARCH_API_KEY=your-key-here
+   ```
+   Keep the real key in `.env.local` and in Vercel Development, Preview, and Production
+   environment variables. Do not rename it with a `NEXT_PUBLIC_` prefix.
+
+5. Optional SEO site URL configuration:
+   ```bash
+   NEXT_PUBLIC_SITE_URL=https://your-production-domain.example
+   ```
+   Set this in production so canonical URLs, `robots.txt`, `sitemap.xml`, and social metadata use the correct public domain.
+
+   This repository also supports a committed `.env.production` for public, non-secret values such as the canonical site URL.
+
+6. Optional AdSense configuration:
+   ```bash
+   NEXT_PUBLIC_ADSENSE_ENABLED=false
+   NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-0000000000000000
+   NEXT_PUBLIC_ADSENSE_SIDEBAR_SLOT_ID=
+   NEXT_PUBLIC_ADSENSE_TOOL_SLOT_ID=
+   NEXT_PUBLIC_ADSENSE_ARTICLE_SLOT_ID=
+   ```
+   During review, keep `NEXT_PUBLIC_ADSENSE_ENABLED=false`. The publisher ID is still emitted through the `google-adsense-account` meta tag, but the script and all ad slots stay absent. Keep Auto Ads disabled.
+
+   Only after AdSense marks the site **Ready**, create three responsive manual units, set the slot IDs, and change `NEXT_PUBLIC_ADSENSE_ENABLED=true`. The sidebar variable controls the home unit after a valid solar dataset exists; tool and article variables control placements after calculator results/evidence and individual-guide evidence. The script is explicitly entered only by `/`, the three calculator routes, and the six guide-detail routes. `/guides`, empty home results, About, Methodology, Contact, Privacy, Terms, loading, error, and not-found states remain ad-free. The app also serves `public/ads.txt` from the site root.
+
+   Follow [the AdSense release checklist](docs/adsense-release-checklist.md) before review and again before enabling ads.
+
+7. Start the development server:
    ```bash
    npm run dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+8. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Available Scripts
 
@@ -57,6 +90,8 @@ A web application that visualizes the sun's path across the sky for any location
 | `npm run lint` | Run ESLint |
 | `npm test` | Run unit tests with Vitest |
 | `npm run test:e2e` | Run E2E tests with Playwright |
+
+The solar engine is identified as `SPT-SUN-V1`. `/methodology#validation-report` compares the production engine with fixed NREL SPA and USNO snapshots without adding an external runtime dependency. Home, calculator, and guide CSV files contain site-calculated values and current user inputs, not raw TomTom or OpenStreetMap provider payloads.
 
 ## Tech Stack
 
@@ -157,4 +192,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - Solar calculations by [mourner/suncalc](https://github.com/mourner/suncalc)
 - Map tiles by [OpenStreetMap](https://www.openstreetmap.org/) contributors
-- Geocoding by [Nominatim](https://nominatim.org/)
+- Address autocomplete by [TomTom Search](https://developer.tomtom.com/search-api/documentation/search-service/fuzzy-search)
+- Explicit fallback geocoding by [Nominatim](https://nominatim.org/)

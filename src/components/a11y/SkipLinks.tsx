@@ -32,8 +32,9 @@ function SkipLink({ targetId, label }: SkipLinkProps) {
       onClick={handleClick}
       className="
         sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100]
-        bg-blue-600 text-white px-4 py-2 rounded-md font-medium
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+        px-4 py-2 rounded-md font-medium
+        bg-[var(--solar-text-strong)] text-[var(--background)]
+        focus:outline-none focus:ring-2 focus:ring-[var(--solar-switch-ring)] focus:ring-offset-2
       "
     >
       {label}

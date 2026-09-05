@@ -8,7 +8,7 @@
  * Rays are color-coded by daylight state.
  */
 
-import { useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import type { HourlySolarPosition, LocationPoint } from '@/types/solar';
@@ -47,7 +47,7 @@ export interface SolarRaysLayerProps {
 /**
  * SolarRaysLayer renders 24 solar position rays on the map
  */
-export function SolarRaysLayer({
+export const SolarRaysLayer = memo(function SolarRaysLayer({
   location,
   positions,
   selectedHour,
@@ -146,7 +146,7 @@ export function SolarRaysLayer({
       </Source>
     </>
   );
-}
+});
 
 /**
  * Hook to handle ray click events on the map
@@ -185,23 +185,28 @@ export function useRayClickHandler(
 export function SolarRaysLegend({ className = '' }: { className?: string }) {
   const items = [
     { color: RAY_COLORS.day, label: 'Daytime' },
-    { color: RAY_COLORS.golden, label: 'Golden Hour' },
+    { color: RAY_COLORS.golden, label: 'Golden' },
     { color: RAY_COLORS.night, label: 'Night' },
     { color: RAY_COLORS.selected, label: 'Selected' },
   ];
 
-  return (
-    <div
-      className={`bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg p-3 shadow-lg ${className}`}
-    >
-      <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-        Solar Ray Colors
+    return (
+      <div
+        className={`max-w-[7.2rem] rounded-[18px] border [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] p-2 [box-shadow:var(--solar-surface-shadow)] backdrop-blur-2xl sm:max-w-none sm:rounded-[22px] sm:p-3 ${className}`}
+      >
+      <h3 className="mb-1.5 text-[0.56rem] font-semibold uppercase tracking-[0.22em] text-[var(--solar-text)] sm:mb-2 sm:text-[0.64rem] sm:tracking-[0.24em]">
+        Ray colors
       </h3>
-      <div className="space-y-1">
+      <div className="space-y-1 sm:space-y-1.5">
         {items.map((item) => (
-          <div key={item.label} className="flex items-center gap-2">
-            <div className="w-4 h-1 rounded-full" style={{ backgroundColor: item.color }} />
-            <span className="text-xs text-slate-600 dark:text-slate-400">{item.label}</span>
+          <div key={item.label} className="flex items-center gap-1.5 sm:gap-2">
+            <div
+              className="h-1 w-3 rounded-full sm:w-4"
+              style={{ backgroundColor: item.color }}
+            />
+            <span className="text-[0.62rem] text-[var(--solar-text)] sm:text-[0.68rem]">
+              {item.label}
+            </span>
           </div>
         ))}
       </div>

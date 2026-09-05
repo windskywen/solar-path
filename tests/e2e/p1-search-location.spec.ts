@@ -4,17 +4,51 @@
  * Tests the location search feature:
  * 1. User can type in search box
  * 2. Search results appear after debounce delay
- * 3. Results show OSM verification link
+ * 3. Results show provider attribution and a coordinate link
  * 4. Clicking a result updates the location
  * 5. Map recenters to selected location
  *
  * @see specs/001-solar-path-tracker/quickstart.md - Scenario 2
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Route } from '@playwright/test';
+
+async function fulfillGeocode(route: Route) {
+  const url = new URL(route.request().url());
+  const query = url.searchParams.get('q') || 'Unknown';
+  const hasNoResults = query.includes('xyznotarealplace');
+
+  await route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      provider: 'geoapify',
+      attribution: 'Powered by Geoapify',
+      attributionUrl: 'https://www.geoapify.com/',
+      fallbackAvailable: false,
+      results: hasNoResults
+        ? []
+        : [
+            {
+              id: `geoapify-${query}`,
+              displayName:
+                query === '35.6762, 139.6503'
+                  ? 'Tokyo, Japan'
+                  : `${query}, Mock address`,
+              lat: query.toLowerCase().includes('sydney') ? -33.8688 : 35.6762,
+              lng: query.toLowerCase().includes('sydney') ? 151.2093 : 139.6503,
+              resultType: 'Point Address',
+              osmUrl:
+                'https://www.openstreetmap.org/?mlat=35.6762&mlon=139.6503#map=18/35.6762/139.6503',
+            },
+          ],
+    }),
+  });
+}
 
 test.describe('User Story 2: Search Location', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/geocode?**', fulfillGeocode);
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     // Wait for map to load
@@ -32,27 +66,38 @@ test.describe('User Story 2: Search Location', () => {
     await expect(searchInput).toHaveValue('Tokyo');
   });
 
+  test('Search button submits a full search request', async ({ page }) => {
+    const searchInput = page.getByPlaceholder(/Search location/i);
+    await searchInput.fill('Brisbane');
+
+    const submittedRequest = page.waitForRequest((request) => {
+      if (!request.url().includes('/api/geocode?')) return false;
+      return new URL(request.url()).searchParams.get('mode') === 'search';
+    });
+    await page.getByRole('button', { name: 'Search for this location' }).click();
+
+    await submittedRequest;
+  });
+
   test('typing shows search results after debounce', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('Tokyo');
 
     // Wait for debounce (400ms) + API response
-    await expect(page.getByText(/Tokyo/i).locator(':visible').first()).toBeVisible({
-      timeout: 5000,
-    });
+    await expect(
+      page.getByRole('listbox', { name: /Search results/i }).getByRole('button').filter({ hasText: /Tokyo/i })
+    ).toHaveCount(1, { timeout: 5000 });
   });
 
-  test('search results include OSM verification link', async ({ page }) => {
+  test('search results include Geoapify attribution and a coordinate link', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('Sydney');
 
     // Wait for results to appear
     await page.waitForTimeout(600); // Debounce + API
 
-    // Look for OSM link in results
-    const osmLink = page.getByText('OSM ↗').or(page.locator('a[href*="openstreetmap.org"]'));
-
-    await expect(osmLink.first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('link', { name: 'Powered by Geoapify' })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('link', { name: /Open coordinates/i }).first()).toBeVisible();
   });
 
   test('clicking search result updates location display', async ({ page }) => {
@@ -72,7 +117,7 @@ test.describe('User Story 2: Search Location', () => {
     });
   });
 
-  test('selecting location shows OSM verification link in display', async ({ page }) => {
+  test('selecting location shows a coordinate link in display', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('London');
 
@@ -84,8 +129,9 @@ test.describe('User Story 2: Search Location', () => {
       .first();
     await result.click();
 
-    // Should see verification link
-    await expect(page.getByText(/Verify on OpenStreetMap/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('link', { name: 'Open coordinates' })).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   test('map recenters when location is selected from search', async ({ page }) => {
@@ -150,12 +196,12 @@ test.describe('User Story 2: Search Location', () => {
     // Search for a coordinate
     await searchInput.fill('35.6762, 139.6503');
 
-    // Wait for results (may show Tokyo or nearby locations)
-    await page.waitForTimeout(1000);
-
-    // Should get some results or show coordinates
-    const bodyContent = await page.textContent('body');
-    expect(bodyContent).toMatch(/Tokyo|Japan|35\.67|139\.65/);
+    await expect(
+      page
+        .getByRole('listbox', { name: /Search results/i })
+        .getByRole('button')
+        .filter({ hasText: 'Tokyo, Japan' })
+    ).toHaveCount(1, { timeout: 5000 });
   });
 
   test('search handles special characters', async ({ page }) => {
@@ -183,8 +229,89 @@ test.describe('User Story 2: Search Location', () => {
     await searchInput.fill('T');
     await page.waitForTimeout(600);
 
-    // No results should appear (min 2 chars)
+    // No results should appear (non-CJK minimum is 3 chars)
     await expect(page.getByRole('listbox', { name: /Search results/i })).not.toBeVisible();
+  });
+
+  test('two Latin characters do not search, while two CJK characters do', async ({ page }) => {
+    const searchInput = page.getByPlaceholder(/Search location/i);
+    let requestCount = 0;
+    page.on('request', (request) => {
+      if (request.url().includes('/api/geocode?')) requestCount += 1;
+    });
+
+    await searchInput.fill('Pa');
+    await page.waitForTimeout(600);
+    expect(requestCount).toBe(0);
+
+    await searchInput.fill('介禮');
+    await expect(page.getByRole('button').filter({ hasText: /介禮/i }).first()).toBeVisible({
+      timeout: 5000,
+    });
+    expect(requestCount).toBe(1);
+  });
+
+  test('provider failure lets Enter issue one explicit search request', async ({ page }) => {
+    await page.unroute('**/api/geocode?**');
+    let submittedRequests = 0;
+    await page.route('**/api/geocode?**', async (route) => {
+      const url = new URL(route.request().url());
+      if (url.searchParams.get('mode') === 'search') {
+        submittedRequests += 1;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            provider: 'tomtom',
+            attribution: 'Search data © TomTom',
+            fallbackAvailable: false,
+            results: [
+              {
+                id: 'tomtom-fallback-1',
+                displayName: '介禮街, 花蓮市, 花蓮縣, Taiwan',
+                lat: 23.991,
+                lng: 121.611,
+                resultType: 'Street',
+                osmUrl: 'https://www.openstreetmap.org/?mlat=23.991&mlon=121.611',
+              },
+            ],
+          }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          provider: 'geoapify',
+          attribution: 'Powered by Geoapify',
+          fallbackAvailable: false,
+          results: [],
+          error: 'Address suggestions are temporarily unavailable. Press Search to retry.',
+          code: 'PROVIDER_UNAVAILABLE',
+        }),
+      });
+    });
+
+    const searchInput = page.getByPlaceholder(/Search location/i);
+    await searchInput.fill('介禮街20號');
+    await expect(
+      page.getByText('Address suggestions are temporarily unavailable. Press Search to retry.')
+    ).toBeVisible({ timeout: 5000 });
+    expect(submittedRequests).toBe(0);
+
+    await searchInput.press('Enter');
+    await searchInput.press('Enter');
+    await expect(
+      page
+        .getByRole('listbox', { name: /Search results/i })
+        .getByText('Search data © TomTom')
+    ).toBeVisible({ timeout: 5000 });
+    expect(submittedRequests).toBe(1);
+
+    await page.getByRole('button').filter({ hasText: /介禮街/i }).first().click();
+    await expect(page.locator('[data-testid="location-display"]')).toContainText('介禮街');
   });
 
   test('no results message shown for unknown location', async ({ page }) => {
@@ -225,8 +352,6 @@ test.describe('User Story 2: Search Location', () => {
 
   test('solar data updates for searched location', async ({ page }) => {
     // First get initial sunrise time
-    const initialSunrise = await page.getByText(/Sunrise/i).textContent();
-
     // Search and select different location
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('Sydney Australia');
@@ -242,12 +367,18 @@ test.describe('User Story 2: Search Location', () => {
     await page.waitForTimeout(2000);
 
     // Sun events should still be visible with potentially different values
-    await expect(page.getByText(/Sunrise/i)).toBeVisible();
-    await expect(page.getByText(/Sunset/i)).toBeVisible();
+    await expect(page.getByText('Sunrise', { exact: true })).toBeVisible();
+    await expect(page.getByText('Sunset', { exact: true })).toBeVisible();
   });
 });
 
 test.describe('Search Rate Limiting', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/geocode?**', fulfillGeocode);
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+  });
+
   test('handles rate limit gracefully', async ({ page }) => {
     // Make many rapid searches to potentially trigger rate limit
     const searchInput = await page.getByPlaceholder(/Search location/i);
@@ -261,8 +392,8 @@ test.describe('Search Rate Limiting', () => {
     await searchInput.fill('Final City');
     await page.waitForTimeout(1000);
 
-    // Should either show results or rate limit message (not crash)
-    const bodyContent = await page.textContent('body');
-    expect(bodyContent).toBeDefined();
+    await expect(
+      page.getByRole('listbox', { name: /Search results/i }).getByRole('button').filter({ hasText: /Final City/i })
+    ).toHaveCount(1, { timeout: 5000 });
   });
 });

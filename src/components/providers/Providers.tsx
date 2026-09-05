@@ -3,17 +3,24 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState, type ReactNode } from 'react';
+import { ThemeProvider } from './ThemeProvider';
 
 interface ProvidersProps {
   children: ReactNode;
 }
+
+const showQueryDevtools =
+  process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_E2E_TEST !== 'true';
 
 /**
  * Application providers wrapper
  *
  * Includes:
  * - React Query for server state management
- * - Zustand store is automatically available (no provider needed)
+ * - Theme state shared across public pages
+ *
+ * The interactive home owns its hydration-safe Zustand provider at the route
+ * boundary; calculators intentionally keep independent local state.
  */
 export function Providers({ children }: ProvidersProps) {
   // Create QueryClient in state to avoid recreation on re-render
@@ -36,9 +43,11 @@ export function Providers({ children }: ProvidersProps) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        {showQueryDevtools && <ReactQueryDevtools initialIsOpen={false} />}
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
