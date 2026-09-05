@@ -154,7 +154,7 @@ test.describe('Independent calculators', () => {
     await searchInput.click();
     await searchInput.pressSequentially('Broken place');
     await expect(searchInput).toHaveValue('Broken place');
-    await expect(page.getByText(/Autocomplete unavailable — press Enter to search/i)).toBeVisible({
+    await expect(page.getByText(/Address suggestions are temporarily unavailable/i)).toBeVisible({
       timeout: 5000,
     });
     await expect(page.getByText('Or enter coordinates manually below.')).toBeVisible();

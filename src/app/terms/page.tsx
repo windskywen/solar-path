@@ -127,9 +127,10 @@ export default function TermsPage() {
           </div>
           <div className="space-y-4 p-4 text-sm leading-6 text-[var(--solar-text)] sm:p-5">
             <p>
-              Map tiles and the explicitly triggered fallback search may use OpenStreetMap and
-              Nominatim data under their applicable attribution and usage terms. Solar calculations
-              use SunCalc. Other operational services are described in our Privacy Policy.
+              Map tiles use OpenStreetMap data under its applicable attribution and usage terms.
+              Address search uses Geoapify and may automatically use TomTom when the primary service
+              is unavailable. Solar calculations use SunCalc. Other operational services are
+              described in our Privacy Policy.
             </p>
             <p>
               You must use the site lawfully and must not overload, bypass limits on, interfere

@@ -90,7 +90,7 @@ export default function AboutPage() {
             </article>
             <article className="rounded-[22px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">
               <h3 className="font-semibold text-[var(--solar-text-strong)]">Time and location context</h3>
-              <p className="mt-3 text-sm leading-7 text-[var(--solar-text)]">Luxon applies IANA timezone rules. Coordinate-to-timezone lookup is handled locally with @photostructure/tz-lookup. TomTom powers primary location search; OpenStreetMap provides map data and the explicitly requested fallback search.</p>
+              <p className="mt-3 text-sm leading-7 text-[var(--solar-text)]">Luxon applies IANA timezone rules. Coordinate-to-timezone lookup is handled locally with @photostructure/tz-lookup. Geoapify powers primary location search, TomTom provides an automatically limited backup, and OpenStreetMap provides map data and coordinate links.</p>
             </article>
             <article className="rounded-[22px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">
               <h3 className="font-semibold text-[var(--solar-text-strong)]">Definitions and limits</h3>

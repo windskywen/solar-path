@@ -61,6 +61,7 @@ export function SiteFooter() {
         <div className="mt-6 border-t pt-5 [border-color:var(--solar-divider)]">
           <p className="text-[var(--solar-text-muted)]">
             Data and calculation sources:{' '}
+            <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer" className={linkClass}>Geoapify</a>,{' '}
             <a href="https://www.tomtom.com/" target="_blank" rel="noopener noreferrer" className={linkClass}>TomTom</a>,{' '}
             <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className={linkClass}>OpenStreetMap</a>,{' '}
             <a href="https://github.com/mourner/suncalc" target="_blank" rel="noopener noreferrer" className={linkClass}>SunCalc</a>, Luxon, and @photostructure/tz-lookup.

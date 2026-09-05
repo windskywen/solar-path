@@ -42,10 +42,10 @@ export function LocationInput({ className = '' }: LocationInputProps) {
     results,
     provider,
     attribution,
+    attributionUrl,
     isLoading: isSearching,
     error: searchError,
-    fallbackAvailable,
-    requestFallback,
+    submitSearch,
     clear: clearSearch,
     canSearch,
   } = useGeocode({
@@ -219,10 +219,10 @@ export function LocationInput({ className = '' }: LocationInputProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       setIsSearchOpen(false);
-    } else if (e.key === 'Enter' && fallbackAvailable) {
+    } else if (e.key === 'Enter' && canSearch) {
       e.preventDefault();
       setIsSearchOpen(true);
-      void requestFallback();
+      void submitSearch();
     }
   };
 
@@ -300,13 +300,26 @@ export function LocationInput({ className = '' }: LocationInputProps) {
                   query={query}
                   provider={provider}
                   attribution={attribution}
+                  attributionUrl={attributionUrl}
                   error={searchError}
-                  fallbackAvailable={fallbackAvailable}
                   onSelect={handleSelectLocation}
                   listboxId="search-location-results"
                 />
               )}
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsSearchOpen(true);
+                void submitSearch();
+              }}
+              disabled={!canSearch || isSearching}
+              className="h-12 flex-shrink-0 rounded-2xl border px-4 text-sm font-semibold text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] [box-shadow:var(--solar-button-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:[border-color:var(--solar-button-hover-border)] hover:[background:var(--solar-button-hover-bg)] hover:text-[var(--solar-button-hover-text)] disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Search for this location"
+            >
+              Search
+            </button>
 
             {/* GPS Button */}
             <button

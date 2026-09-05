@@ -1,8 +1,8 @@
 /**
  * Global address autocomplete backed by /api/geocode.
  *
- * TomTom requests are debounced and never retained by React Query after the
- * active search. Nominatim is only requested through requestFallback().
+ * Geoapify autocomplete is debounced. Explicit Search / Enter requests use a
+ * full search mode that can automatically fall back to TomTom on empty results.
  */
 
 'use client';
@@ -44,7 +44,7 @@ function useDebounce<T>(value: T, delay: number): T {
 interface FetchGeocodeOptions {
   query: string;
   limit: number;
-  mode: 'autocomplete' | 'fallback';
+  mode: 'autocomplete' | 'search';
   signal?: AbortSignal;
   lat?: number;
   lng?: number;
@@ -64,11 +64,9 @@ export async function fetchGeocode({
     mode,
   });
 
-  if (mode === 'autocomplete') {
-    if (lat !== undefined && lng !== undefined) {
-      params.set('lat', lat.toString());
-      params.set('lng', lng.toString());
-    }
+  if (lat !== undefined && lng !== undefined) {
+    params.set('lat', lat.toString());
+    params.set('lng', lng.toString());
   }
 
   const response = await fetch(`/api/geocode?${params}`, {
@@ -83,7 +81,7 @@ export async function fetchGeocode({
   const data = (await response.json().catch(() => null)) as GeocodeResponse | null;
   if (
     data &&
-    (data.provider === 'tomtom' || data.provider === 'nominatim') &&
+    (data.provider === 'geoapify' || data.provider === 'tomtom') &&
     Array.isArray(data.results)
   ) {
     return data;
@@ -112,17 +110,17 @@ export interface UseGeocodeResult {
   results: GeocodeResult[];
   provider: GeocodeProvider | null;
   attribution: string;
+  attributionUrl?: string;
   isLoading: boolean;
   isDebouncing: boolean;
   error: string | null;
-  fallbackAvailable: boolean;
-  requestFallback: () => Promise<void>;
+  submitSearch: () => Promise<void>;
   clear: () => void;
   canSearch: boolean;
   toLocationPoint: (result: GeocodeResult) => LocationPoint;
 }
 
-interface FallbackState {
+interface SubmittedSearchState {
   query: string;
   response: GeocodeResponse;
 }
@@ -136,11 +134,11 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
   } = options;
   const queryClient = useQueryClient();
   const [query, setQueryState] = useState('');
-  const [fallbackState, setFallbackState] = useState<FallbackState | null>(null);
-  const [fallbackError, setFallbackError] = useState<string | null>(null);
-  const [isFallbackLoading, setIsFallbackLoading] = useState(false);
-  const fallbackAttemptedQueryRef = useRef<string | null>(null);
-  const fallbackAbortRef = useRef<AbortController | null>(null);
+  const [submittedState, setSubmittedState] = useState<SubmittedSearchState | null>(null);
+  const [submittedError, setSubmittedError] = useState<string | null>(null);
+  const [isSubmittedLoading, setIsSubmittedLoading] = useState(false);
+  const submittedAbortRef = useRef<AbortController | null>(null);
+  const submittedQueryRef = useRef<string | null>(null);
   const debouncedQuery = useDebounce(query, debounceMs);
 
   const trimmedQuery = query.trim();
@@ -185,12 +183,12 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
 
   const setQuery = useCallback(
     (nextQuery: string) => {
-      fallbackAbortRef.current?.abort();
-      fallbackAbortRef.current = null;
-      fallbackAttemptedQueryRef.current = null;
-      setFallbackState(null);
-      setFallbackError(null);
-      setIsFallbackLoading(false);
+      submittedAbortRef.current?.abort();
+      submittedAbortRef.current = null;
+      submittedQueryRef.current = null;
+      setSubmittedState(null);
+      setSubmittedError(null);
+      setIsSubmittedLoading(false);
       void queryClient.cancelQueries({ queryKey: ['geocode', 'autocomplete'] });
       setQueryState(nextQuery);
     },
@@ -201,60 +199,55 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
 
   useEffect(
     () => () => {
-      fallbackAbortRef.current?.abort();
+      submittedAbortRef.current?.abort();
     },
     []
   );
 
-  const currentFallbackResponse =
-    fallbackState?.query === trimmedQuery ? fallbackState.response : undefined;
-  const activeResponse = currentFallbackResponse || (!isDebouncing ? autocompleteResponse : undefined);
+  const currentSubmittedResponse =
+    submittedState?.query === trimmedQuery ? submittedState.response : undefined;
+  const activeResponse = currentSubmittedResponse || (!isDebouncing ? autocompleteResponse : undefined);
 
-  const networkFallbackAvailable = Boolean(autocompleteError) && canSearch;
-  const fallbackAvailable =
-    !currentFallbackResponse &&
-    (activeResponse?.fallbackAvailable === true || networkFallbackAvailable);
-
-  const requestFallback = useCallback(async () => {
-    const fallbackQuery = query.trim();
+  const submitSearch = useCallback(async () => {
+    const submittedQuery = query.trim();
     if (
-      !isGeocodeQueryEligible(fallbackQuery) ||
-      !fallbackAvailable ||
-      fallbackAttemptedQueryRef.current === fallbackQuery
-    ) {
-      return;
-    }
+      !isGeocodeQueryEligible(submittedQuery) ||
+      submittedQueryRef.current === submittedQuery
+    ) return;
 
-    fallbackAttemptedQueryRef.current = fallbackQuery;
-    fallbackAbortRef.current?.abort();
+    submittedAbortRef.current?.abort();
+    submittedQueryRef.current = submittedQuery;
     const controller = new AbortController();
-    fallbackAbortRef.current = controller;
-    setIsFallbackLoading(true);
-    setFallbackError(null);
+    submittedAbortRef.current = controller;
+    setIsSubmittedLoading(true);
+    setSubmittedError(null);
 
     try {
       const response = await fetchGeocode({
-        query: fallbackQuery,
+        query: submittedQuery,
         limit,
-        mode: 'fallback',
+        mode: 'search',
         signal: controller.signal,
+        lat: bias?.lat,
+        lng: bias?.lng,
       });
-      setFallbackState({ query: fallbackQuery, response });
-      if (response.error) setFallbackError(response.error);
-    } catch (error) {
+      setSubmittedState({ query: submittedQuery, response });
+      if (response.error) setSubmittedError(response.error);
+    } catch {
       if (controller.signal.aborted) return;
-      setFallbackError(
-        error instanceof Error
-          ? error.message
-          : 'Fallback address search is unavailable. Use GPS or enter coordinates manually.'
-      );
+      setSubmittedError('Address search is unavailable. Use GPS or enter coordinates manually.');
     } finally {
-      if (fallbackAbortRef.current === controller) {
-        fallbackAbortRef.current = null;
-        setIsFallbackLoading(false);
+      if (submittedAbortRef.current === controller) {
+        submittedAbortRef.current = null;
+        setIsSubmittedLoading(false);
+        window.setTimeout(() => {
+          if (submittedQueryRef.current === submittedQuery) {
+            submittedQueryRef.current = null;
+          }
+        }, 1_000);
       }
     }
-  }, [fallbackAvailable, limit, query]);
+  }, [bias?.lat, bias?.lng, limit, query]);
 
   const toLocationPoint = useCallback(
     (result: GeocodeResult): LocationPoint => ({
@@ -268,10 +261,10 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
   );
 
   const error =
-    fallbackError ||
+    submittedError ||
     activeResponse?.error ||
     (autocompleteError && canSearch
-      ? 'Autocomplete unavailable — press Enter to search'
+      ? 'Address suggestions are temporarily unavailable. Press Search to retry.'
       : null);
 
   return {
@@ -280,11 +273,11 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
     results: activeResponse?.results ?? [],
     provider: activeResponse?.provider ?? null,
     attribution: activeResponse?.attribution ?? '',
-    isLoading: canSearch && (isDebouncing || isAutocompleteLoading || isFallbackLoading),
+    attributionUrl: activeResponse?.attributionUrl,
+    isLoading: canSearch && (isDebouncing || isAutocompleteLoading || isSubmittedLoading),
     isDebouncing,
     error,
-    fallbackAvailable,
-    requestFallback,
+    submitSearch,
     clear,
     canSearch,
     toLocationPoint,
