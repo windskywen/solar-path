@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildCoordinateUrl,
+  convertGeoapifyResult,
+  convertGeoapifyResults,
   convertTomTomResult,
   convertTomTomResults,
 } from '@/lib/geocode/providers';
@@ -73,6 +75,38 @@ describe('TomTom geocode provider conversion', () => {
     expect(buildCoordinateUrl(23.991, 121.611)).toBe(
       'https://www.openstreetmap.org/?mlat=23.991&mlon=121.611#map=18/23.991/121.611'
     );
+  });
+});
+
+describe('Geoapify geocode provider conversion', () => {
+  it('converts a formatted result to the shared shape', () => {
+    const result = convertGeoapifyResult({
+      place_id: 'geo-place-1',
+      formatted: 'Queen Street, Brisbane QLD, Australia',
+      result_type: 'street',
+      lat: -27.4698,
+      lon: 153.0251,
+    });
+
+    expect(result).toMatchObject({
+      id: 'geo-place-1',
+      displayName: 'Queen Street, Brisbane QLD, Australia',
+      resultType: 'street',
+      lat: -27.4698,
+      lng: 153.0251,
+    });
+    expect(result?.osmUrl).toContain('mlat=-27.4698');
+  });
+
+  it('filters Geoapify results without valid coordinates', () => {
+    const results = convertGeoapifyResults({
+      results: [
+        { place_id: 'valid', formatted: 'Valid', lat: 1, lon: 2 },
+        { place_id: 'missing', formatted: 'Missing coordinates' },
+      ],
+    });
+
+    expect(results.map((result) => result.id)).toEqual(['valid']);
   });
 });
 

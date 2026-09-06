@@ -14,7 +14,7 @@ const title = 'Calculation Methodology';
 const description =
   'How Solar Path Tracker calculates solar position, event times, timezones, golden hour, daylight states, and polar conditions, including precision limits.';
 const path = '/methodology';
-const lastUpdated = '2026-08-24';
+const lastUpdated = '2026-09-06';
 
 export const metadata: Metadata = buildPageMetadata({
   title,
@@ -59,7 +59,7 @@ export default function MethodologyPage() {
           <p className={`${eyebrow} mt-6`}>Transparent calculations</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-[var(--solar-text-strong)] sm:text-5xl">{title}</h1>
           <p className="mt-5 max-w-4xl text-base leading-7 text-[var(--solar-text)] sm:text-lg">{description}</p>
-          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>24 August 2026</time></p>
+          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>6 September 2026</time></p>
         </header>
 
         <div className="mt-4 grid gap-4">
@@ -147,9 +147,10 @@ export default function MethodologyPage() {
           <section className={`${panel} p-4 sm:p-6`} aria-labelledby="limits-heading">
             <p className={eyebrow}>Precision and scope</p>
             <h2 id="limits-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]">What the model does not calculate</h2>
+            <p className="mt-4 max-w-5xl text-sm leading-7 text-[var(--solar-text)]">Terrain and buildings may appear in the 3D view as visual context where available. These visual layers are separate from the astronomical engine and do not change its solar positions or event times.</p>
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
               <ul className="space-y-3 rounded-[22px] border p-4 text-sm leading-6 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] text-[var(--solar-text)]">
-                <li>• No terrain elevation profile, skyline mask, building, tree, or window geometry.</li>
+                <li>• No shading calculation from terrain elevation, skyline masks, buildings, trees, or window geometry.</li>
                 <li>• No live cloud, haze, smoke, aerosol, visibility, or weather-dependent refraction.</li>
                 <li>• No observer elevation correction or surveyed true-horizon measurement.</li>
               </ul>

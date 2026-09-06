@@ -21,8 +21,9 @@ async function fulfillGeocode(route: Route) {
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify({
-      provider: 'tomtom',
-      attribution: 'Search data © TomTom',
+      provider: 'geoapify',
+      attribution: 'Powered by Geoapify',
+      attributionUrl: 'https://www.geoapify.com/',
       fallbackAvailable: false,
       results: [
         {

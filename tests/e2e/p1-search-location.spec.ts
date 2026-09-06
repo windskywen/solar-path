@@ -22,14 +22,15 @@ async function fulfillGeocode(route: Route) {
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify({
-      provider: 'tomtom',
-      attribution: 'Search data © TomTom',
+      provider: 'geoapify',
+      attribution: 'Powered by Geoapify',
+      attributionUrl: 'https://www.geoapify.com/',
       fallbackAvailable: false,
       results: hasNoResults
         ? []
         : [
             {
-              id: `tomtom-${query}`,
+              id: `geoapify-${query}`,
               displayName:
                 query === '35.6762, 139.6503'
                   ? 'Tokyo, Japan'
@@ -65,6 +66,19 @@ test.describe('User Story 2: Search Location', () => {
     await expect(searchInput).toHaveValue('Tokyo');
   });
 
+  test('Search button submits a full search request', async ({ page }) => {
+    const searchInput = page.getByPlaceholder(/Search location/i);
+    await searchInput.fill('Brisbane');
+
+    const submittedRequest = page.waitForRequest((request) => {
+      if (!request.url().includes('/api/geocode?')) return false;
+      return new URL(request.url()).searchParams.get('mode') === 'search';
+    });
+    await page.getByRole('button', { name: 'Search for this location' }).click();
+
+    await submittedRequest;
+  });
+
   test('typing shows search results after debounce', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('Tokyo');
@@ -75,14 +89,14 @@ test.describe('User Story 2: Search Location', () => {
     ).toHaveCount(1, { timeout: 5000 });
   });
 
-  test('search results include TomTom attribution and a coordinate link', async ({ page }) => {
+  test('search results include Geoapify attribution and a coordinate link', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('Sydney');
 
     // Wait for results to appear
     await page.waitForTimeout(600); // Debounce + API
 
-    await expect(page.getByText('Search data © TomTom')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('link', { name: 'Powered by Geoapify' })).toBeVisible({ timeout: 5000 });
     await expect(page.getByRole('link', { name: /Open coordinates/i }).first()).toBeVisible();
   });
 
@@ -237,28 +251,28 @@ test.describe('User Story 2: Search Location', () => {
     expect(requestCount).toBe(1);
   });
 
-  test('provider failure waits for Enter before issuing one fallback request', async ({ page }) => {
+  test('provider failure lets Enter issue one explicit search request', async ({ page }) => {
     await page.unroute('**/api/geocode?**');
-    let fallbackRequests = 0;
+    let submittedRequests = 0;
     await page.route('**/api/geocode?**', async (route) => {
       const url = new URL(route.request().url());
-      if (url.searchParams.get('mode') === 'fallback') {
-        fallbackRequests += 1;
+      if (url.searchParams.get('mode') === 'search') {
+        submittedRequests += 1;
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            provider: 'nominatim',
-            attribution: '© OpenStreetMap contributors',
+            provider: 'tomtom',
+            attribution: 'Search data © TomTom',
             fallbackAvailable: false,
             results: [
               {
-                id: 'nominatim-1',
+                id: 'tomtom-fallback-1',
                 displayName: '介禮街, 花蓮市, 花蓮縣, Taiwan',
                 lat: 23.991,
                 lng: 121.611,
-                resultType: 'OpenStreetMap way',
-                osmUrl: 'https://www.openstreetmap.org/way/1',
+                resultType: 'Street',
+                osmUrl: 'https://www.openstreetmap.org/?mlat=23.991&mlon=121.611',
               },
             ],
           }),
@@ -270,11 +284,11 @@ test.describe('User Story 2: Search Location', () => {
         status: 503,
         contentType: 'application/json',
         body: JSON.stringify({
-          provider: 'tomtom',
-          attribution: 'Search data © TomTom',
-          fallbackAvailable: true,
+          provider: 'geoapify',
+          attribution: 'Powered by Geoapify',
+          fallbackAvailable: false,
           results: [],
-          error: 'Autocomplete unavailable — press Enter to search',
+          error: 'Address suggestions are temporarily unavailable. Press Search to retry.',
           code: 'PROVIDER_UNAVAILABLE',
         }),
       });
@@ -283,18 +297,18 @@ test.describe('User Story 2: Search Location', () => {
     const searchInput = page.getByPlaceholder(/Search location/i);
     await searchInput.fill('介禮街20號');
     await expect(
-      page.getByText('Autocomplete unavailable — press Enter to search')
+      page.getByText('Address suggestions are temporarily unavailable. Press Search to retry.')
     ).toBeVisible({ timeout: 5000 });
-    expect(fallbackRequests).toBe(0);
+    expect(submittedRequests).toBe(0);
 
     await searchInput.press('Enter');
     await searchInput.press('Enter');
     await expect(
       page
         .getByRole('listbox', { name: /Search results/i })
-        .getByText('© OpenStreetMap contributors')
+        .getByText('Search data © TomTom')
     ).toBeVisible({ timeout: 5000 });
-    expect(fallbackRequests).toBe(1);
+    expect(submittedRequests).toBe(1);
 
     await page.getByRole('button').filter({ hasText: /介禮街/i }).first().click();
     await expect(page.locator('[data-testid="location-display"]')).toContainText('介禮街');

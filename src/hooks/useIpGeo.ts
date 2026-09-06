@@ -13,26 +13,35 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { getTaipeiExampleLocation } from '@/lib/solar/example-location';
 import type { IpGeoResponse, LocationPoint } from '@/types/solar';
 
-// Default fallback location (Taipei, Taiwan)
-const DEFAULT_LOCATION: LocationPoint = {
-  lat: 25.033,
-  lng: 121.5654,
-  name: 'Taipei, Taiwan (default)',
-  source: 'fallback',
-};
+export const IP_LOCATION_TIMEOUT_MS = 8_000;
 
 /**
  * Fetch IP geolocation from the API
  */
-async function fetchIpGeo(): Promise<IpGeoResponse> {
-  const response = await fetch('/api/ip-geo', {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
-  });
+export async function fetchIpGeo(): Promise<IpGeoResponse> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), IP_LOCATION_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch('/api/ip-geo', {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error('Approximate location timed out');
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -106,7 +115,7 @@ export function useIpGeo(): UseIpGeoResult {
   });
 
   // Always return a valid location (either from IP or default)
-  const location = data ? toLocationPoint(data) : DEFAULT_LOCATION;
+  const location = data ? toLocationPoint(data) : getTaipeiExampleLocation();
   const isDefault = !data;
 
   return {
@@ -125,5 +134,5 @@ export function useIpGeo(): UseIpGeoResult {
  * Useful for components that need a location immediately
  */
 export function getDefaultLocation(): LocationPoint {
-  return { ...DEFAULT_LOCATION };
+  return getTaipeiExampleLocation();
 }

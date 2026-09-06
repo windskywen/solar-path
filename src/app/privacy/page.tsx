@@ -38,7 +38,7 @@ export default function PrivacyPage() {
             while being transparent about the third-party services that help operate the site.
           </p>
           <p className="text-xs text-[var(--solar-text-muted)]">
-            Last updated: <time dateTime="2026-08-24">24 August 2026</time>
+            Last updated: <time dateTime="2026-09-05">5 September 2026</time>
           </p>
         </div>
       </section>
@@ -149,17 +149,16 @@ export default function PrivacyPage() {
             </p>
             <p>
               If you use Search Location, your query is sent through our `/api/geocode` endpoint to
-              TomTom so we can return matching global addresses, places, streets, and administrative
+              Geoapify so we can return matching global addresses, places, streets, and administrative
               areas. If a starting location is available, its coordinates are also sent as a soft
-              location preference; they do not restrict the search to that area. TomTom autocomplete
-              results are not placed in our shared 24-hour search cache.
+              location preference; they do not restrict the search to that area.
             </p>
             <p>
-              If TomTom autocomplete is unavailable, the interface offers a one-time fallback after
-              you explicitly press Enter. Only then is the current query sent to OpenStreetMap
-              Nominatim. Those fallback responses may be cached in server memory for up to 24 hours
-              to reduce repeated upstream lookups. Request metadata may also be used for rate
-              limiting.
+              Geoapify responses may be stored in a shared server cache for up to 24 hours; an empty
+              result is cached for up to 5 minutes. If Geoapify is unavailable, or an explicit Search
+              returns no match, the server may automatically retry through TomTom. TomTom responses
+              are not stored in the shared results cache. Request metadata is used for shared rate
+              limits, provider health protection, and rolling usage limits.
             </p>
             <p>
               On first load, the site may request an approximate location from our `/api/ip-geo`
@@ -190,15 +189,23 @@ export default function PrivacyPage() {
                   : ' is configured for account/site verification, but its advertising script and ad slots are disabled in review mode.'}
               </li>
               <li>
-                <strong className="text-[var(--solar-text-strong)]">TomTom:</strong> powers global
-                address and place autocomplete and may receive the search text and a soft location
+                <strong className="text-[var(--solar-text-strong)]">Geoapify:</strong> powers primary
+                global address and place search and may receive the search text and a soft location
                 preference.
               </li>
               <li>
-                <strong className="text-[var(--solar-text-strong)]">
-                  OpenStreetMap / Nominatim:
-                </strong>{' '}
-                provides map tiles, coordinate links, and the explicitly triggered fallback search.
+                <strong className="text-[var(--solar-text-strong)]">TomTom:</strong> provides the
+                automatically limited backup address search and may receive the same search text and
+                soft location preference when a backup request is needed.
+              </li>
+              <li>
+                <strong className="text-[var(--solar-text-strong)]">Upstash Redis:</strong> stores
+                temporary search-cache entries, rate-limit counters, provider health state, and
+                rolling provider-usage counters.
+              </li>
+              <li>
+                <strong className="text-[var(--solar-text-strong)]">OpenStreetMap:</strong> provides
+                map tiles and coordinate links.
               </li>
               <li>
                 <strong className="text-[var(--solar-text-strong)]">ip-api.com:</strong> provides

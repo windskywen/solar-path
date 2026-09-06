@@ -12,7 +12,7 @@ const title = 'About';
 const description =
   'Learn why Solar Path Tracker exists, how its solar results are calculated and checked, which data sources it uses, and how to report an error.';
 const path = '/about';
-const lastUpdated = '2026-08-24';
+const lastUpdated = '2026-09-06';
 
 export const metadata: Metadata = buildPageMetadata({
   title,
@@ -55,7 +55,7 @@ export default function AboutPage() {
           <p className={`${eyebrow} mt-6`}>Purpose and accountability</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-[var(--solar-text-strong)] sm:text-5xl">About Solar Path Tracker</h1>
           <p className="mt-5 max-w-4xl text-base leading-7 text-[var(--solar-text)] sm:text-lg">Solar Path Tracker turns a location, date, and local time into a readable sun path, solar angles, astronomical events, and educational worked examples. It is designed for first-pass daylight research before an on-site or professional assessment.</p>
-          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>24 August 2026</time></p>
+          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>6 September 2026</time></p>
         </header>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -64,7 +64,7 @@ export default function AboutPage() {
             <h2 id="purpose-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]">Make solar geometry easier to inspect</h2>
             <div className="mt-4 space-y-4 text-sm leading-7 text-[var(--solar-text)]">
               <p>Questions about direct light usually involve several facts at once: where the Sun sits around the compass, how high it is, how the path changes through the day, and when the horizon events occur. The site keeps those facts together in one visual workflow.</p>
-              <p>The map and 3D scene support exploration. The calculators provide focused inputs and results. The guides explain how to interpret those results without claiming that an unobstructed astronomical model can see a real building, tree, hill, cloud layer, or window.</p>
+              <p>The map and 3D scene support exploration. Terrain and buildings may appear as visual context where available, but those layers do not feed into the solar calculation. The calculators provide focused inputs and results, and the guides explain how to interpret that unobstructed astronomical baseline.</p>
             </div>
           </section>
 
@@ -90,7 +90,7 @@ export default function AboutPage() {
             </article>
             <article className="rounded-[22px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">
               <h3 className="font-semibold text-[var(--solar-text-strong)]">Time and location context</h3>
-              <p className="mt-3 text-sm leading-7 text-[var(--solar-text)]">Luxon applies IANA timezone rules. Coordinate-to-timezone lookup is handled locally with @photostructure/tz-lookup. TomTom powers primary location search; OpenStreetMap provides map data and the explicitly requested fallback search.</p>
+              <p className="mt-3 text-sm leading-7 text-[var(--solar-text)]">Luxon applies IANA timezone rules. Coordinate-to-timezone lookup is handled locally with @photostructure/tz-lookup. Geoapify powers primary location search, TomTom provides an automatically limited backup, and OpenStreetMap provides map data and coordinate links.</p>
             </article>
             <article className="rounded-[22px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">
               <h3 className="font-semibold text-[var(--solar-text-strong)]">Definitions and limits</h3>
@@ -109,7 +109,7 @@ export default function AboutPage() {
             </div>
             <div className="space-y-4 text-sm leading-7 text-[var(--solar-text)]">
               <p>Reported discrepancies are reproduced from the submitted coordinates, local date and time, timezone, page, displayed output, and comparison source. A confirmed calculation or explanation error is corrected in code or content, covered by an automated regression check where practical, and released with the page&apos;s visible modified date changed only when that page actually changes.</p>
-              <p>Model limits remain visible even when a benchmark passes: the engine describes unobstructed astronomical geometry and does not inspect terrain, buildings, vegetation, clouds, equipment, or a surveyed horizon. For consequential decisions, compare the output with an independent source and a qualified on-site assessment.</p>
+              <p>Model limits remain visible even when a benchmark passes: the engine describes unobstructed astronomical geometry and does not calculate shading from terrain, buildings, vegetation, clouds, equipment, or a surveyed horizon. Any terrain or building shown in 3D is visual context only. For consequential decisions, compare the output with an independent source and a qualified on-site assessment.</p>
             </div>
           </div>
           <div className="mt-5 rounded-[22px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">

@@ -9,7 +9,12 @@ describe('HomeSeoContent', () => {
     expect(screen.getByRole('heading', { name: 'Check a sun path for a place, date, and time' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'A calculated solar position, not a live sensor' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'What does a sun path map show?' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Does the map include terrain, buildings, trees, or weather?' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Can the 3D view display terrain and buildings?' })).toBeVisible();
+    expect(
+      screen.getByRole('heading', {
+        name: 'Does the calculation include shading from terrain, buildings, or trees?',
+      })
+    ).toBeVisible();
 
     expect(screen.getByRole('link', { name: 'Sunrise & Sunset Calculator' })).toHaveAttribute(
       'href',

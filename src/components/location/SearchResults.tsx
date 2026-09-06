@@ -22,10 +22,10 @@ export interface SearchResultsProps {
   provider: GeocodeProvider | null;
   /** Provider-required attribution */
   attribution: string;
+  /** Provider attribution destination */
+  attributionUrl?: string;
   /** Search error shown inside the dropdown */
   error?: string | null;
-  /** Whether Enter can trigger the one-off fallback */
-  fallbackAvailable?: boolean;
   /** Callback when a result is selected */
   onSelect: (location: LocationPoint) => void;
   /** Callback when the coordinate link is clicked */
@@ -179,8 +179,8 @@ export function SearchResults({
   query,
   provider,
   attribution,
+  attributionUrl,
   error,
-  fallbackAvailable = false,
   onSelect,
   onCoordinateClick,
   className = '',
@@ -203,7 +203,7 @@ export function SearchResults({
     );
   }
 
-  if (error && (fallbackAvailable || results.length === 0)) {
+  if (error && results.length === 0) {
     return (
       <div
         className={`absolute left-0 right-0 top-full z-[80] mt-2 rounded-[22px] border [border-color:var(--solar-dropdown-border)] [background:var(--solar-dropdown-bg)] [box-shadow:var(--solar-dropdown-shadow)] backdrop-blur-2xl ${className}`}
@@ -242,7 +242,18 @@ export function SearchResults({
         />
       ))}
       <div className="border-t [border-color:var(--solar-divider)] px-3 py-2 text-xs text-[var(--solar-text-muted)]">
-        {attribution || (provider === 'tomtom' ? 'Search data © TomTom' : '© OpenStreetMap contributors')}
+        {attributionUrl ? (
+          <a
+            href={attributionUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-[var(--solar-text-strong)]"
+          >
+            {attribution}
+          </a>
+        ) : (
+          attribution || (provider === 'tomtom' ? 'Search data © TomTom' : 'Powered by Geoapify')
+        )}
       </div>
     </div>
   );

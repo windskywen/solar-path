@@ -1,4 +1,4 @@
-export type GeocodeProvider = 'tomtom' | 'nominatim';
+export type GeocodeProvider = 'geoapify' | 'tomtom';
 
 export interface GeocodeResult {
   id: string;
@@ -12,6 +12,7 @@ export interface GeocodeResult {
 export interface GeocodeResponse {
   provider: GeocodeProvider;
   attribution: string;
+  attributionUrl?: string;
   fallbackAvailable: boolean;
   results: GeocodeResult[];
   error?: string;
@@ -56,17 +57,28 @@ export interface TomTomSearchResponse {
   results?: TomTomSearchResult[];
 }
 
-export interface NominatimResult {
-  place_id: number;
-  display_name: string;
-  lat: string;
-  lon: string;
-  osm_type: string;
-  osm_id: number;
+export interface GeoapifyResult {
+  place_id?: string;
+  formatted?: string;
+  name?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  result_type?: string;
+  lat?: number;
+  lon?: number;
+}
+
+export interface GeoapifySearchResponse {
+  results?: GeoapifyResult[];
 }
 
 export const TOMTOM_ATTRIBUTION = 'Search data © TomTom';
-export const NOMINATIM_ATTRIBUTION = '© OpenStreetMap contributors';
+export const TOMTOM_ATTRIBUTION_URL = 'https://www.tomtom.com/';
+export const GEOAPIFY_ATTRIBUTION = 'Powered by Geoapify';
+export const GEOAPIFY_ATTRIBUTION_URL = 'https://www.geoapify.com/';
 
 export function buildCoordinateUrl(lat: number, lng: number): string {
   const encodedLat = encodeURIComponent(lat.toString());
@@ -141,16 +153,55 @@ export function convertTomTomResults(response: TomTomSearchResponse): GeocodeRes
     .filter((result): result is GeocodeResult => result !== null);
 }
 
-export function convertNominatimResult(result: NominatimResult): GeocodeResult {
-  const osmType =
-    result.osm_type === 'node' ? 'node' : result.osm_type === 'way' ? 'way' : 'relation';
+function getGeoapifyDisplayName(result: GeoapifyResult): string {
+  if (result.formatted?.trim()) return result.formatted.trim();
+
+  return [
+    result.name,
+    result.address_line1,
+    result.address_line2,
+    result.city,
+    result.state,
+    result.country,
+  ]
+    .filter((value, index, values): value is string =>
+      Boolean(value?.trim()) && values.indexOf(value) === index
+    )
+    .join(', ');
+}
+
+export function convertGeoapifyResult(
+  result: GeoapifyResult,
+  index = 0
+): GeocodeResult | null {
+  const lat = result.lat;
+  const lng = result.lon;
+
+  if (
+    typeof lat !== 'number' ||
+    typeof lng !== 'number' ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng) ||
+    lat < -90 ||
+    lat > 90 ||
+    lng < -180 ||
+    lng > 180
+  ) {
+    return null;
+  }
 
   return {
-    id: `nominatim:${result.place_id}`,
-    displayName: result.display_name,
-    lat: Number.parseFloat(result.lat),
-    lng: Number.parseFloat(result.lon),
-    resultType: `OpenStreetMap ${osmType}`,
-    osmUrl: `https://www.openstreetmap.org/${osmType}/${result.osm_id}`,
+    id: result.place_id || `geoapify:${result.result_type || 'place'}:${lat}:${lng}:${index}`,
+    displayName: getGeoapifyDisplayName(result) || result.result_type || 'Place',
+    lat,
+    lng,
+    resultType: result.result_type || 'Place',
+    osmUrl: buildCoordinateUrl(lat, lng),
   };
+}
+
+export function convertGeoapifyResults(response: GeoapifySearchResponse): GeocodeResult[] {
+  return (response.results ?? [])
+    .map((result, index) => convertGeoapifyResult(result, index))
+    .filter((result): result is GeocodeResult => result !== null);
 }

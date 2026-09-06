@@ -1,76 +1,74 @@
 /**
- * Geocoding API Route
+ * Shared geocoding gateway.
  *
- * TomTom Fuzzy Search powers autocomplete. Public Nominatim is only called
- * after an explicit one-off fallback request from the user.
+ * Geoapify is the primary provider. TomTom is a paid automatic fallback with
+ * an application-enforced rolling budget. Public Nominatim is deliberately not
+ * used for address search or autocomplete.
  */
 
+import { createHmac } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  convertNominatimResult,
+  convertGeoapifyResults,
   convertTomTomResults,
-  NOMINATIM_ATTRIBUTION,
+  GEOAPIFY_ATTRIBUTION,
+  GEOAPIFY_ATTRIBUTION_URL,
   TOMTOM_ATTRIBUTION,
+  TOMTOM_ATTRIBUTION_URL,
+  type GeocodeProvider,
   type GeocodeResponse,
   type GeocodeResult,
-  type NominatimResult,
+  type GeoapifySearchResponse,
   type TomTomSearchResponse,
 } from '@/lib/geocode/providers';
+import {
+  SearchStoreUnavailableError,
+  searchStore,
+} from '@/lib/geocode/search-store';
 
+const GEOAPIFY_AUTOCOMPLETE_URL = 'https://api.geoapify.com/v1/geocode/autocomplete';
+const GEOAPIFY_SEARCH_URL = 'https://api.geoapify.com/v1/geocode/search';
 const TOMTOM_BASE_URL = 'https://api.tomtom.com/search/2/search';
 const TOMTOM_INDEXES = 'POI,PAD,Addr,Geo,Str,XStr,EPP';
-const TOMTOM_TIMEOUT_MS = 6000;
 
-const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
-const USER_AGENT = 'SolarPathTracker/1.0 (educational-project)';
-const NOMINATIM_TIMEOUT_MS = 8000;
+const GEOAPIFY_TIMEOUT_MS = 3_000;
+const TOMTOM_TIMEOUT_MS = 4_000;
+const GEOAPIFY_DAILY_LIMIT = 2_800;
+const TOMTOM_31_DAY_LIMIT = 5_000;
+const CLIENT_RATE_LIMIT = 150;
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const MAX_CACHE_SIZE = 1000;
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const THIRTY_ONE_DAYS_MS = 31 * ONE_DAY_MS;
+const SUCCESS_CACHE_TTL_MS = ONE_DAY_MS;
+const EMPTY_CACHE_TTL_MS = 5 * 60 * 1000;
+const SINGLE_FLIGHT_TTL_MS = 5_000;
 
-const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
-const MAX_REQUESTS_PER_WINDOW = 150;
+type SearchMode = 'autocomplete' | 'search';
+type ProviderFailureKind = 'auth' | 'rate-limit' | 'transient' | 'budget';
 
-let lastNominatimRequest = 0;
-const MIN_REQUEST_INTERVAL_MS = 1100;
+class ProviderError extends Error {
+  constructor(
+    readonly provider: GeocodeProvider,
+    readonly kind: ProviderFailureKind,
+    readonly status?: number,
+    readonly retryAfter = 0,
+    cause?: unknown
+  ) {
+    super(`${provider.toUpperCase()}_${kind.toUpperCase()}`, { cause });
+    this.name = 'ProviderError';
+  }
+}
 
-interface CacheEntry {
+interface CachedResults {
   results: GeocodeResult[];
-  timestamp: number;
 }
 
-interface RateLimitEntry {
-  count: number;
-  windowStart: number;
+function providerDetails(provider: GeocodeProvider) {
+  return provider === 'geoapify'
+    ? { attribution: GEOAPIFY_ATTRIBUTION, attributionUrl: GEOAPIFY_ATTRIBUTION_URL }
+    : { attribution: TOMTOM_ATTRIBUTION, attributionUrl: TOMTOM_ATTRIBUTION_URL };
 }
-
-class LRUCache<K, V> {
-  private cache = new Map<K, V>();
-
-  constructor(private readonly maxSize: number) {}
-
-  get(key: K): V | undefined {
-    const value = this.cache.get(key);
-    if (value !== undefined) {
-      this.cache.delete(key);
-      this.cache.set(key, value);
-    }
-    return value;
-  }
-
-  set(key: K, value: V): void {
-    if (this.cache.has(key)) {
-      this.cache.delete(key);
-    } else if (this.cache.size >= this.maxSize) {
-      const firstKey = this.cache.keys().next().value;
-      if (firstKey !== undefined) this.cache.delete(firstKey);
-    }
-    this.cache.set(key, value);
-  }
-}
-
-const nominatimCache = new LRUCache<string, CacheEntry>(MAX_CACHE_SIZE);
-const rateLimitMap = new Map<string, RateLimitEntry>();
 
 function jsonResponse(body: GeocodeResponse, status = 200, headers?: HeadersInit) {
   return NextResponse.json(body, {
@@ -83,18 +81,17 @@ function jsonResponse(body: GeocodeResponse, status = 200, headers?: HeadersInit
 }
 
 function errorResponse(
-  provider: GeocodeResponse['provider'],
+  provider: GeocodeProvider,
   error: string,
   code: NonNullable<GeocodeResponse['code']>,
   status: number,
-  fallbackAvailable: boolean,
   retryAfter?: number
 ) {
   return jsonResponse(
     {
       provider,
-      attribution: provider === 'tomtom' ? TOMTOM_ATTRIBUTION : NOMINATIM_ATTRIBUTION,
-      fallbackAvailable,
+      ...providerDetails(provider),
+      fallbackAvailable: false,
       results: [],
       error,
       code,
@@ -109,27 +106,6 @@ function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) return forwarded.split(',')[0].trim();
   return request.headers.get('x-real-ip') || 'unknown';
-}
-
-function checkRateLimit(clientIp: string): number {
-  const now = Date.now();
-  const entry = rateLimitMap.get(clientIp);
-
-  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
-    rateLimitMap.set(clientIp, { count: 1, windowStart: now });
-    return 0;
-  }
-
-  if (entry.count >= MAX_REQUESTS_PER_WINDOW) {
-    return Math.ceil((entry.windowStart + RATE_LIMIT_WINDOW_MS - now) / 1000);
-  }
-
-  entry.count++;
-  return 0;
-}
-
-function createCacheKey(query: string, limit: number): string {
-  return `${query.toLowerCase().trim()}:${limit}`;
 }
 
 function parseCoordinate(value: string | null, minimum: number, maximum: number): number | undefined {
@@ -151,16 +127,130 @@ function isAbortError(error: unknown): boolean {
   return name === 'AbortError' || name === 'TimeoutError';
 }
 
-function removeCjkHouseNumber(query: string): string {
-  return query
-    .replace(/\d+號/g, '')
-    .replace(/\d+巷/g, '')
-    .replace(/\d+弄/g, '')
-    .replace(/\d+樓/g, '')
-    .replace(/之\d+/g, '')
-    .replace(/[,-]\s*\d+/g, '')
-    .replace(/\s+/g, '')
-    .trim();
+function getRetryAfter(response: Response): number {
+  const value = response.headers.get('retry-after');
+  if (!value) return 0;
+  const seconds = Number.parseInt(value, 10);
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
+}
+
+function createCacheHash(
+  query: string,
+  limit: number,
+  mode: SearchMode,
+  lat?: number,
+  lng?: number
+): string {
+  const value = JSON.stringify({
+    query: query.toLocaleLowerCase().replace(/\s+/g, ' ').trim(),
+    limit,
+    mode,
+    lat: lat === undefined ? null : Number(lat.toFixed(3)),
+    lng: lng === undefined ? null : Number(lng.toFixed(3)),
+  });
+  return createPrivateHash(value);
+}
+
+function createPrivateHash(value: string): string {
+  const secret =
+    process.env.GEOCODE_CACHE_SECRET?.trim() ||
+    (process.env.VERCEL ? '' : 'solar-path-local-geocode-cache');
+  if (!secret) throw new SearchStoreUnavailableError();
+  return createHmac('sha256', secret).update(value).digest('hex');
+}
+
+function classifyHttpFailure(provider: GeocodeProvider, response: Response): ProviderError {
+  const retryAfter = getRetryAfter(response);
+  if (response.status === 401 || response.status === 403) {
+    return new ProviderError(provider, 'auth', response.status, retryAfter);
+  }
+  if (response.status === 429) {
+    return new ProviderError(provider, 'rate-limit', response.status, retryAfter);
+  }
+  return new ProviderError(provider, 'transient', response.status, retryAfter);
+}
+
+async function reserveProviderCall(provider: GeocodeProvider) {
+  const circuit = await searchStore.beforeProvider(provider);
+  if (!circuit.allowed) {
+    throw new ProviderError(provider, 'transient', undefined, circuit.retryAfter);
+  }
+
+  const rpsLimit = provider === 'geoapify' ? 4 : 2;
+  const rps = await searchStore.takeWindow(`geocode:v1:rps:${provider}`, rpsLimit, 1_000);
+  if (!rps.allowed) {
+    throw new ProviderError(provider, 'rate-limit', 429, rps.retryAfter);
+  }
+
+  const usage =
+    provider === 'geoapify'
+      ? await searchStore.takeWindow(
+          'geocode:v1:usage:geoapify:24h',
+          GEOAPIFY_DAILY_LIMIT,
+          ONE_DAY_MS
+        )
+      : await searchStore.takeWindow(
+          'geocode:v1:usage:tomtom:31d',
+          TOMTOM_31_DAY_LIMIT,
+          THIRTY_ONE_DAYS_MS
+        );
+
+  if (!usage.allowed) {
+    throw new ProviderError(provider, 'budget', 429, usage.retryAfter);
+  }
+
+  return circuit.probeToken;
+}
+
+async function fetchFromGeoapify(
+  query: string,
+  limit: number,
+  mode: SearchMode,
+  lat: number | undefined,
+  lng: number | undefined,
+  requestSignal: AbortSignal
+): Promise<GeocodeResult[]> {
+  const apiKey = process.env.GEOAPIFY_API_KEY?.trim();
+  if (!apiKey) throw new ProviderError('geoapify', 'auth');
+
+  const probeToken = await reserveProviderCall('geoapify');
+  try {
+    const params = new URLSearchParams({
+      text: query,
+      format: 'json',
+      limit: limit.toString(),
+      apiKey,
+    });
+    if (lat !== undefined && lng !== undefined) {
+      params.set('bias', `proximity:${lng},${lat}`);
+    }
+
+    const response = await fetch(
+      `${mode === 'autocomplete' ? GEOAPIFY_AUTOCOMPLETE_URL : GEOAPIFY_SEARCH_URL}?${params}`,
+      {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+        signal: createUpstreamSignal(requestSignal, GEOAPIFY_TIMEOUT_MS),
+      }
+    );
+    if (!response.ok) throw classifyHttpFailure('geoapify', response);
+
+    const data = (await response.json()) as GeoapifySearchResponse;
+    await searchStore.recordProviderSuccess('geoapify', probeToken);
+    return convertGeoapifyResults(data);
+  } catch (error) {
+    const providerError =
+      error instanceof ProviderError
+        ? error
+        : new ProviderError('geoapify', 'transient', undefined, 0, error);
+    await searchStore.recordProviderFailure(
+      'geoapify',
+      providerError.kind === 'budget' ? 'rate-limit' : providerError.kind,
+      providerError.retryAfter,
+      probeToken
+    );
+    throw providerError;
+  }
 }
 
 async function fetchFromTomTom(
@@ -171,231 +261,218 @@ async function fetchFromTomTom(
   requestSignal: AbortSignal
 ): Promise<GeocodeResult[]> {
   const apiKey = process.env.TOMTOM_SEARCH_API_KEY?.trim();
-  if (!apiKey) {
-    throw new Error('TOMTOM_KEY_MISSING');
-  }
+  if (!apiKey) throw new ProviderError('tomtom', 'auth');
 
-  const params = new URLSearchParams({
-    key: apiKey,
-    typeahead: 'true',
-    limit: limit.toString(),
-    idxSet: TOMTOM_INDEXES,
-  });
-
-  if (lat !== undefined && lng !== undefined) {
-    params.set('lat', lat.toString());
-    params.set('lon', lng.toString());
-  }
-
-  const response = await fetch(`${TOMTOM_BASE_URL}/${encodeURIComponent(query)}.json?${params}`, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
-    cache: 'no-store',
-    signal: createUpstreamSignal(requestSignal, TOMTOM_TIMEOUT_MS),
-  });
-
-  if (!response.ok) {
-    throw new Error(`TOMTOM_HTTP_${response.status}`);
-  }
-
-  const data = (await response.json()) as TomTomSearchResponse;
-  return convertTomTomResults(data);
-}
-
-async function waitForNominatimSlot(): Promise<void> {
-  const elapsed = Date.now() - lastNominatimRequest;
-  if (elapsed < MIN_REQUEST_INTERVAL_MS) {
-    await new Promise((resolve) => setTimeout(resolve, MIN_REQUEST_INTERVAL_MS - elapsed));
-  }
-  lastNominatimRequest = Date.now();
-}
-
-async function fetchFromNominatim(
-  query: string,
-  limit: number,
-  requestSignal: AbortSignal
-): Promise<GeocodeResult[]> {
-  await waitForNominatimSlot();
-
-  const params = new URLSearchParams({
-    q: query,
-    format: 'json',
-    limit: limit.toString(),
-    addressdetails: '1',
-  });
-
-  const response = await fetch(`${NOMINATIM_BASE_URL}?${params}`, {
-    headers: {
-      'User-Agent': USER_AGENT,
-      Accept: 'application/json',
-    },
-    cache: 'no-store',
-    signal: createUpstreamSignal(requestSignal, NOMINATIM_TIMEOUT_MS),
-  });
-
-  if (!response.ok) throw new Error(`NOMINATIM_HTTP_${response.status}`);
-
-  const data = (await response.json()) as NominatimResult[];
-  return data.map(convertNominatimResult);
-}
-
-async function fetchNominatimFallback(
-  query: string,
-  limit: number,
-  requestSignal: AbortSignal
-): Promise<GeocodeResult[]> {
-  let results = await fetchFromNominatim(query, limit, requestSignal);
-
-  if (results.length === 0) {
-    const simplifiedQuery = removeCjkHouseNumber(query);
-    if (simplifiedQuery && simplifiedQuery !== query && simplifiedQuery.length >= 2) {
-      results = await fetchFromNominatim(
-        simplifiedQuery,
-        limit,
-        requestSignal
-      );
+  const probeToken = await reserveProviderCall('tomtom');
+  try {
+    const params = new URLSearchParams({
+      key: apiKey,
+      typeahead: 'true',
+      limit: limit.toString(),
+      idxSet: TOMTOM_INDEXES,
+    });
+    if (lat !== undefined && lng !== undefined) {
+      params.set('lat', lat.toString());
+      params.set('lon', lng.toString());
     }
+
+    const response = await fetch(`${TOMTOM_BASE_URL}/${encodeURIComponent(query)}.json?${params}`, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+      signal: createUpstreamSignal(requestSignal, TOMTOM_TIMEOUT_MS),
+    });
+    if (!response.ok) throw classifyHttpFailure('tomtom', response);
+
+    const data = (await response.json()) as TomTomSearchResponse;
+    await searchStore.recordProviderSuccess('tomtom', probeToken);
+    return convertTomTomResults(data);
+  } catch (error) {
+    const providerError =
+      error instanceof ProviderError
+        ? error
+        : new ProviderError('tomtom', 'transient', undefined, 0, error);
+    await searchStore.recordProviderFailure(
+      'tomtom',
+      providerError.kind === 'budget' ? 'rate-limit' : providerError.kind,
+      providerError.retryAfter,
+      probeToken
+    );
+    throw providerError;
+  }
+}
+
+async function waitForCachedResult(cacheKey: string, requestSignal: AbortSignal) {
+  for (let attempt = 0; attempt < 10 && !requestSignal.aborted; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const cached = await searchStore.get<CachedResults>(cacheKey);
+    if (cached) return cached.results;
+  }
+  return null;
+}
+
+async function getGeoapifyResults(
+  query: string,
+  limit: number,
+  mode: SearchMode,
+  lat: number | undefined,
+  lng: number | undefined,
+  requestSignal: AbortSignal
+): Promise<{ results: GeocodeResult[]; cache: 'HIT' | 'MISS' }> {
+  const hash = createCacheHash(query, limit, mode, lat, lng);
+  const cacheKey = `geocode:v1:cache:geoapify:${hash}`;
+  const cached = await searchStore.get<CachedResults>(cacheKey);
+  if (cached) return { results: cached.results, cache: 'HIT' };
+
+  const lockKey = `geocode:v1:lock:geoapify:${hash}`;
+  const lockToken = await searchStore.acquireLock(lockKey, SINGLE_FLIGHT_TTL_MS);
+  if (!lockToken) {
+    const sharedResult = await waitForCachedResult(cacheKey, requestSignal);
+    if (sharedResult) return { results: sharedResult, cache: 'HIT' };
   }
 
-  return results;
+  try {
+    const results = await fetchFromGeoapify(query, limit, mode, lat, lng, requestSignal);
+    await searchStore.set(
+      cacheKey,
+      { results } satisfies CachedResults,
+      results.length > 0 ? SUCCESS_CACHE_TTL_MS : EMPTY_CACHE_TTL_MS
+    );
+    return { results, cache: 'MISS' };
+  } finally {
+    if (lockToken) await searchStore.releaseLock(lockKey, lockToken);
+  }
+}
+
+function logProviderFailure(error: unknown, queryHash: string) {
+  const providerError = error instanceof ProviderError ? error : null;
+  console.error('[geocode] provider failure', {
+    provider: providerError?.provider || 'unknown',
+    kind: providerError?.kind || (isAbortError(error) ? 'timeout' : 'unknown'),
+    status: providerError?.status,
+    queryHash: queryHash.slice(0, 12),
+  });
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse<GeocodeResponse>> {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get('q')?.trim() ?? '';
-  const mode = searchParams.get('mode') || 'autocomplete';
-  const limitText = searchParams.get('limit');
+  const rawMode = searchParams.get('mode') || 'autocomplete';
+  const mode: SearchMode = rawMode === 'fallback' ? 'search' : (rawMode as SearchMode);
 
   if (query.length < 2) {
+    return errorResponse('geoapify', 'Query must be at least 2 characters', 'INVALID_QUERY', 400);
+  }
+  if (mode !== 'autocomplete' && mode !== 'search') {
     return errorResponse(
-      'tomtom',
-      'Query must be at least 2 characters',
-      'INVALID_QUERY',
-      400,
-      false
+      'geoapify',
+      'Mode must be autocomplete or search',
+      'INVALID_MODE',
+      400
     );
   }
 
-  if (mode !== 'autocomplete' && mode !== 'fallback') {
-    return errorResponse('tomtom', 'Mode must be autocomplete or fallback', 'INVALID_MODE', 400, false);
-  }
-
-  const parsedLimit = limitText === null ? 5 : Number.parseInt(limitText, 10);
+  const parsedLimit = searchParams.get('limit') === null
+    ? 5
+    : Number.parseInt(searchParams.get('limit') as string, 10);
   if (!Number.isInteger(parsedLimit) || parsedLimit < 1 || parsedLimit > 5) {
-    return errorResponse('tomtom', 'Limit must be between 1 and 5', 'INVALID_LIMIT', 400, false);
+    return errorResponse('geoapify', 'Limit must be between 1 and 5', 'INVALID_LIMIT', 400);
   }
 
   const lat = parseCoordinate(searchParams.get('lat'), -90, 90);
   const lng = parseCoordinate(searchParams.get('lng'), -180, 180);
-  const hasInvalidBias =
-    Number.isNaN(lat) || Number.isNaN(lng) || (lat === undefined) !== (lng === undefined);
-  if (hasInvalidBias) {
+  if (Number.isNaN(lat) || Number.isNaN(lng) || (lat === undefined) !== (lng === undefined)) {
     return errorResponse(
-      'tomtom',
+      'geoapify',
       'Latitude and longitude must be valid and supplied together',
       'INVALID_BIAS',
-      400,
-      false
-    );
-  }
-
-  const clientIp = getClientIp(request);
-  const retryAfter = checkRateLimit(clientIp);
-  if (retryAfter > 0) {
-    return errorResponse(
-      mode === 'autocomplete' ? 'tomtom' : 'nominatim',
-      mode === 'autocomplete'
-        ? 'Autocomplete unavailable — press Enter to search'
-        : 'Fallback search is temporarily rate limited',
-      'RATE_LIMITED',
-      429,
-      mode === 'autocomplete',
-      retryAfter
-    );
-  }
-
-  if (mode === 'autocomplete') {
-    try {
-      const results = await fetchFromTomTom(query, parsedLimit, lat, lng, request.signal);
-      return jsonResponse({
-        provider: 'tomtom',
-        attribution: TOMTOM_ATTRIBUTION,
-        fallbackAvailable: false,
-        results,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : '';
-      const isRateLimited = message === 'TOMTOM_HTTP_429';
-      const providerUnavailable =
-        message === 'TOMTOM_KEY_MISSING' ||
-        message === 'TOMTOM_HTTP_403' ||
-        isRateLimited ||
-        message.startsWith('TOMTOM_HTTP_5') ||
-        isAbortError(error);
-
-      console.error(
-        '[geocode] TomTom autocomplete unavailable:',
-        message === 'TOMTOM_KEY_MISSING' ? 'API key is not configured' : message || error
-      );
-
-      return errorResponse(
-        'tomtom',
-        'Autocomplete unavailable — press Enter to search',
-        providerUnavailable ? 'PROVIDER_UNAVAILABLE' : 'UPSTREAM_ERROR',
-        isRateLimited ? 429 : 503,
-        true
-      );
-    }
-  }
-
-  const cacheKey = createCacheKey(query, parsedLimit);
-  const cached = nominatimCache.get(cacheKey);
-
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return jsonResponse(
-      {
-        provider: 'nominatim',
-        attribution: NOMINATIM_ATTRIBUTION,
-        fallbackAvailable: false,
-        results: cached.results,
-      },
-      200,
-      { 'X-Cache': 'HIT' }
+      400
     );
   }
 
   try {
-    const results = await fetchNominatimFallback(
-      query,
-      parsedLimit,
-      request.signal
+    const clientLimit = await searchStore.takeWindow(
+      `geocode:v1:client:${createPrivateHash(getClientIp(request))}`,
+      CLIENT_RATE_LIMIT,
+      FIVE_MINUTES_MS
     );
+    if (!clientLimit.allowed) {
+      return errorResponse(
+        'geoapify',
+        'Address search is temporarily rate limited. Please try again shortly.',
+        'RATE_LIMITED',
+        429,
+        clientLimit.retryAfter
+      );
+    }
 
-    nominatimCache.set(cacheKey, { results, timestamp: Date.now() });
+    const queryHash = createCacheHash(query, parsedLimit, mode, lat, lng);
+    try {
+      const primary = await getGeoapifyResults(
+        query,
+        parsedLimit,
+        mode,
+        lat,
+        lng,
+        request.signal
+      );
+      if (primary.results.length > 0 || mode === 'autocomplete') {
+        return jsonResponse(
+          {
+            provider: 'geoapify',
+            ...providerDetails('geoapify'),
+            fallbackAvailable: false,
+            results: primary.results,
+          },
+          200,
+          { 'X-Cache': primary.cache, 'X-Geocode-Provider': 'geoapify' }
+        );
+      }
+    } catch (error) {
+      if (error instanceof SearchStoreUnavailableError) throw error;
+      logProviderFailure(error, queryHash);
+    }
 
-    return jsonResponse(
-      {
-        provider: 'nominatim',
-        attribution: NOMINATIM_ATTRIBUTION,
-        fallbackAvailable: false,
-        results,
-      },
-      200,
-      { 'X-Cache': 'MISS' }
-    );
+    try {
+      const results = await fetchFromTomTom(
+        query,
+        parsedLimit,
+        lat,
+        lng,
+        request.signal
+      );
+      return jsonResponse(
+        {
+          provider: 'tomtom',
+          ...providerDetails('tomtom'),
+          fallbackAvailable: false,
+          results,
+        },
+        200,
+        { 'X-Cache': 'BYPASS', 'X-Geocode-Provider': 'tomtom' }
+      );
+    } catch (error) {
+      if (error instanceof SearchStoreUnavailableError) throw error;
+      logProviderFailure(error, queryHash);
+      const retryAfter = error instanceof ProviderError ? error.retryAfter : 0;
+      const isLimited = error instanceof ProviderError &&
+        (error.kind === 'rate-limit' || error.kind === 'budget');
+      return errorResponse(
+        'tomtom',
+        'Address search is temporarily unavailable. Use GPS or enter coordinates manually.',
+        isLimited ? 'RATE_LIMITED' : 'PROVIDER_UNAVAILABLE',
+        isLimited ? 429 : 503,
+        retryAfter || undefined
+      );
+    }
   } catch (error) {
-    console.error(
-      '[geocode] Nominatim fallback unavailable:',
-      error instanceof Error ? error.message : error
-    );
+    console.error('[geocode] shared store unavailable', {
+      kind: error instanceof SearchStoreUnavailableError ? 'store' : 'unknown',
+    });
     return errorResponse(
-      'nominatim',
-      'Fallback address search is unavailable. Use GPS or enter coordinates manually.',
-      'UPSTREAM_ERROR',
-      502,
-      false
+      'geoapify',
+      'Address search is temporarily unavailable. Use GPS or enter coordinates manually.',
+      'PROVIDER_UNAVAILABLE',
+      503
     );
   }
 }

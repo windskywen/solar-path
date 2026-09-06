@@ -1,4 +1,4 @@
-import { act, cleanup, render, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MapPanel } from '@/components/map/MapPanel';
 
@@ -18,6 +18,7 @@ const mapHarness = vi.hoisted(() => ({
   jumpTo: vi.fn(),
   getZoom: vi.fn(() => 12),
   captureProps: vi.fn(),
+  shouldThrow: false,
 }));
 
 vi.mock('@/store/solar-store', () => ({
@@ -30,6 +31,7 @@ vi.mock('react-map-gl/maplibre', async () => {
 
   const MockMap = React.forwardRef<unknown, Record<string, unknown>>(function MockMap(props, ref) {
     mapHarness.captureProps(props);
+    if (mapHarness.shouldThrow) throw new Error('Map initialization failed');
     React.useImperativeHandle(ref, () => ({
       jumpTo: mapHarness.jumpTo,
       getZoom: mapHarness.getZoom,
@@ -66,9 +68,13 @@ describe('MapPanel', () => {
     mapHarness.getZoom.mockClear();
     mapHarness.getZoom.mockReturnValue(12);
     mapHarness.captureProps.mockClear();
+    mapHarness.shouldThrow = false;
   });
 
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
 
   it('uses an uncontrolled camera and preserves the current zoom for location changes', async () => {
     const { rerender } = render(<MapPanel />);
@@ -107,7 +113,8 @@ describe('MapPanel', () => {
 
   it('keeps the existing rounded map-click location contract', async () => {
     const onMapClick = vi.fn();
-    render(<MapPanel onMapClick={onMapClick} />);
+    const onUserInteraction = vi.fn();
+    render(<MapPanel onMapClick={onMapClick} onUserInteraction={onUserInteraction} />);
 
     act(() => {
       const handleClick = getLatestMapProps().onClick as (event: {
@@ -124,6 +131,53 @@ describe('MapPanel', () => {
         source: 'manual',
       });
       expect(onMapClick).toHaveBeenCalledWith(-27.469812, 153.025146);
+      expect(onUserInteraction).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it('marks pointer and keyboard map interactions before an asynchronous location result', () => {
+    const onUserInteraction = vi.fn();
+    render(<MapPanel onUserInteraction={onUserInteraction} />);
+    const map = screen.getByTestId('map');
+
+    fireEvent.pointerDown(map);
+    fireEvent.keyDown(map, { key: 'Enter' });
+
+    expect(onUserInteraction).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps solar data reachable when map loading exceeds ten seconds and can retry', () => {
+    vi.useFakeTimers();
+    render(<MapPanel />);
+
+    act(() => vi.advanceTimersByTime(10_000));
+
+    expect(
+      screen.getByText('The map is unavailable or taking too long to load')
+    ).toBeVisible();
+    expect(screen.getByRole('link', { name: 'View data' })).toHaveAttribute(
+      'href',
+      '#solar-data'
+    );
+
+    const renderCount = mapHarness.captureProps.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Retry map' }));
+
+    expect(screen.getByText('Loading map...')).toBeVisible();
+    expect(mapHarness.captureProps.mock.calls.length).toBeGreaterThan(renderCount);
+  });
+
+  it('contains a map initialization error and leaves retry and data actions available', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mapHarness.shouldThrow = true;
+
+    render(<MapPanel />);
+
+    expect(
+      screen.getByText('The map is unavailable or taking too long to load')
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Retry map' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'View data' })).toBeVisible();
+    consoleError.mockRestore();
   });
 });

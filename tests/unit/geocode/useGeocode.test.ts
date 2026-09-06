@@ -20,8 +20,8 @@ describe('fetchGeocode query language', () => {
       const fetchMock = vi.fn().mockResolvedValue(
         new Response(
           JSON.stringify({
-            provider: 'tomtom',
-            attribution: 'Search data © TomTom',
+            provider: 'geoapify',
+            attribution: 'Powered by Geoapify',
             fallbackAvailable: false,
             results: [],
           }),

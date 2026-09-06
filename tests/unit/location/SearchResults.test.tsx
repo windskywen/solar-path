@@ -13,19 +13,23 @@ const result = {
 };
 
 describe('SearchResults', () => {
-  it('shows TomTom attribution and neutral coordinate wording', () => {
+  it('shows linked Geoapify attribution and neutral coordinate wording', () => {
     render(
       <SearchResults
         results={[result]}
         isLoading={false}
         query="Jieli"
-        provider="tomtom"
-        attribution="Search data © TomTom"
+        provider="geoapify"
+        attribution="Powered by Geoapify"
+        attributionUrl="https://www.geoapify.com/"
         onSelect={vi.fn()}
       />
     );
 
-    expect(screen.getByText('Search data © TomTom')).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Powered by Geoapify' })).toHaveAttribute(
+      'href',
+      'https://www.geoapify.com/'
+    );
     expect(screen.getByRole('link', { name: /Open coordinates/i })).toHaveAttribute(
       'href',
       result.osmUrl
@@ -33,7 +37,7 @@ describe('SearchResults', () => {
     expect(screen.queryByText('OSM ↗')).not.toBeInTheDocument();
   });
 
-  it('shows the explicit Enter fallback prompt on provider failure', () => {
+  it('shows manual alternatives when both providers are unavailable', () => {
     render(
       <SearchResults
         results={[]}
@@ -41,14 +45,13 @@ describe('SearchResults', () => {
         query="Brisbane"
         provider="tomtom"
         attribution="Search data © TomTom"
-        error="Autocomplete unavailable — press Enter to search"
-        fallbackAvailable
+        error="Address search is temporarily unavailable."
         onSelect={vi.fn()}
       />
     );
 
     expect(
-      screen.getByText('Autocomplete unavailable — press Enter to search')
+      screen.getByText('Address search is temporarily unavailable.')
     ).toBeVisible();
     expect(screen.getByText(/GPS or enter coordinates manually/i)).toBeVisible();
   });
@@ -60,8 +63,8 @@ describe('SearchResults', () => {
         results={[result]}
         isLoading={false}
         query="Jieli"
-        provider="nominatim"
-        attribution="© OpenStreetMap contributors"
+        provider="geoapify"
+        attribution="Powered by Geoapify"
         onSelect={onSelect}
       />
     );

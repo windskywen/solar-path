@@ -325,6 +325,8 @@ export function Solar3DViewModal({
 
             <Dialog.Description id="solar-3d-description" className="sr-only">
               Interactive 3D visualization of the sun&apos;s path across the sky.
+              Terrain and buildings may be displayed for visual context where available. Solar
+              calculations do not account for shading from terrain, buildings or trees.
               {viewData &&
                 !viewData.isEmpty &&
                 ` Showing ${viewData.visiblePoints.length} visible hourly positions.`}
@@ -372,6 +374,13 @@ export function Solar3DViewModal({
 
             {viewData && (
               <div className="relative z-20 border-t [border-color:var(--solar-divider)] [background:var(--solar-3d-footer-bg)] px-4 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] pt-2.5 sm:px-6 sm:pb-4 sm:pt-3 sm:backdrop-blur-xl">
+                <p
+                  className="mb-2.5 max-w-4xl text-[0.72rem] leading-5 text-[var(--solar-text-muted)] sm:text-xs"
+                  data-testid="solar-3d-scope-note"
+                >
+                  Terrain and buildings may be displayed for visual context where available. Solar
+                  calculations do not account for shading from terrain, buildings or trees.
+                </p>
                 <div className="flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-[0.65rem] font-medium uppercase tracking-[0.3em] text-[var(--solar-text-faint)]">

@@ -140,8 +140,9 @@ export interface GeocodeResult {
 
 /** Geocoding API response */
 export interface GeocodeResponse {
-  provider: 'tomtom' | 'nominatim';
+  provider: 'geoapify' | 'tomtom';
   attribution: string;
+  attributionUrl?: string;
   fallbackAvailable: boolean;
   results: GeocodeResult[];
   error?: string;

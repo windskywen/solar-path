@@ -20,10 +20,10 @@ export function CalculatorLocationPicker({ value, onChange }: CalculatorLocation
     results,
     provider,
     attribution,
+    attributionUrl,
     isLoading,
     error,
-    fallbackAvailable,
-    requestFallback,
+    submitSearch,
     clear,
     canSearch,
   } = useGeocode({ limit: 5, bias: { lat: value.lat, lng: value.lng } });
@@ -52,45 +52,59 @@ export function CalculatorLocationPicker({ value, onChange }: CalculatorLocation
             Search location
           </label>
           <p className="mt-2 text-xs text-[var(--solar-text-faint)]">Search by address, place, district, or city.</p>
-          <div ref={containerRef} className="relative mt-3">
-            <input
-              id="calculator-location-search"
-              type="text"
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setIsSearchOpen(true);
-              }}
-              onFocus={() => setIsSearchOpen(query.length > 0)}
-              onKeyDown={(event) => {
-                if (event.key === 'Escape') setIsSearchOpen(false);
-                if (event.key === 'Enter' && fallbackAvailable) {
-                  event.preventDefault();
-                  void requestFallback();
-                }
-              }}
-              role="combobox"
-              aria-autocomplete="list"
-              aria-expanded={isSearchOpen && canSearch}
-              aria-controls="calculator-search-results"
-              autoComplete="off"
-              placeholder="Brisbane, Queen Street, or a landmark"
-              className="h-11 w-full rounded-2xl border px-3 text-sm text-[var(--solar-text-strong)] [border-color:var(--solar-input-border)] [background:var(--solar-input-bg)] outline-none placeholder:text-[var(--solar-input-placeholder)] focus:ring-2 focus:ring-[var(--solar-input-focus-ring)]"
-            />
-            {isSearchOpen && canSearch ? (
-              <SearchResults
-                results={results}
-                isLoading={isLoading}
-                query={query}
-                provider={provider}
-                attribution={attribution}
-                error={error}
-                fallbackAvailable={fallbackAvailable}
-                onSelect={selectLocation}
-                listboxId="calculator-search-results"
-                unavailableGuidance="Or enter coordinates manually below."
+          <div ref={containerRef} className="mt-3 flex gap-2">
+            <div className="relative min-w-0 flex-1">
+              <input
+                id="calculator-location-search"
+                type="text"
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setIsSearchOpen(true);
+                }}
+                onFocus={() => setIsSearchOpen(query.length > 0)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') setIsSearchOpen(false);
+                  if (event.key === 'Enter' && canSearch) {
+                    event.preventDefault();
+                    setIsSearchOpen(true);
+                    void submitSearch();
+                  }
+                }}
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={isSearchOpen && canSearch}
+                aria-controls="calculator-search-results"
+                autoComplete="off"
+                placeholder="Brisbane, Queen Street, or a landmark"
+                className="h-11 w-full rounded-2xl border px-3 text-sm text-[var(--solar-text-strong)] [border-color:var(--solar-input-border)] [background:var(--solar-input-bg)] outline-none placeholder:text-[var(--solar-input-placeholder)] focus:ring-2 focus:ring-[var(--solar-input-focus-ring)]"
               />
-            ) : null}
+              {isSearchOpen && canSearch ? (
+                <SearchResults
+                  results={results}
+                  isLoading={isLoading}
+                  query={query}
+                  provider={provider}
+                  attribution={attribution}
+                  attributionUrl={attributionUrl}
+                  error={error}
+                  onSelect={selectLocation}
+                  listboxId="calculator-search-results"
+                  unavailableGuidance="Or enter coordinates manually below."
+                />
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsSearchOpen(true);
+                void submitSearch();
+              }}
+              disabled={!canSearch || isLoading}
+              className="h-11 flex-shrink-0 rounded-2xl border px-4 text-sm font-semibold text-[var(--solar-button-text)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] transition-colors hover:[background:var(--solar-button-hover-bg)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Search
+            </button>
           </div>
         </div>
 
