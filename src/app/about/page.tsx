@@ -1,3 +1,4 @@
+import { CONTENT_MODIFIED } from '@/lib/content-dates';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ContentPageHeader } from '@/components/layout/ContentPageHeader';
@@ -12,7 +13,7 @@ const title = 'About';
 const description =
   'Learn why Solar Path Tracker exists, how its solar results are calculated and checked, which data sources it uses, and how to report an error.';
 const path = '/about';
-const lastUpdated = '2026-09-06';
+const lastUpdated = CONTENT_MODIFIED.about;
 
 export const metadata: Metadata = buildPageMetadata({
   title,
@@ -55,7 +56,7 @@ export default function AboutPage() {
           <p className={`${eyebrow} mt-6`}>Purpose and accountability</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-[var(--solar-text-strong)] sm:text-5xl">About Solar Path Tracker</h1>
           <p className="mt-5 max-w-4xl text-base leading-7 text-[var(--solar-text)] sm:text-lg">Solar Path Tracker turns a location, date, and local time into a readable sun path, solar angles, astronomical events, and educational worked examples. It is designed for first-pass daylight research before an on-site or professional assessment.</p>
-          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>6 September 2026</time></p>
+          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>{new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${lastUpdated}T00:00:00Z`))}</time></p>
         </header>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-2">

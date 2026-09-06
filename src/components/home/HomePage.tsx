@@ -766,6 +766,7 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                 <div className="max-h-[430px] overflow-y-auto xl:max-h-none">
                   {solarData ? (
                     <SolarDataTable
+                      events={solarData.events}
                       positions={solarData.hourly}
                       selectedHour={selectedHour}
                       onRowClick={selectHour}

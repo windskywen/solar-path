@@ -51,14 +51,8 @@ describe('guide registry', () => {
       'solar-azimuth-altitude-worked-example': ['/solar-azimuth-altitude'],
       'estimating-shadow-direction-from-solar-angles': ['/solar-azimuth-altitude'],
     };
-    const expandedCaseStudies = new Set([
-      'brisbane-winter-vs-summer-sun-path',
-      'golden-hour-direction-brisbane',
-      'estimating-shadow-direction-from-solar-angles',
-    ]);
-
     for (const guide of GUIDES) {
-      expect(guide.modifiedDate).toBe(expandedCaseStudies.has(guide.slug) ? '2026-09-06' : '2026-08-24');
+      expect(guide.modifiedDate).toBe(guide.evidenceKey === 'nrel-spa-benchmark' ? '2026-08-24' : '2026-09-06');
       expect(guide.relatedTools?.map((tool) => tool.href)).toEqual(expectedTools[guide.slug]);
       for (const tool of guide.relatedTools ?? []) {
         expect(tool.label.length).toBeGreaterThan(8);
@@ -171,11 +165,11 @@ describe('guide application-case geometry', () => {
     }
 
     const winterEveningStart = golden.rows.find(
-      (row) => row.season === 'Winter solstice' && row.window === 'Evening' && row.boundary === 'Start'
+      (row) => row.season === 'Winter reference' && row.window === 'Evening' && row.boundary === 'Start'
     );
     expect(winterEveningStart?.value).toBeDefined();
     expect(golden.dataset.rows).toContainEqual(expect.arrayContaining([
-      'Winter solstice',
+      'Winter reference',
       'Evening',
       'Start',
       winterEveningStart?.value?.localTime,
@@ -220,9 +214,9 @@ describe('public sitemap', () => {
       expect(entry?.lastModified).toEqual(new Date(`${guide.modifiedDate}T00:00:00Z`));
     }
 
-    for (const route of ['/', '/sunrise-sunset-calculator', '/solar-azimuth-altitude']) {
+    for (const route of ['/', '/sunrise-sunset-calculator', '/golden-hour-calculator', '/about', '/methodology']) {
       const entry = entries.find((candidate) => candidate.url === `https://solarpathtracker.example${route}`);
-      expect(entry?.lastModified).toEqual(new Date('2026-08-24T00:00:00Z'));
+      expect(entry?.lastModified).toEqual(new Date('2026-09-06T00:00:00Z'));
     }
 
     const guideIndex = entries.find(

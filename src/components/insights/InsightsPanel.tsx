@@ -32,7 +32,7 @@ function getInsightIcon(message: string): string {
   if (lowerMessage.includes('equator')) {
     return '🌍';
   }
-  if (lowerMessage.includes('golden hour')) {
+  if (/golden[- ]hour/.test(lowerMessage)) {
     return '🌅';
   }
   if (lowerMessage.includes('shadow') || lowerMessage.includes('low maximum solar')) {

@@ -5,7 +5,17 @@
  * No AI/ML - purely deterministic rules as specified in data-model.md.
  */
 
-import type { HourlySolarPosition, SunEvents, SolarInsights } from '@/types/solar';
+import type { HourlySolarPosition, SunEvents, SolarInsights, ExtendedSunEvents, SolarEventWindow } from '@/types/solar';
+import { formatDayLength } from './events';
+
+type InsightEvents = SunEvents & Partial<Pick<ExtendedSunEvents, 'morningGoldenHour' | 'eveningGoldenHour'>>;
+
+function windowDuration(window?: SolarEventWindow): string | undefined {
+  const minutes = window?.durationMinutes;
+  return window?.available && minutes !== undefined && Number.isFinite(minutes) && minutes >= 0
+    ? formatDayLength(minutes / 60)
+    : undefined;
+}
 
 /**
  * Check if all hourly positions have sun above horizon (polar day)
@@ -46,7 +56,7 @@ function getPeakAltitude(hourly: HourlySolarPosition[]): number {
 export function generateInsights(
   lat: number,
   hourly: HourlySolarPosition[],
-  events: SunEvents
+  events: InsightEvents
 ): SolarInsights {
   const messages: string[] = [];
   const absLat = Math.abs(lat);
@@ -100,13 +110,12 @@ export function generateInsights(
     );
   }
 
-  // Golden hour duration estimate
-  const goldenHours = hourly.filter((h) => h.daylightState === 'golden').length;
-  if (goldenHours > 0 && !isPolarDay(hourly) && !isPolarNight(hourly)) {
+  // Event durations are independent of whether an hourly sample hits the window.
+  const morning = windowDuration(events.morningGoldenHour);
+  const evening = windowDuration(events.eveningGoldenHour);
+  if (morning !== undefined || evening !== undefined) {
     messages.push(
-      `Approximately ${goldenHours} hour${
-        goldenHours > 1 ? 's' : ''
-      } of golden hour conditions today.`
+      `Calculated golden-hour windows: morning ${morning ?? 'unavailable'}; evening ${evening ?? 'unavailable'}.`
     );
   }
 

@@ -195,32 +195,33 @@ export function DatePicker({ className = '', initialDateISO, onChange }: DatePic
         )}
       </div>
 
+      <p className="text-xs text-[var(--solar-text-muted)]">These are fixed seasonal reference dates, not the exact local dates of the solstices or equinoxes.</p>
       {/* Quick date buttons */}
       <div className="flex flex-wrap gap-2">
         <QuickDateButton
-          label="Jun Sol"
-          fullLabel="June Solstice"
+          label="Jun 21"
+          fullLabel="June reference"
           dateISO={`${today.slice(0, 4)}-06-21`}
           currentDate={dateISO}
           onClick={handleQuickDateChange}
         />
         <QuickDateButton
-          label="Mar Eq"
-          fullLabel="March Equinox"
+          label="Mar 20"
+          fullLabel="March reference"
           dateISO={`${today.slice(0, 4)}-03-20`}
           currentDate={dateISO}
           onClick={handleQuickDateChange}
         />
         <QuickDateButton
-          label="Dec Sol"
-          fullLabel="December Solstice"
+          label="Dec 21"
+          fullLabel="December reference"
           dateISO={`${today.slice(0, 4)}-12-21`}
           currentDate={dateISO}
           onClick={handleQuickDateChange}
         />
         <QuickDateButton
-          label="Sep Eq"
-          fullLabel="September Equinox"
+          label="Sep 22"
+          fullLabel="September reference"
           dateISO={`${today.slice(0, 4)}-09-22`}
           currentDate={dateISO}
           onClick={handleQuickDateChange}

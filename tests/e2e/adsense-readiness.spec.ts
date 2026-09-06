@@ -16,8 +16,8 @@ const applicationGuideRoutes = [
 ] as const;
 
 const guideEvidence: Record<(typeof guideSlugs)[number], { key: string; heading: string }> = {
-  'how-to-read-a-sun-path-diagram': { key: 'sun-path-diagram', heading: 'Brisbane equinox sun-path diagram dataset' },
-  'brisbane-winter-vs-summer-sun-path': { key: 'seasonal-comparison', heading: 'Brisbane solstice 24-hour comparison' },
+  'how-to-read-a-sun-path-diagram': { key: 'sun-path-diagram', heading: 'Brisbane near-equinox sun-path diagram dataset' },
+  'brisbane-winter-vs-summer-sun-path': { key: 'seasonal-comparison', heading: 'Brisbane seasonal reference 24-hour comparison' },
   'east-vs-west-facing-homes-australia': { key: 'facade-orientation-matrix', heading: 'Australian east–west facade bearing matrix' },
   'golden-hour-direction-brisbane': { key: 'golden-hour-shot-plan', heading: 'Brisbane winter and summer directional shot plan' },
   'solar-azimuth-altitude-worked-example': { key: 'nrel-spa-benchmark', heading: 'NREL SPA canonical Golden, Colorado comparison' },

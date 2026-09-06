@@ -89,6 +89,9 @@ export function GuideArticle({ guide }: GuideArticleProps) {
             {guide.sectionsBeforeExample.map((section) => <GuideSection key={section.heading} section={section} />)}
           </div>
 
+          {guide.evidenceKey !== 'nrel-spa-benchmark' && (
+            <p className="mt-4 text-sm text-[var(--solar-text-muted)]">These are fixed seasonal reference dates, not the exact local dates of the solstices or equinoxes.</p>
+          )}
           <GuideEvidence guide={guide} />
 
           <ArticleAdPlacement />

@@ -42,11 +42,16 @@ function buildWindow(
   const startBoundary = toBoundaryAtLocation(start, timezone, lat, lng);
   const endBoundary = toBoundaryAtLocation(end, timezone, lat, lng);
 
-  if (!startBoundary || !endBoundary) {
+  if (!startBoundary || !endBoundary || !isValidDate(start) || !isValidDate(end) || end < start) {
     return { available: false, note: unavailableNote };
   }
 
-  return { available: true, start: startBoundary, end: endBoundary };
+  return {
+    available: true,
+    start: startBoundary,
+    end: endBoundary,
+    durationMinutes: (end.getTime() - start.getTime()) / 60_000,
+  };
 }
 
 export function computeExtendedSunEvents(
