@@ -1,3 +1,4 @@
+import { CONTENT_MODIFIED } from '@/lib/content-dates';
 import type { MetadataRoute } from 'next';
 import { GUIDES } from '@/lib/guides';
 import { absoluteUrl } from '@/lib/site';
@@ -10,19 +11,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: absoluteUrl('/'),
-      lastModified: UPDATED_2026_08_24,
+      lastModified: new Date(`${CONTENT_MODIFIED.home}T00:00:00Z`),
       changeFrequency: 'daily',
       priority: 1,
     },
     {
       url: absoluteUrl('/sunrise-sunset-calculator'),
-      lastModified: UPDATED_2026_08_24,
+      lastModified: new Date(`${CONTENT_MODIFIED.sunrise}T00:00:00Z`),
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: absoluteUrl('/golden-hour-calculator'),
-      lastModified: UPDATED_2026_08_24,
+      lastModified: new Date(`${CONTENT_MODIFIED.goldenHour}T00:00:00Z`),
       changeFrequency: 'weekly',
       priority: 0.9,
     },
@@ -40,13 +41,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: absoluteUrl('/methodology'),
-      lastModified: UPDATED_2026_08_24,
+      lastModified: new Date(`${CONTENT_MODIFIED.methodology}T00:00:00Z`),
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
       url: absoluteUrl('/about'),
-      lastModified: UPDATED_2026_08_24,
+      lastModified: new Date(`${CONTENT_MODIFIED.about}T00:00:00Z`),
       changeFrequency: 'monthly',
       priority: 0.6,
     },

@@ -118,7 +118,7 @@ export const GUIDES: readonly GuideDefinition[] = [
     contentTypeLabel: 'Annotated diagram',
     csvDefinition: {
       filenameStem: 'brisbane-equinox-sun-path',
-      description: 'The plotted Brisbane equinox points shown in the original diagram and accessible data table.',
+      description: 'The plotted Brisbane near-equinox points shown in the original diagram and accessible data table.',
       columns: ['local_time', 'azimuth_deg', 'altitude_deg', 'daylight_state'],
     },
     evidenceSources: [{
@@ -131,7 +131,7 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Learn how time, solar azimuth, altitude, horizon crossings, and seasonal curves fit together in a practical sun path diagram.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-24',
+    modifiedDate: '2026-09-06',
     keywords: ['how to read a sun path diagram', 'solar azimuth', 'solar altitude', 'sun path chart'],
     introduction: [
       'A sun path diagram compresses a moving three-dimensional relationship into a readable daily curve. The horizontal question is direction: where around the compass is the Sun? The vertical question is height: how far above or below the horizon is it? A useful reading always joins those two angles to a local date and time.',
@@ -256,7 +256,7 @@ export const GUIDES: readonly GuideDefinition[] = [
       },
     ],
     example: {
-      title: 'Solstice comparison at the same Brisbane coordinates',
+      title: 'Seasonal reference comparison at the same Brisbane coordinates',
       description:
         'The June and December dates are fixed to 2026. Event times and angle samples are generated from Solar Path Tracker’s SunCalc-based engine in Australia/Brisbane time.',
       locationName: 'Brisbane, Queensland, Australia',
@@ -264,8 +264,8 @@ export const GUIDES: readonly GuideDefinition[] = [
       longitude: 153.0251,
       timezone: 'Australia/Brisbane',
       dates: [
-        { label: 'June solstice', dateISO: '2026-06-21', localTimes: ['08:00', '12:00', '16:00'] },
-        { label: 'December solstice', dateISO: '2026-12-21', localTimes: ['08:00', '12:00', '16:00'] },
+        { label: 'June reference', dateISO: '2026-06-21', localTimes: ['08:00', '12:00', '16:00'] },
+        { label: 'December reference', dateISO: '2026-12-21', localTimes: ['08:00', '12:00', '16:00'] },
       ],
       chartDateISO: '2026-12-21',
       chartView: 'altitude',
@@ -286,7 +286,7 @@ export const GUIDES: readonly GuideDefinition[] = [
         toolHref: '/',
         toolLabel: 'Open the Sun Path Map',
         steps: [
-          'Enter the coordinates shown in the case inputs and select each listed solstice date.',
+          'Enter the coordinates shown in the case inputs and select each listed seasonal reference date.',
           'Inspect the solar bearing and altitude at 08:00, 12:00, and 16:00 without changing the observation point.',
           'Use the same viewpoint and camera direction during each field visit.',
           'Record actual obstructions and visible light beside the calculated baseline instead of treating the model as a shading survey.',
@@ -309,7 +309,7 @@ export const GUIDES: readonly GuideDefinition[] = [
     ],
     limitations: [
       'The example uses level-horizon astronomy and does not simulate a particular house, eave, or window.',
-      'Solstice dates are seasonal anchors, not a complete annual energy or comfort model.',
+      'Fixed reference dates are seasonal anchors, not a complete annual energy or comfort model.',
       'Cloud cover, surface temperatures, glazing properties, and reflected heat are outside the calculation.',
     ],
     sources: SHARED_SOURCES,
@@ -350,7 +350,7 @@ export const GUIDES: readonly GuideDefinition[] = [
       'Use solar azimuth and altitude to compare morning east-facing exposure with afternoon west-facing exposure in an Australian context.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-24',
+    modifiedDate: '2026-09-06',
     keywords: ['east vs west facing house Australia', 'afternoon sun Australia', 'house orientation sunlight', 'west-facing windows'],
     introduction: [
       '“East-facing” and “west-facing” are useful starting labels, but they do not describe a full property. A facade receives direct sun when the solar bearing falls within its visible half of the sky and no obstacle blocks the rays. Solar altitude then determines how steeply that light arrives and how readily an overhang, neighbouring structure, or vegetation can intercept it.',
@@ -474,7 +474,7 @@ export const GUIDES: readonly GuideDefinition[] = [
     example: {
       title: 'Seasonal golden-hour bearings for Brisbane',
       description:
-        'The event table calculates exact morning and evening windows for the June and December solstices. The angle rows add fixed low-light samples so the bearing shift can be inspected alongside the daily chart.',
+        'The event table calculates exact morning and evening windows for the June and December references. The angle rows add fixed low-light samples so the bearing shift can be inspected alongside the daily chart.',
       locationName: 'Brisbane, Queensland, Australia',
       latitude: -27.4698,
       longitude: 153.0251,
@@ -492,7 +492,7 @@ export const GUIDES: readonly GuideDefinition[] = [
       ],
     },
     applicationCase: {
-      task: 'Use the winter-solstice evening golden-hour bearing to place a camera for front, side, or back light, then compare that setup with the summer direction.',
+      task: 'Use the winter-reference evening golden-hour bearing to place a camera for front, side, or back light, then compare that setup with the summer direction.',
       assumptions: [
         'The diagrams show relative positions around one subject and are not maps of a real location.',
         'All directions are true-north bearings measured clockwise from north.',
@@ -502,10 +502,10 @@ export const GUIDES: readonly GuideDefinition[] = [
         toolHref: '/golden-hour-calculator',
         toolLabel: 'Open the Golden Hour Calculator',
         steps: [
-          'Enter the coordinates shown in the case inputs and select the winter-solstice date.',
+          'Enter the coordinates shown in the case inputs and select the winter-reference date.',
           'Read the Evening golden hour start and end times, bearings, and altitudes.',
           'Use the winter start bearing to choose the relative camera setup shown in the diagrams.',
-          'Check the real horizon before the window begins, then repeat with the summer-solstice date rather than reusing the winter direction.',
+          'Check the real horizon before the window begins, then repeat with the summer-reference date rather than reusing the winter direction.',
         ],
       },
     },
@@ -514,7 +514,7 @@ export const GUIDES: readonly GuideDefinition[] = [
         heading: 'Plan a location check before the shoot',
         paragraphs: [
           'Plot or stand facing the boundary bearing, then inspect whether the horizon is clear. For an evening shoot, arrive before the Sun falls into the 0–6° band so composition and exposure can be tested while the light is still changing.',
-          'If the subject must be front-lit, place the photographer generally opposite the Sun. For backlight or rim light, place the subject between the camera and the solar bearing. These are compositional starting points, not safety guidance for viewing or photographing the Sun.',
+          'For front light, place the photographer on the Sun-facing side of the subject, with the Sun generally behind the photographer. For backlight or rim light, place the subject between the camera and the solar bearing. These are compositional starting points, not safety guidance for viewing or photographing the Sun.',
         ],
       },
     ],
@@ -655,7 +655,7 @@ export const GUIDES: readonly GuideDefinition[] = [
     contentTypeLabel: 'Shadow calculation table',
     csvDefinition: {
       filenameStem: 'perth-shadow-direction-model',
-      description: 'Perth equinox bearings and theoretical shadow lengths for a two-metre vertical object from 08:00 to 16:00.',
+      description: 'Perth near-equinox bearings and theoretical shadow lengths for a two-metre vertical object from 08:00 to 16:00.',
       columns: ['date', 'local_time', 'object_height_m', 'solar_azimuth_deg', 'solar_altitude_deg', 'shadow_bearing_deg', 'shadow_length_m', 'availability'],
     },
     evidenceSources: [{
@@ -691,7 +691,7 @@ export const GUIDES: readonly GuideDefinition[] = [
       },
     ],
     example: {
-      title: 'Two-metre shadow bearings through a Perth equinox day',
+      title: 'Two-metre shadow bearings through a Perth near-equinox day',
       description:
         'The fixed Perth reference samples five local times. Shadow bearing and a two-metre level-ground length are derived only when solar altitude is above zero.',
       locationName: 'Perth, Western Australia, Australia',

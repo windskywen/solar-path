@@ -11,7 +11,7 @@
  */
 
 import { memo, useMemo } from 'react';
-import type { HourlySolarPosition } from '@/types/solar';
+import type { HourlySolarPosition, SunEvents } from '@/types/solar';
 
 // Color classes for daylight states
 const STATE_COLORS = {
@@ -34,6 +34,8 @@ const STATE_COLORS = {
 };
 
 export interface SolarDataTableProps {
+  /** Event-derived daylight duration and special-condition note. */
+  events?: SunEvents;
   /** Array of 24 hourly positions */
   positions: HourlySolarPosition[];
   /** Currently selected hour (0-23) or null */
@@ -120,6 +122,7 @@ const SolarDataRow = memo(function SolarDataRow({
  * SolarDataTable displays hourly solar position data in a scrollable table
  */
 export function SolarDataTable({
+  events,
   positions,
   selectedHour,
   onRowClick,
@@ -158,7 +161,8 @@ export function SolarDataTable({
       <div className="border-t [border-color:var(--solar-divider)] [background:var(--solar-surface-soft-bg)] px-3 py-3 sm:px-4">
           <div className="flex items-center justify-between gap-3 text-[0.7rem] text-[var(--solar-text-muted)] sm:text-xs">
             <span className="font-medium text-[var(--solar-text)]">
-              {positions.filter((p) => p.altitudeDeg > 0).length} hours of daylight
+              Daylight: {events?.dayLengthLabel ?? 'unavailable'}
+              {events?.note && <span className="block">{events.note}</span>}
             </span>
             {timezone && (
               <span className="max-w-[140px] truncate font-mono opacity-80 sm:max-w-none">

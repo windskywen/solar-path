@@ -305,7 +305,7 @@ describe('generateInsights', () => {
       expect(highAltMsg).toContain('85.0°');
     });
 
-    it('counts golden hour conditions', () => {
+    it('does not infer golden-hour duration from sampled positions', () => {
       // Create positions with several golden hours (0-10 degrees)
       const altitudes = [
         -15, -10, -5, 2, 5, 8, 15, 25, 35, 45, 50, 52, 50, 45, 35, 25, 15, 8, 5, 2, -5, -10, -12,
@@ -316,8 +316,8 @@ describe('generateInsights', () => {
 
       const insights = generateInsights(40, hourly, events);
 
-      const goldenMsg = insights.messages.find((m) => m.includes('golden hour'));
-      expect(goldenMsg).toBeDefined();
+      const goldenMsg = insights.messages.find((m) => /golden[- ]hour/.test(m));
+      expect(goldenMsg).toBeUndefined();
     });
 
     it('does not mention golden hour during polar day', () => {
@@ -326,7 +326,7 @@ describe('generateInsights', () => {
 
       const insights = generateInsights(70, hourly, events);
 
-      const goldenMsg = insights.messages.find((m) => m.includes('golden hour'));
+      const goldenMsg = insights.messages.find((m) => /golden[- ]hour/.test(m));
       expect(goldenMsg).toBeUndefined();
     });
 
@@ -336,7 +336,7 @@ describe('generateInsights', () => {
 
       const insights = generateInsights(70, hourly, events);
 
-      const goldenMsg = insights.messages.find((m) => m.includes('golden hour'));
+      const goldenMsg = insights.messages.find((m) => /golden[- ]hour/.test(m));
       expect(goldenMsg).toBeUndefined();
     });
   });

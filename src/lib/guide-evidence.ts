@@ -206,8 +206,8 @@ function buildSeasonalComparisonEvidence(guide: GuideDefinition): SeasonalCompar
       noonAltitudeDeg: events.solarNoonBoundary?.altitudeDeg ?? null,
     };
   };
-  const winter = buildSeason('Winter solstice', '2026-06-21');
-  const summer = buildSeason('Summer solstice', '2026-12-21');
+  const winter = buildSeason('Winter reference', '2026-06-21');
+  const summer = buildSeason('Summer reference', '2026-12-21');
   const seasons: readonly [SeasonalEvidenceSeason, SeasonalEvidenceSeason] = [winter, summer];
   const observations = ['08:00', '12:00', '16:00'].map((localTime) => {
     const winterPosition = winter.positions.find((position) => position.localTimeLabel === localTime);
@@ -280,8 +280,8 @@ function buildFacadeOrientationEvidence(guide: GuideDefinition): FacadeOrientati
     { city: 'Hobart', latitude: -42.8821, longitude: 147.3272, timezone: 'Australia/Hobart' },
   ] as const;
   const seasons = [
-    { label: 'Winter solstice', dateISO: '2026-06-21' },
-    { label: 'Summer solstice', dateISO: '2026-12-21' },
+    { label: 'Winter reference', dateISO: '2026-06-21' },
+    { label: 'Summer reference', dateISO: '2026-12-21' },
   ] as const;
   const rows = cities.flatMap((city) =>
     seasons.flatMap((season) =>
@@ -332,8 +332,8 @@ function buildFacadeOrientationEvidence(guide: GuideDefinition): FacadeOrientati
 function buildGoldenHourShotPlanEvidence(guide: GuideDefinition): GoldenHourShotPlanEvidence {
   const { latitude, longitude, timezone, locationName } = guide.example;
   const seasons = [
-    { label: 'Winter solstice', dateISO: '2026-06-21' },
-    { label: 'Summer solstice', dateISO: '2026-12-21' },
+    { label: 'Winter reference', dateISO: '2026-06-21' },
+    { label: 'Summer reference', dateISO: '2026-12-21' },
   ] as const;
   const rows: GoldenHourBoundaryRow[] = [];
 

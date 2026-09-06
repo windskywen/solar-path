@@ -73,6 +73,8 @@ export interface SolarEventBoundary {
 
 export interface SolarEventWindow {
   available: boolean;
+  /** Elapsed minutes between raw event instants, before display rounding. */
+  durationMinutes?: number;
   start?: SolarEventBoundary;
   end?: SolarEventBoundary;
   note?: string;

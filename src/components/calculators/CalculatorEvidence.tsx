@@ -85,8 +85,8 @@ function GoldenHourEvidence() {
   const winter = computeExtendedSunEvents(-27.4698, 153.0251, '2026-06-21', 'Australia/Brisbane');
   const summer = computeExtendedSunEvents(-27.4698, 153.0251, '2026-12-21', 'Australia/Brisbane');
   const rows = [
-    ...toShotPlanRows('Winter solstice · 21 Jun', winter.morningGoldenHour, winter.eveningGoldenHour),
-    ...toShotPlanRows('Summer solstice · 21 Dec', summer.morningGoldenHour, summer.eveningGoldenHour),
+    ...toShotPlanRows('Winter reference · 21 Jun', winter.morningGoldenHour, winter.eveningGoldenHour),
+    ...toShotPlanRows('Summer reference · 21 Dec', summer.morningGoldenHour, summer.eveningGoldenHour),
   ];
 
   return (
@@ -94,7 +94,7 @@ function GoldenHourEvidence() {
       <p className="text-[0.66rem] font-semibold uppercase tracking-[0.28em] text-[var(--solar-kicker)]">Directional field plan</p>
       <h2 id="calculator-golden-evidence-heading" className="mt-2 text-xl font-semibold text-[var(--solar-text-strong)]">Brisbane golden-hour shot plan</h2>
       <p className="mt-3 max-w-4xl text-sm leading-6 text-[var(--solar-text)]">
-        This calculator defines morning golden hour as sunrise to +6° altitude and evening golden hour as +6° altitude to sunset. The fixed winter and summer examples show why both timing and camera direction change by season.
+        This calculator defines morning golden hour as sunrise to +6° altitude and evening golden hour as +6° altitude to sunset. The fixed winter and summer examples show why both timing and camera direction change by season. These are fixed seasonal reference dates, not the exact local dates of the solstices or equinoxes.
       </p>
       <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(260px,0.36fr)]">
         <div className="overflow-x-auto rounded-[24px] border [border-color:var(--solar-surface-border)]">

@@ -249,8 +249,8 @@ export function SolarCalculator({ mode, initialDateISO }: SolarCalculatorProps) 
   const year = Number(dateISO.slice(0, 4));
   const seasonalEvents = useMemo(
     () => [
-      { label: 'June solstice', date: `${year}-06-21`, events: computeExtendedSunEvents(location.lat, location.lng, `${year}-06-21`, timezone) },
-      { label: 'December solstice', date: `${year}-12-21`, events: computeExtendedSunEvents(location.lat, location.lng, `${year}-12-21`, timezone) },
+      { label: 'June reference', date: `${year}-06-21`, events: computeExtendedSunEvents(location.lat, location.lng, `${year}-06-21`, timezone) },
+      { label: 'December reference', date: `${year}-12-21`, events: computeExtendedSunEvents(location.lat, location.lng, `${year}-12-21`, timezone) },
     ],
     [location.lat, location.lng, timezone, year]
   );
@@ -372,7 +372,8 @@ export function SolarCalculator({ mode, initialDateISO }: SolarCalculatorProps) 
         <div className="space-y-4">
           <section className={`${panelClass} overflow-hidden`} aria-labelledby="seasonal-comparison-heading">
             <div className="border-b px-4 py-4 [border-color:var(--solar-divider)] sm:px-5">
-              <h2 id="seasonal-comparison-heading" className="text-xl font-semibold text-[var(--solar-text-strong)]">Solstice comparison</h2>
+              <h2 id="seasonal-comparison-heading" className="text-xl font-semibold text-[var(--solar-text-strong)]">Seasonal reference comparison</h2>
+              <p className="mt-2 text-sm text-[var(--solar-text-muted)]">These are fixed seasonal reference dates, not the exact local dates of the solstices or equinoxes.</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px] text-left text-sm">

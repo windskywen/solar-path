@@ -1,3 +1,4 @@
+import { CONTENT_MODIFIED } from '@/lib/content-dates';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ContentPageHeader } from '@/components/layout/ContentPageHeader';
@@ -14,7 +15,7 @@ const title = 'Calculation Methodology';
 const description =
   'How Solar Path Tracker calculates solar position, event times, timezones, golden hour, daylight states, and polar conditions, including precision limits.';
 const path = '/methodology';
-const lastUpdated = '2026-09-06';
+const lastUpdated = CONTENT_MODIFIED.methodology;
 
 export const metadata: Metadata = buildPageMetadata({
   title,
@@ -59,7 +60,7 @@ export default function MethodologyPage() {
           <p className={`${eyebrow} mt-6`}>Transparent calculations</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-[var(--solar-text-strong)] sm:text-5xl">{title}</h1>
           <p className="mt-5 max-w-4xl text-base leading-7 text-[var(--solar-text)] sm:text-lg">{description}</p>
-          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>6 September 2026</time></p>
+          <p className="mt-5 text-xs text-[var(--solar-text-muted)]">Last updated: <time dateTime={lastUpdated}>{new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${lastUpdated}T00:00:00Z`))}</time></p>
         </header>
 
         <div className="mt-4 grid gap-4">
@@ -129,7 +130,7 @@ export default function MethodologyPage() {
                   <tr className="border-t [border-color:var(--solar-divider)]"><th scope="row" className="px-4 py-4 text-[var(--solar-text-strong)]">Sunrise / sunset</th><td className="px-4 py-4">SunCalc’s standard sunrise and sunset events, including its conventional horizon/refraction model.</td><td className="px-4 py-4">Exact local event timestamps when available.</td></tr>
                   <tr className="border-t [border-color:var(--solar-divider)]"><th scope="row" className="px-4 py-4 text-[var(--solar-text-strong)]">Civil dawn / dusk</th><td className="px-4 py-4">The Sun crosses −6° altitude before sunrise or after sunset.</td><td className="px-4 py-4">Exact local event timestamps when available.</td></tr>
                   <tr className="border-t [border-color:var(--solar-divider)]"><th scope="row" className="px-4 py-4 text-[var(--solar-text-strong)]">Calculator golden hour</th><td className="px-4 py-4">Morning: sunrise to +6°. Evening: +6° to sunset.</td><td className="px-4 py-4">Exact window boundaries with angle and bearing.</td></tr>
-                  <tr className="border-t [border-color:var(--solar-divider)]"><th scope="row" className="px-4 py-4 text-[var(--solar-text-strong)]">Home hourly state</th><td className="px-4 py-4">A sampled altitude below 0° is night, 0–6° is approximate golden, and above 6° is day.</td><td className="px-4 py-4">A whole-hour classification, not an exact event boundary.</td></tr>
+                  <tr className="border-t [border-color:var(--solar-divider)]"><th scope="row" className="px-4 py-4 text-[var(--solar-text-strong)]">Home hourly state</th><td className="px-4 py-4">A sampled altitude below 0° is night, 0–6° is approximate golden, and above 6° is day.</td><td className="px-4 py-4">A whole-hour classification, not an exact event boundary. Home daylight and golden-hour duration summaries use event boundaries rather than counts of hourly samples.</td></tr>
                 </tbody>
               </table>
             </div>

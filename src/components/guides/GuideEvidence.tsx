@@ -72,14 +72,14 @@ function DiagramEvidence({ guide, data }: { guide: GuideDefinition; data: SunPat
   return (
     <EvidenceShell
       guide={guide}
-      heading="Brisbane equinox sun-path diagram dataset"
+      heading="Brisbane near-equinox sun-path diagram dataset"
       intro="This original diagram plots seven fixed Brisbane readings on 23 September 2026. Every labelled point has the same time, azimuth, and altitude in the table and downloadable CSV, so the visual can be checked without estimating from pixels."
       dataset={data.dataset}
     >
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.8fr)]">
         <figure className="rounded-[24px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">
           <svg viewBox="0 0 560 320" role="img" aria-labelledby="diagram-title diagram-desc" className="h-auto w-full">
-            <title id="diagram-title">Brisbane equinox solar altitude and azimuth points</title>
+            <title id="diagram-title">Brisbane near-equinox solar altitude and azimuth points</title>
             <desc id="diagram-desc">A time-based curve rises from near the horizon in the morning to its highest altitude near noon and returns toward the horizon by evening. Each point is labelled with time and azimuth.</desc>
             <rect x="0" y="0" width="560" height="320" rx="18" fill="currentColor" fillOpacity="0.025" />
             {[0, 20, 40, 60, 80].map((altitude) => (
@@ -108,7 +108,7 @@ function DiagramEvidence({ guide, data }: { guide: GuideDefinition; data: SunPat
 
         <div className="overflow-x-auto rounded-[24px] border [border-color:var(--solar-surface-border)]">
           <table className="w-full min-w-[520px] text-left text-sm">
-            <caption className="sr-only">Text alternative for every plotted Brisbane equinox point</caption>
+            <caption className="sr-only">Text alternative for every plotted Brisbane near-equinox point</caption>
             <thead className="[background:var(--solar-surface-bg)] text-xs uppercase tracking-[0.16em] text-[var(--solar-text-muted)]">
               <tr><th scope="col" className="px-4 py-3">Local time</th><th scope="col" className="px-4 py-3">Azimuth</th><th scope="col" className="px-4 py-3">Altitude</th><th scope="col" className="px-4 py-3">State</th></tr>
             </thead>
@@ -134,7 +134,7 @@ function SeasonalEvidence({ guide, data }: { guide: GuideDefinition; data: Seaso
   return (
     <EvidenceShell
       guide={guide}
-      heading="Brisbane solstice 24-hour comparison"
+      heading="Brisbane seasonal reference 24-hour comparison"
       intro="The same Brisbane coordinates and timezone are calculated for 21 June and 21 December 2026. The event summary and every whole-hour pair make the seasonal change inspectable instead of reducing it to a generic claim about longer summer days."
       dataset={data.dataset}
     >
@@ -193,7 +193,7 @@ function FacadeEvidence({ guide, data }: { guide: GuideDefinition; data: FacadeO
     <EvidenceShell
       guide={guide}
       heading="Australian east–west facade bearing matrix"
-      intro="Darwin, Brisbane, and Hobart are sampled at 08:00 and 16:00 on both solstices. The matrix reports solar geometry only: it identifies whether the bearing lies in the east-facing or west-facing half-sky and makes no claim about room temperature, cooling energy, or comfort."
+      intro="Darwin, Brisbane, and Hobart are sampled at 08:00 and 16:00 on both seasonal reference dates. The matrix reports solar geometry only: it identifies whether the bearing lies in the east-facing or west-facing half-sky and makes no claim about room temperature, cooling energy, or comfort."
       dataset={data.dataset}
     >
       <div className="rounded-[22px] border p-4 [border-color:var(--solar-warning-border)] [background:var(--solar-warning-bg)] text-sm leading-6 text-[var(--solar-warning-text)]">
@@ -228,7 +228,7 @@ function GoldenEvidence({ guide, data }: { guide: GuideDefinition; data: GoldenH
     <EvidenceShell
       guide={guide}
       heading="Brisbane winter and summer directional shot plan"
-      intro="This fixed planning sheet applies Solar Path Tracker’s explicit definition: morning golden hour runs from sunrise to +6° altitude, and evening golden hour runs from +6° altitude to sunset. The live calculator handles other dates and locations; this guide focuses on repeatable field preparation for Brisbane’s two solstices."
+      intro="This fixed planning sheet applies Solar Path Tracker’s explicit definition: morning golden hour runs from sunrise to +6° altitude, and evening golden hour runs from +6° altitude to sunset. The live calculator handles other dates and locations; this guide focuses on repeatable field preparation for Brisbane’s two seasonal reference dates."
       dataset={data.dataset}
     >
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">

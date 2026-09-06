@@ -204,13 +204,13 @@ export function GoldenHourApplicationCase({
   data: GoldenHourShotPlanEvidence;
 }) {
   const winterStart = data.rows.find(
-    (row) => row.season === 'Winter solstice' && row.window === 'Evening' && row.boundary === 'Start'
+    (row) => row.season === 'Winter reference' && row.window === 'Evening' && row.boundary === 'Start'
   )?.value;
   const winterEnd = data.rows.find(
-    (row) => row.season === 'Winter solstice' && row.window === 'Evening' && row.boundary === 'End'
+    (row) => row.season === 'Winter reference' && row.window === 'Evening' && row.boundary === 'End'
   )?.value;
   const summerStart = data.rows.find(
-    (row) => row.season === 'Summer solstice' && row.window === 'Evening' && row.boundary === 'Start'
+    (row) => row.season === 'Summer reference' && row.window === 'Evening' && row.boundary === 'Start'
   )?.value;
 
   return (
@@ -269,7 +269,7 @@ function SolarAltitudeComparisonChart({ data }: { data: SeasonalComparisonEviden
       <svg viewBox="0 0 720 310" role="img" aria-labelledby="season-chart-title season-chart-desc" className="h-auto w-full">
         <title id="season-chart-title">Brisbane winter and summer solar altitude curves</title>
         <desc id="season-chart-desc">
-          A solid amber curve shows the winter-solstice solar altitude and a dashed pink curve shows the summer-solstice altitude across 24 local hours. The 08:00, 12:00, and 16:00 comparison points are labelled and also listed in text cards below.
+          A solid amber curve shows the winter-reference solar altitude and a dashed pink curve shows the summer-reference altitude across 24 local hours. The 08:00, 12:00, and 16:00 comparison points are labelled and also listed in text cards below.
         </desc>
         <rect x="0" y="0" width="720" height="310" rx="18" fill="currentColor" fillOpacity="0.025" />
         {[-60, -30, 0, 30, 60, 90].map((altitude) => (

@@ -95,36 +95,15 @@ test.describe('User Story 3: Date Selection', () => {
     await expect(page.getByText('✓ Today')).toBeVisible();
   });
 
-  test('quick date buttons exist for solstices and equinoxes', async ({ page }) => {
-    // Look for quick date buttons
-    const winterSolstice = page.getByRole('button', { name: /Winter Solstice/i });
-    const summerSolstice = page.getByRole('button', { name: /Summer Solstice/i });
-    const springEquinox = page.getByRole('button', { name: /Spring Equinox|Vernal/i });
-    const fallEquinox = page.getByRole('button', { name: /Fall Equinox|Autumn/i });
-
-    // At least some of these should be visible
-    const buttons = await page
-      .getByRole('button')
-      .filter({
-        hasText: /Solstice|Equinox/i,
-      })
-      .count();
-    expect(buttons).toBeGreaterThanOrEqual(2);
+  test('quick reference buttons expose fixed dates', async ({ page }) => {
+    for (const name of ['June reference', 'March reference', 'December reference', 'September reference']) {
+      await expect(page.getByRole('button', { name, exact: true })).toBeVisible();
+    }
   });
 
-  test('clicking winter solstice updates date', async ({ page }) => {
-    const dateInput = page.locator('input[type="date"]');
-
-    // Click winter solstice button if visible
-    const winterButton = page.getByRole('button', { name: /Winter Solstice/i }).first();
-
-    if (await winterButton.isVisible()) {
-      await winterButton.click();
-
-      // Date should be December 21
-      const value = await dateInput.inputValue();
-      expect(value).toMatch(/12-21/);
-    }
+  test('December reference selects December 21', async ({ page }) => {
+    await page.getByRole('button', { name: 'December reference', exact: true }).click();
+    await expect(page.locator('input[type="date"]')).toHaveValue(`${new Date().getUTCFullYear()}-12-21`);
   });
 
   test('solar data updates when date changes', async ({ page }) => {
