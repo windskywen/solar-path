@@ -100,6 +100,7 @@ export function GuideArticle({ guide }: GuideArticleProps) {
           <section className={`${glassPanel} mt-4 p-4 sm:p-6`} aria-labelledby="uses-and-limits-heading">
             <p className={eyebrow}>Responsible use</p>
             <h2 id="uses-and-limits-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--solar-text-strong)]">Practical uses and model limits</h2>
+            <p className="mt-4 max-w-4xl text-sm leading-7 text-[var(--solar-text)]">Terrain and buildings may be displayed in the 3D view for visual context where available. They are not inputs to the solar engine, which reports an unobstructed astronomical baseline without terrain, building, or tree shading.</p>
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
               <div className="rounded-[22px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]">
                 <h3 className="font-semibold text-[var(--solar-text-strong)]">Useful for</h3>

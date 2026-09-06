@@ -7,7 +7,14 @@
  * Displays the location marker and handles map interactions.
  */
 
-import { useRef, useCallback, useState, useEffect } from 'react';
+import {
+  Component,
+  useRef,
+  useCallback,
+  useState,
+  useEffect,
+  type ReactNode,
+} from 'react';
 import Map, { Marker, NavigationControl, GeolocateControl } from 'react-map-gl/maplibre';
 import type { MapRef, MapLayerMouseEvent, ViewState } from 'react-map-gl/maplibre';
 import { useLocation, useSolarActions } from '@/store/solar-store';
@@ -52,14 +59,73 @@ export interface MapPanelProps {
   className?: string;
   /** Callback when map is clicked */
   onMapClick?: (lat: number, lng: number) => void;
+  /** Marks a visitor action that should prevent a late IP-location replacement. */
+  onUserInteraction?: () => void;
   /** Children to render as map layers */
   children?: React.ReactNode;
+}
+
+class MapRenderBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('[map] Map initialization failed:', error.message);
+  }
+
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
+
+function MapUnavailable({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div
+      className="absolute inset-0 z-20 flex items-center justify-center [background:var(--solar-surface-soft-bg)] p-5 text-center"
+      role="status"
+    >
+      <div className="max-w-sm rounded-[22px] border p-5 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] [box-shadow:var(--solar-surface-shadow)]">
+        <p className="font-semibold text-[var(--solar-text-strong)]">
+          The map is unavailable or taking too long to load
+        </p>
+        <p className="mt-2 text-sm leading-6 text-[var(--solar-text)]">
+          Your solar results are still available. Retry the map or continue with the data below.
+        </p>
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex min-h-11 items-center rounded-xl border px-4 text-sm font-semibold text-[var(--solar-text-strong)] [border-color:var(--solar-button-border)] [background:var(--solar-button-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--solar-input-focus-ring)]"
+          >
+            Retry map
+          </button>
+          <a
+            href="#solar-data"
+            className="inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-[var(--solar-accent)] underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--solar-input-focus-ring)]"
+          >
+            View data
+          </a>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /**
  * MapPanel displays an interactive map with the current location
  */
-export function MapPanel({ className = '', onMapClick, children }: MapPanelProps) {
+export function MapPanel({
+  className = '',
+  onMapClick,
+  onUserInteraction,
+  children,
+}: MapPanelProps) {
   const mapRef = useRef<MapRef>(null);
   const locationFrameRef = useRef<number | null>(null);
   const locationCommitFrameRef = useRef<number | null>(null);
@@ -74,7 +140,20 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
       latitude: location.lat,
     }),
   };
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [mapLoadState, setMapLoadState] = useState<'loading' | 'ready' | 'stalled'>('loading');
+  const [retryKey, setRetryKey] = useState(0);
+  const isMapLoaded = mapLoadState === 'ready';
+
+  const handleRetry = useCallback(() => {
+    setMapLoadState('loading');
+    setRetryKey((current) => current + 1);
+  }, []);
+
+  useEffect(() => {
+    if (mapLoadState !== 'loading') return;
+    const timeoutId = window.setTimeout(() => setMapLoadState('stalled'), 10_000);
+    return () => window.clearTimeout(timeoutId);
+  }, [mapLoadState, retryKey]);
 
   useEffect(
     () => () => {
@@ -98,6 +177,7 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
 
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {
+      onUserInteraction?.();
       const { lng, lat } = e.lngLat;
 
       // Round to 6 decimal places
@@ -123,11 +203,12 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
         });
       });
     },
-    [setLocation, onMapClick]
+    [setLocation, onMapClick, onUserInteraction]
   );
 
   const handleGeolocate = useCallback(
     (position: GeolocationPosition) => {
+      onUserInteraction?.();
       const { latitude, longitude } = position.coords;
 
       // Round to 6 decimal places
@@ -141,48 +222,54 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
         source: 'gps',
       });
     },
-    [setLocation]
+    [setLocation, onUserInteraction]
   );
 
   return (
-    <div className={`relative w-full h-full ${className}`}>
-      <Map
-        ref={mapRef}
-        initialViewState={initialViewState}
-        onClick={handleMapClick}
-        onLoad={() => setIsMapLoaded(true)}
-        mapStyle={MAP_STYLE}
-        attributionControl={{ compact: true }}
-        reuseMaps
-        style={{ width: '100%', height: '100%' }}
-      >
-        {/* Navigation controls */}
-        <NavigationControl position="top-right" />
+    <div
+      className={`relative w-full h-full ${className}`}
+      onPointerDownCapture={onUserInteraction}
+      onKeyDownCapture={onUserInteraction}
+    >
+      <MapRenderBoundary key={retryKey} fallback={<MapUnavailable onRetry={handleRetry} />}>
+        <Map
+          ref={mapRef}
+          initialViewState={initialViewState}
+          onClick={handleMapClick}
+          onLoad={() => setMapLoadState('ready')}
+          mapStyle={MAP_STYLE}
+          attributionControl={{ compact: true }}
+          reuseMaps
+          style={{ width: '100%', height: '100%' }}
+        >
+          {/* Navigation controls */}
+          <NavigationControl position="top-right" />
 
-        {/* GPS button */}
-        <GeolocateControl
-          position="top-right"
-          trackUserLocation={false}
-          showUserLocation={false}
-          onGeolocate={handleGeolocate}
-        />
+          {/* GPS button */}
+          <GeolocateControl
+            position="top-right"
+            trackUserLocation={false}
+            showUserLocation={false}
+            onGeolocate={handleGeolocate}
+          />
 
-        {/* Location marker */}
-        {location && (
-          <Marker longitude={location.lng} latitude={location.lat} anchor="center">
-            <div
-              className="w-4 h-4 bg-primary border-2 border-background rounded-full shadow-lg"
-              title={location.name || `${location.lat}, ${location.lng}`}
-            />
-          </Marker>
-        )}
+          {/* Location marker */}
+          {location && (
+            <Marker longitude={location.lng} latitude={location.lat} anchor="center">
+              <div
+                className="w-4 h-4 bg-primary border-2 border-background rounded-full shadow-lg"
+                title={location.name || `${location.lat}, ${location.lng}`}
+              />
+            </Marker>
+          )}
 
-        {/* Additional layers (e.g., SolarRaysLayer) */}
-        {isMapLoaded && children}
-      </Map>
+          {/* Additional layers (e.g., SolarRaysLayer) */}
+          {isMapLoaded && children}
+        </Map>
+      </MapRenderBoundary>
 
       {/* Map loading indicator */}
-      {!isMapLoaded && (
+      {mapLoadState === 'loading' && (
         <div className="absolute inset-0 flex items-center justify-center [background:var(--solar-surface-soft-bg)]">
           <div className="flex items-center gap-2 text-[var(--solar-text-muted)]">
             <svg
@@ -209,7 +296,7 @@ export function MapPanel({ className = '', onMapClick, children }: MapPanelProps
           </div>
         </div>
       )}
-
+      {mapLoadState === 'stalled' ? <MapUnavailable onRetry={handleRetry} /> : null}
     </div>
   );
 }

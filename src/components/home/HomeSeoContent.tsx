@@ -74,9 +74,11 @@ export function HomeSeoContent() {
                 the Sun&apos;s geometric position from the location, date, and local time you choose.
               </p>
               <p>
-                It does not model local terrain, buildings, trees, weather, cloud, or surveyed
-                site geometry. Check real obstructions on site before making an architectural,
-                engineering, safety, or installation decision.
+                Terrain and buildings may appear in the 3D view as visual context where data and
+                device display mode allow. Those visual layers do not affect the calculation: it
+                does not calculate shading from terrain, buildings, or trees and does not model
+                weather, cloud, or surveyed site geometry. Check real obstructions on site before
+                making an architectural, engineering, safety, or installation decision.
               </p>
             </div>
           </aside>
@@ -120,11 +122,20 @@ export function HomeSeoContent() {
             </article>
             <article className={surfacePanel}>
               <h3 className="font-semibold text-[var(--solar-text-strong)]">
-                Does the map include terrain, buildings, trees, or weather?
+                Can the 3D view display terrain and buildings?
               </h3>
               <p className="mt-3 text-sm leading-6 text-[var(--solar-text)]">
-                No. The map reports an unobstructed astronomical baseline and does not simulate
-                local obstructions, terrain, weather, or visibility.
+                It may display terrain and buildings for visual context where data is available and
+                the device uses a supported display mode. Availability and detail can vary.
+              </p>
+            </article>
+            <article className={surfacePanel}>
+              <h3 className="font-semibold text-[var(--solar-text-strong)]">
+                Does the calculation include shading from terrain, buildings, or trees?
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-[var(--solar-text)]">
+                No. Results are an unobstructed astronomical baseline. Terrain, buildings, and
+                trees shown for visual context do not change the calculated solar values.
               </p>
             </article>
           </div>

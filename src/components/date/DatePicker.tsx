@@ -97,6 +97,14 @@ export function DatePicker({ className = '', initialDateISO, onChange }: DatePic
     onChange?.(newDate);
   }, [dateISO, setDateISO, onChange]);
 
+  const handleQuickDateChange = useCallback(
+    (newDate: string) => {
+      setDateISO(newDate);
+      onChange?.(newDate);
+    },
+    [onChange, setDateISO]
+  );
+
   const handleOpenPicker = useCallback(() => {
     const input = dateInputRef.current;
     if (!input) return;
@@ -194,28 +202,28 @@ export function DatePicker({ className = '', initialDateISO, onChange }: DatePic
           fullLabel="June Solstice"
           dateISO={`${today.slice(0, 4)}-06-21`}
           currentDate={dateISO}
-          onClick={setDateISO}
+          onClick={handleQuickDateChange}
         />
         <QuickDateButton
           label="Mar Eq"
           fullLabel="March Equinox"
           dateISO={`${today.slice(0, 4)}-03-20`}
           currentDate={dateISO}
-          onClick={setDateISO}
+          onClick={handleQuickDateChange}
         />
         <QuickDateButton
           label="Dec Sol"
           fullLabel="December Solstice"
           dateISO={`${today.slice(0, 4)}-12-21`}
           currentDate={dateISO}
-          onClick={setDateISO}
+          onClick={handleQuickDateChange}
         />
         <QuickDateButton
           label="Sep Eq"
           fullLabel="September Equinox"
           dateISO={`${today.slice(0, 4)}-09-22`}
           currentDate={dateISO}
-          onClick={setDateISO}
+          onClick={handleQuickDateChange}
         />
       </div>
     </div>

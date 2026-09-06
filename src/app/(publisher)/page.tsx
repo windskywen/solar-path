@@ -9,6 +9,7 @@ import {
 } from '@/lib/structured-data';
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, absoluteUrl } from '@/lib/site';
 import { getTodayISO } from '@/lib/utils/timezone';
+import { getTaipeiExampleLocation } from '@/lib/solar/example-location';
 
 export const revalidate = 3600;
 
@@ -58,6 +59,7 @@ const homeStructuredData = [
 
 export default function Page() {
   const initialDateISO = getTodayISO('UTC');
+  const initialLocation = getTaipeiExampleLocation();
 
   return (
     <>
@@ -65,7 +67,7 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeStructuredData) }}
       />
-      <SolarStoreProvider initialDateISO={initialDateISO}>
+      <SolarStoreProvider initialDateISO={initialDateISO} initialLocation={initialLocation}>
         <HomePage initialDateISO={initialDateISO} />
       </SolarStoreProvider>
       <HomeSeoContent />

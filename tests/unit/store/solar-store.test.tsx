@@ -7,10 +7,15 @@ import {
   useSolarActions,
   useTimezone,
 } from '@/store/solar-store';
+import type { LocationPoint } from '@/types/solar';
 
-function createWrapper(initialDateISO: string) {
+function createWrapper(initialDateISO: string, initialLocation?: LocationPoint) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
-    return <SolarStoreProvider initialDateISO={initialDateISO}>{children}</SolarStoreProvider>;
+    return (
+      <SolarStoreProvider initialDateISO={initialDateISO} initialLocation={initialLocation}>
+        {children}
+      </SolarStoreProvider>
+    );
   };
 }
 
@@ -32,6 +37,23 @@ describe('SolarStoreProvider', () => {
     expect(result.current.dateISO).toBe('2026-08-11');
     expect(result.current.location).toBeNull();
     expect(result.current.timezone).toBe('UTC');
+  });
+
+  it('uses an optional server-provided example location and derives its timezone', () => {
+    const { result } = renderHook(useStoreTestSurface, {
+      wrapper: createWrapper('2026-09-06', {
+        lat: 25.033,
+        lng: 121.5654,
+        name: 'Taipei, Taiwan',
+        source: 'fallback',
+      }),
+    });
+
+    expect(result.current.location).toMatchObject({
+      name: 'Taipei, Taiwan',
+      source: 'fallback',
+    });
+    expect(result.current.timezone).toBe('Asia/Taipei');
   });
 
   it('preserves the existing actions and derives timezone after a location change', () => {

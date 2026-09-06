@@ -286,6 +286,10 @@ test.describe('3D Solar Path View - US1: Open/Close Modal', () => {
 
     // Modal should have Reset View button
     await expect(modal.getByText('Reset View')).toBeVisible();
+
+    await expect(modal.getByTestId('solar-3d-scope-note')).toHaveText(
+      'Terrain and buildings may be displayed for visual context where available. Solar calculations do not account for shading from terrain, buildings or trees.'
+    );
   });
 
   test('pressing Escape closes the modal', async ({ page }) => {

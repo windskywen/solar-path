@@ -24,15 +24,21 @@ import { getTodayISO, getTimezoneFromCoordinates } from '@/lib/utils/timezone';
 export interface SolarStoreProviderProps {
   children: ReactNode;
   initialDateISO: string;
+  initialLocation?: LocationPoint | null;
 }
 
-function createSolarStore(initialDateISO: string): StoreApi<SolarStore> {
+function createSolarStore(
+  initialDateISO: string,
+  initialLocation: LocationPoint | null = null
+): StoreApi<SolarStore> {
   const initialState = {
-    location: null as LocationPoint | null,
+    location: initialLocation,
     dateISO: initialDateISO,
-    timezone: 'UTC',
+    timezone: initialLocation
+      ? getTimezoneFromCoordinates(initialLocation.lat, initialLocation.lng)
+      : 'UTC',
     selectedHour: null as number | null,
-    isLoadingLocation: true,
+    isLoadingLocation: initialLocation === null,
     error: null as string | null,
   };
 
@@ -76,8 +82,12 @@ function createSolarStore(initialDateISO: string): StoreApi<SolarStore> {
 
 const SolarStoreContext = createContext<StoreApi<SolarStore> | null>(null);
 
-export function SolarStoreProvider({ children, initialDateISO }: SolarStoreProviderProps) {
-  const [store] = useState(() => createSolarStore(initialDateISO));
+export function SolarStoreProvider({
+  children,
+  initialDateISO,
+  initialLocation = null,
+}: SolarStoreProviderProps) {
+  const [store] = useState(() => createSolarStore(initialDateISO, initialLocation));
 
   return (
     <SolarStoreContext.Provider value={store}>

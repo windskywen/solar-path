@@ -67,7 +67,7 @@ export function SiteFooter() {
             <a href="https://github.com/mourner/suncalc" target="_blank" rel="noopener noreferrer" className={linkClass}>SunCalc</a>, Luxon, and @photostructure/tz-lookup.
           </p>
           <p className="mt-3 max-w-6xl text-[0.68rem] leading-5 text-[var(--solar-text-faint)]">
-            Solar data and 3D visualizations are general informational references. The model does not include local terrain, buildings, trees, weather, or surveyed site geometry and is not professional architectural, engineering, surveying, safety, or installation advice.
+            Solar data and 3D visualizations are general informational references. Terrain and buildings may appear in 3D as visual context, but the model does not calculate shading from terrain, buildings, or trees and does not include weather or surveyed site geometry. It is not professional architectural, engineering, surveying, safety, or installation advice.
           </p>
           <p className="mt-4 text-[var(--solar-text-muted)]">&copy; {year} Solar Path Tracker</p>
         </div>

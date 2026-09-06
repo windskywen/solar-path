@@ -1,7 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { MapPanel } from '@/components/map/MapPanel';
 import { SolarRaysLayer, SolarRaysLegend } from '@/components/map/SolarRaysLayer';
 import { LocationInput } from '@/components/location/LocationInput';
@@ -10,9 +19,9 @@ import { SunEventsPanel, InsightsPanel } from '@/components/insights';
 import { SolarDataTable, MetricsPanel } from '@/components/data';
 import { CalculationReportPanel } from '@/components/home/CalculationReportPanel';
 import { DeferredChartsPanel } from '@/components/charts/DeferredChartsPanel';
-import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
 import { AdSenseScript } from '@/components/ads/AdSenseScript';
 import { SidebarAdPanel } from '@/components/ads/SidebarAdPanel';
+import { SiteHeader } from '@/components/layout/SiteHeader';
 import { useSolarData } from '@/hooks/useSolarData';
 import { useIpGeo } from '@/hooks/useIpGeo';
 import {
@@ -153,7 +162,7 @@ function Solar3DViewButton({ disabled, onClick, onPreload }: Solar3DViewButtonPr
           Open 3D View
         </span>
         <span className="mt-1 block text-xs text-[var(--solar-text-muted)]">
-          Terrain, buildings and the full sun path
+          Explore the sun path in 3D
         </span>
       </span>
       <span
@@ -339,9 +348,28 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
   const dateISO = useDateISO();
   const selectedHour = useSelectedHour();
   const { setDateISO, setLocation, setSelectedHour } = useSolarActions();
+  const automaticLocationAllowedRef = useRef(true);
+  const hasAppliedIpLocationRef = useRef(false);
 
   // Get initial location from IP
-  const { location: ipLocation, isLoading: ipLoading } = useIpGeo();
+  const {
+    location: ipLocation,
+    isLoading: ipLoading,
+    isDefault: ipIsDefault,
+    error: ipError,
+  } = useIpGeo();
+
+  const stopAutomaticLocation = useCallback(() => {
+    automaticLocationAllowedRef.current = false;
+  }, []);
+
+  const selectHour = useCallback(
+    (hour: number) => {
+      stopAutomaticLocation();
+      setSelectedHour(hour);
+    },
+    [setSelectedHour, stopAutomaticLocation]
+  );
 
   // Refresh an ISR-provided date only after hydration. The first client render
   // still matches the server exactly, so cached pages do not create text
@@ -353,12 +381,22 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
     }
   }, [dateISO, initialDateISO, setDateISO]);
 
-  // Set initial location from IP geo on first load
+  // Replace the server-rendered example with the approximate IP location only
+  // while the visitor has not begun working with the tool.
   useEffect(() => {
-    if (!location && ipLocation && !ipLoading) {
-      setLocation(ipLocation);
+    if (
+      ipLoading ||
+      ipIsDefault ||
+      hasAppliedIpLocationRef.current ||
+      !automaticLocationAllowedRef.current ||
+      location?.source !== 'fallback'
+    ) {
+      return;
     }
-  }, [ipLocation, ipLoading, location, setLocation]);
+
+    hasAppliedIpLocationRef.current = true;
+    setLocation(ipLocation);
+  }, [ipIsDefault, ipLoading, ipLocation, location?.source, setLocation]);
 
   // Compute solar data
   const solarData = useSolarData();
@@ -382,7 +420,11 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
         ? 'Manual coordinates'
         : location?.source === 'search'
           ? 'Search result'
-          : 'Set a location';
+          : location?.source === 'ip'
+            ? 'Approximate location'
+            : location?.source === 'fallback'
+              ? 'Example location · Taipei'
+              : 'Set a location';
   const selectedStatus = selectedPosition
     ? `${selectedPosition.localTimeLabel} · ${selectedPosition.daylightState}`
     : 'Choose a ray or row';
@@ -390,6 +432,9 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
     solarData?.events?.dayLengthLabel ||
     solarData?.events?.dayLengthFormatted ||
     'Awaiting solar data';
+  const sunriseSummary = solarData.events.sunriseLocal ?? 'Unavailable';
+  const sunsetSummary = solarData.events.sunsetLocal ?? 'Unavailable';
+  const isShowingExample = location?.source === 'fallback';
 
   const glassPanel =
     'relative overflow-hidden rounded-[30px] border [border-color:var(--solar-glass-border)] [background:var(--solar-glass-bg)] [box-shadow:var(--solar-glass-shadow)] backdrop-blur-2xl';
@@ -431,54 +476,22 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
         ]}
       />
 
+      <SiteHeader sticky />
+
       <div className="relative z-10 mx-auto flex min-h-screen max-w-screen-2xl flex-col px-3 pb-4 sm:px-4 lg:px-6">
-        {/* Header */}
-        <header className="sticky top-0 z-30 py-3 sm:py-4">
-          <div className={`${glassPanel} px-4 py-3 sm:px-5`}>
-            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
-              <div className="min-w-0 space-y-1">
-                <p className={eyebrow}>Solar mission control</p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-lg font-semibold tracking-[-0.02em] text-[var(--solar-text-strong)] sm:text-xl lg:text-2xl">
-                    Solar Path Tracker
-                  </p>
-                  <span className="hidden h-1.5 w-1.5 rounded-full bg-sky-300/70 sm:inline-block" />
-                  <p className="text-sm text-[var(--solar-text)]">
-                    Visualize the sun&apos;s journey across the sky
-                  </p>
-                </div>
-              </div>
-
-              <ThemeSwitcher className="justify-self-center" />
-
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-self-end sm:justify-end">
-                <span className={capsule}>
-                  <span className="text-[var(--solar-pill-muted)]">Date</span>
-                  <span>{displayDate}</span>
-                </span>
-                <span className={capsule}>
-                  <span className="text-[var(--solar-pill-muted)]">Timezone</span>
-                  <span className="truncate">{displayTimezone}</span>
-                </span>
-                <span className={`${capsule} hidden lg:inline-flex`}>
-                  <span className="text-[var(--solar-pill-muted)]">Focus</span>
-                  <span>{selectedStatus}</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {/* Hero + controls */}
         <section className="pb-4 sm:pb-6">
           <div className="grid gap-4 xl:grid-cols-[minmax(300px,0.68fr)_minmax(0,1.32fr)]">
-            <div className={`${glassPanel} px-4 py-5 sm:px-6 sm:py-6`}>
+            <div
+              className={`${glassPanel} min-w-0 px-4 py-5 sm:px-6 sm:py-6`}
+              data-testid="home-hero"
+            >
               <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.22),transparent_48%),radial-gradient(circle_at_top_right,rgba(250,204,21,0.14),transparent_38%)]" />
 
-              <div className="relative space-y-5">
-                <p className={eyebrow}>Cinematic daylight atlas</p>
+              <div className="relative min-w-0 space-y-4">
+                <p className={eyebrow}>Solar planning dashboard</p>
                 <div className="space-y-3">
-                  <h1 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--solar-text-strong)] sm:text-4xl lg:text-[3.75rem] lg:leading-[0.95]">
+                  <h1 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--solar-text-strong)] sm:text-4xl lg:text-5xl lg:leading-none">
                     Sun path map and sun tracker for any location.
                   </h1>
                   <p className="max-w-2xl text-sm leading-6 text-[var(--solar-text)] sm:text-base">
@@ -488,19 +501,84 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                 </div>
 
                 <div className="flex flex-wrap gap-2.5">
-                  <span className={capsule}>
+                  <span className={capsule} data-testid="location-source">
                     <span className="text-[var(--solar-pill-muted)]">Location</span>
                     <span>{locationSource}</span>
                   </span>
                   <span className={capsule}>
-                    <span className="text-[var(--solar-pill-muted)]">Daylight</span>
-                    <span>{daylightSummary}</span>
+                    <span className="text-[var(--solar-pill-muted)]">Date</span>
+                    <span>{displayDate}</span>
+                  </span>
+                  <span className={capsule} data-testid="location-timezone">
+                    <span className="text-[var(--solar-pill-muted)]">Timezone</span>
+                    <span>{displayTimezone}</span>
                   </span>
                 </div>
 
-                <p className="max-w-xl text-xs uppercase tracking-[0.28em] text-[var(--solar-text-faint)] sm:text-[0.7rem]">
-                  Compare daylight. Plan faster. Keep the map front and center.
-                </p>
+                <dl
+                  className="grid grid-cols-3 gap-2 rounded-[22px] border p-3 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] [box-shadow:var(--solar-surface-inset-shadow)]"
+                  data-testid="initial-solar-summary"
+                >
+                  <div className="min-w-0">
+                    <dt className="text-[0.62rem] uppercase tracking-[0.18em] text-[var(--solar-text-faint)]">
+                      Sunrise
+                    </dt>
+                    <dd className="mt-1 text-base font-semibold tabular-nums text-[var(--solar-text-strong)]">
+                      {sunriseSummary}
+                    </dd>
+                  </div>
+                  <div className="min-w-0 border-x px-2 [border-color:var(--solar-divider)]">
+                    <dt className="text-[0.62rem] uppercase tracking-[0.18em] text-[var(--solar-text-faint)]">
+                      Sunset
+                    </dt>
+                    <dd className="mt-1 text-base font-semibold tabular-nums text-[var(--solar-text-strong)]">
+                      {sunsetSummary}
+                    </dd>
+                  </div>
+                  <div className="min-w-0 pl-1">
+                    <dt className="text-[0.62rem] uppercase tracking-[0.18em] text-[var(--solar-text-faint)]">
+                      Daylight
+                    </dt>
+                    <dd className="mt-1 truncate text-base font-semibold tabular-nums text-[var(--solar-text-strong)]">
+                      {daylightSummary}
+                    </dd>
+                  </div>
+                </dl>
+
+                <div className="space-y-2 text-xs leading-5 text-[var(--solar-text-muted)]">
+                  <p>
+                    Times use the selected location&apos;s timezone. Results do not account for
+                    shading from terrain, buildings or trees.
+                  </p>
+                  <p aria-live="polite">
+                    {isShowingExample && ipLoading
+                      ? 'Showing a Taipei example while approximate location is checked.'
+                      : isShowingExample && ipError
+                        ? 'Showing the Taipei example. Search or enter coordinates to choose another place.'
+                        : `Current focus: ${selectedStatus}.`}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold">
+                  <a
+                    href="#solar-data"
+                    className="inline-flex min-h-11 items-center text-[var(--solar-accent)] underline decoration-sky-200/40 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--solar-input-focus-ring)]"
+                  >
+                    View full results
+                  </a>
+                  <Link
+                    href="/guides/how-to-read-a-sun-path-diagram"
+                    className="inline-flex min-h-11 items-center text-[var(--solar-text)] underline decoration-sky-200/30 underline-offset-4 hover:text-[var(--solar-text-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--solar-input-focus-ring)]"
+                  >
+                    How to read a sun path
+                  </Link>
+                  <Link
+                    href="/guides/brisbane-winter-vs-summer-sun-path"
+                    className="inline-flex min-h-11 items-center text-[var(--solar-text)] underline decoration-sky-200/30 underline-offset-4 hover:text-[var(--solar-text-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--solar-input-focus-ring)]"
+                  >
+                    Brisbane winter vs summer
+                  </Link>
+                </div>
               </div>
             </div>
 
@@ -518,7 +596,12 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                       GPS, search, or coordinates
                     </span>
                   </div>
-                  <LocationInput className="!space-y-3" />
+                  <div
+                    onPointerDownCapture={stopAutomaticLocation}
+                    onKeyDownCapture={stopAutomaticLocation}
+                  >
+                    <LocationInput className="!space-y-3" />
+                  </div>
                 </div>
 
                 <div className={`${insetPanel} relative z-10 p-4 sm:p-5`}>
@@ -533,7 +616,11 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                       {displayTimezone}
                     </span>
                   </div>
-                  <DatePicker className="w-full" initialDateISO={initialDateISO} />
+                  <DatePicker
+                    className="w-full"
+                    initialDateISO={initialDateISO}
+                    onChange={stopAutomaticLocation}
+                  />
                 </div>
               </div>
             </div>
@@ -571,13 +658,16 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
 
             <div className="relative flex-1 overflow-hidden rounded-[26px] border [border-color:var(--solar-map-frame-border)] [background:var(--solar-map-frame-bg)] [box-shadow:var(--solar-map-frame-shadow)]">
               <Suspense fallback={<MapSkeleton />}>
-                <MapPanel className="h-full w-full">
+                <MapPanel
+                  className="h-full w-full"
+                  onUserInteraction={stopAutomaticLocation}
+                >
                   {deferredSolarData ? (
                     <SolarRaysLayer
                       location={deferredSolarData.location}
                       positions={deferredSolarData.hourly}
                       selectedHour={deferredSelectedHour}
-                      onRayClick={setSelectedHour}
+                      onRayClick={selectHour}
                     />
                   ) : null}
                 </MapPanel>
@@ -613,7 +703,7 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                     <DeferredChartsPanel
                       positions={deferredSolarData?.hourly ?? solarData.hourly}
                       selectedHour={deferredSelectedHour}
-                      onHourClick={setSelectedHour}
+                      onHourClick={selectHour}
                     />
                   ) : (
                       <div className="flex h-44 flex-col items-center justify-center rounded-[24px] border border-dashed [border-color:var(--solar-empty-border)] [background:var(--solar-empty-bg)] px-6 text-center">
@@ -678,7 +768,7 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                     <SolarDataTable
                       positions={solarData.hourly}
                       selectedHour={selectedHour}
-                      onRowClick={setSelectedHour}
+                      onRowClick={selectHour}
                       timezone={timezone}
                       className="border-0 rounded-none shadow-none"
                     />
@@ -739,7 +829,9 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
                     from two perspectives: a fast visual path for exploration, and a precise set of
                     values for decision-making. That is especially useful when comparing Golden Hour
                     timing, winter sun angles, or all-day exposure on a facade, roof, or outdoor
-                    scene.
+                    scene. Terrain and buildings may appear in the 3D scene as visual context, but
+                    they do not change the calculated solar path or model shading from terrain,
+                    buildings, or trees.
                   </p>
                 </div>
               </section>
