@@ -7,8 +7,8 @@
  * Defaults to today's date and allows selecting any Gregorian date.
  */
 
-import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
-import { useDateISO, useSolarActions } from '@/store/solar-store';
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { useDateISO, useSolarActions, useTimezone } from '@/store/solar-store';
 import { getTodayISO } from '@/lib/utils/timezone';
 
 export interface DatePickerProps {
@@ -37,15 +37,9 @@ function formatDateDisplay(dateISO: string): string {
   }
 }
 
-/**
- * Check if a date is today
- */
-function isToday(dateISO: string): boolean {
-  return dateISO === getTodayISO();
-}
-
-function subscribeToUtcDate() {
-  return () => {};
+function subscribeToDate(onChange: () => void) {
+  const timer = setInterval(onChange, 60_000);
+  return () => clearInterval(timer);
 }
 
 /**
@@ -53,56 +47,66 @@ function subscribeToUtcDate() {
  */
 export function DatePicker({ className = '', initialDateISO, onChange }: DatePickerProps) {
   const dateISO = useDateISO();
+  const timezone = useTimezone();
   const { setDateISO } = useSolarActions();
   const dateInputRef = useRef<HTMLInputElement>(null);
 
-  // Keep the hydration snapshot equal to the server date, then expose the
-  // current UTC date to the client without a mount-effect state update.
+  const automaticDate = useRef(true);
+  const lastAutomaticDate = useRef(initialDateISO);
+
+  // Preserve the server snapshot, then resolve today in the observation timezone.
   const today = useSyncExternalStore(
-    subscribeToUtcDate,
-    () => getTodayISO('UTC'),
+    subscribeToDate,
+    () => getTodayISO(timezone),
     () => initialDateISO
   );
   const dateIsToday = useMemo(() => dateISO === today, [dateISO, today]);
+
+  useEffect(() => {
+    if (!automaticDate.current || dateISO !== lastAutomaticDate.current) return;
+    lastAutomaticDate.current = today;
+    if (dateISO !== today) setDateISO(today);
+  }, [dateISO, today, setDateISO]);
+
+  const selectDate = useCallback((value: string) => {
+    automaticDate.current = false;
+    setDateISO(value);
+    onChange?.(value);
+  }, [setDateISO, onChange]);
 
   const handleDateChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newDate = e.target.value;
       if (newDate) {
-        setDateISO(newDate);
-        onChange?.(newDate);
+        selectDate(newDate);
       }
     },
-    [setDateISO, onChange]
+    [selectDate]
   );
 
   const handleTodayClick = useCallback(() => {
-    setDateISO(today);
-    onChange?.(today);
-  }, [today, setDateISO, onChange]);
+    selectDate(getTodayISO(timezone));
+  }, [timezone, selectDate]);
 
   const handlePrevDay = useCallback(() => {
     const current = new Date(dateISO + 'T12:00:00');
     current.setDate(current.getDate() - 1);
     const newDate = current.toISOString().split('T')[0];
-    setDateISO(newDate);
-    onChange?.(newDate);
-  }, [dateISO, setDateISO, onChange]);
+    selectDate(newDate);
+  }, [dateISO, selectDate]);
 
   const handleNextDay = useCallback(() => {
     const current = new Date(dateISO + 'T12:00:00');
     current.setDate(current.getDate() + 1);
     const newDate = current.toISOString().split('T')[0];
-    setDateISO(newDate);
-    onChange?.(newDate);
-  }, [dateISO, setDateISO, onChange]);
+    selectDate(newDate);
+  }, [dateISO, selectDate]);
 
   const handleQuickDateChange = useCallback(
     (newDate: string) => {
-      setDateISO(newDate);
-      onChange?.(newDate);
+      selectDate(newDate);
     },
-    [onChange, setDateISO]
+    [selectDate]
   );
 
   const handleOpenPicker = useCallback(() => {
@@ -270,12 +274,15 @@ function QuickDateButton({
  */
 export function DateDisplayCompact({ className = '' }: { className?: string }) {
   const dateISO = useDateISO();
+  const timezone = useTimezone();
+
+  const today = useSyncExternalStore(subscribeToDate, () => getTodayISO(timezone), () => "");
 
   return (
     <div className={`flex items-center gap-2 text-sm ${className}`}>
       <span className="text-muted-foreground">Date:</span>
       <span className="font-medium text-foreground">{formatDateDisplay(dateISO)}</span>
-      {isToday(dateISO) && (
+      {dateISO === today && (
         <span className="rounded-full border px-2 py-0.5 text-xs [border-color:var(--solar-success-border)] [background:var(--solar-success-bg)] text-[var(--solar-success-text)]">
           Today
         </span>

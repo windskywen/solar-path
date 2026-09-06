@@ -104,7 +104,7 @@ export default function MethodologyPage() {
             <div className="mt-4 max-w-5xl space-y-4 text-sm leading-7 text-[var(--solar-text)] sm:text-base">
               <p>Latitude and longitude identify the observer. The <a href="https://github.com/photostructure/tz-lookup" target="_blank" rel="noopener noreferrer" className="text-[var(--solar-accent)] underline underline-offset-4">@photostructure/tz-lookup</a> dataset maps those coordinates to an IANA timezone where possible. For unmapped ocean coordinates, the site uses a longitude-based fixed-offset fallback.</p>
               <p><a href="https://moment.github.io/luxon/" target="_blank" rel="noopener noreferrer" className="text-[var(--solar-accent)] underline underline-offset-4">Luxon</a> constructs each selected local date and time in that timezone and converts the instant for calculation. This preserves timezone-boundary and daylight-saving rules represented by the runtime’s IANA data. The browser’s timezone is not substituted for the selected location.</p>
-              <p>The interactive home receives its initial UTC date from the server so server HTML and the first browser render match. After mount, an old incremental-static-render date is refreshed only if the user has not already selected a different date.</p>
+              <p>The interactive home receives its initial UTC date from the server so server HTML and the first browser render match. After hydration, the default date and Today control use the selected location’s timezone. Automatic date updates stop after the user selects a date, including when they select the original server date.</p>
             </div>
           </section>
 

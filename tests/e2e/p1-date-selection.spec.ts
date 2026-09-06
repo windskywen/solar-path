@@ -29,7 +29,8 @@ test.describe('User Story 3: Date Selection', () => {
     await expect(dateInput).toBeVisible();
 
     // Should show today's date
-    const today = new Date().toISOString().split('T')[0];
+    const zone = await page.locator('#solar-data').getByText(/^[A-Za-z_]+\/[A-Za-z_]+$/).first().textContent();
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: zone?.trim() ?? 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     await expect(dateInput).toHaveValue(today);
 
     // "Today" indicator should be visible
@@ -90,7 +91,8 @@ test.describe('User Story 3: Date Selection', () => {
     await page.getByText('Go to Today').click();
 
     // Should return to today
-    const today = new Date().toISOString().split('T')[0];
+    const zone = await page.locator('#solar-data').getByText(/^[A-Za-z_]+\/[A-Za-z_]+$/).first().textContent();
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: zone?.trim() ?? 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     await expect(dateInput).toHaveValue(today);
     await expect(page.getByText('✓ Today')).toBeVisible();
   });
@@ -107,21 +109,15 @@ test.describe('User Story 3: Date Selection', () => {
   });
 
   test('solar data updates when date changes', async ({ page }) => {
-    // Wait for initial data
-    await expect(page.getByText('Sunrise', { exact: true })).toBeVisible({ timeout: 10000 });
-
-    // Capture initial sunrise time
-    const initialContent = await page.textContent('body');
-
-    // Change to winter solstice (shortest day)
+    const overview = page.getByRole('region', { name: 'Daily solar overview', exact: true });
     const dateInput = page.locator('input[type="date"]');
+    await dateInput.fill('2024-06-21');
+    await expect(overview.getByText('Sunrise', { exact: true })).toBeVisible();
+    const initialOverview = await overview.innerText();
     await dateInput.fill('2024-12-21');
-
-    // Wait for data to update
-    await page.waitForTimeout(1000);
-
-    // Day length should be visible and potentially different
-    await expect(page.getByText('Day Length', { exact: true })).toBeVisible();
+    await expect(dateInput).toHaveValue('2024-12-21');
+    await expect.poll(() => overview.innerText()).not.toBe(initialOverview);
+    await expect(overview.getByText('Day Length', { exact: true })).toBeVisible();
   });
 
   test('map preserves center when date changes', async ({ page }) => {

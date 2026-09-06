@@ -1,3 +1,4 @@
+import { CONTENT_MODIFIED } from '@/lib/content-dates';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ContentPageHeader } from '@/components/layout/ContentPageHeader';
@@ -38,7 +39,7 @@ export default function PrivacyPage() {
             while being transparent about the third-party services that help operate the site.
           </p>
           <p className="text-xs text-[var(--solar-text-muted)]">
-            Last updated: <time dateTime="2026-09-05">5 September 2026</time>
+            Last updated: <time dateTime={CONTENT_MODIFIED.privacy}>{new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${CONTENT_MODIFIED.privacy}T00:00:00Z`))}</time>
           </p>
         </div>
       </section>
