@@ -59,7 +59,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: absoluteUrl('/privacy'),
-      lastModified: UPDATED_2026_08_24,
+      lastModified: new Date(`${CONTENT_MODIFIED.privacy}T00:00:00Z`),
       changeFrequency: 'monthly',
       priority: 0.5,
     },

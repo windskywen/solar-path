@@ -52,7 +52,7 @@ describe('guide registry', () => {
       'estimating-shadow-direction-from-solar-angles': ['/solar-azimuth-altitude'],
     };
     for (const guide of GUIDES) {
-      expect(guide.modifiedDate).toBe(guide.evidenceKey === 'nrel-spa-benchmark' ? '2026-08-24' : '2026-09-06');
+      expect(guide.modifiedDate).toBe(guide.evidenceKey === 'nrel-spa-benchmark' ? '2026-08-24' : guide.slug === 'golden-hour-direction-brisbane' ? '2026-09-07' : '2026-09-06');
       expect(guide.relatedTools?.map((tool) => tool.href)).toEqual(expectedTools[guide.slug]);
       for (const tool of guide.relatedTools ?? []) {
         expect(tool.label.length).toBeGreaterThan(8);
@@ -214,9 +214,9 @@ describe('public sitemap', () => {
       expect(entry?.lastModified).toEqual(new Date(`${guide.modifiedDate}T00:00:00Z`));
     }
 
-    for (const route of ['/', '/sunrise-sunset-calculator', '/golden-hour-calculator', '/about', '/methodology']) {
+    for (const [route, date] of Object.entries({ '/': '2026-09-07', '/sunrise-sunset-calculator': '2026-09-06', '/golden-hour-calculator': '2026-09-06', '/about': '2026-09-06', '/methodology': '2026-09-07', '/privacy': '2026-09-05' })) {
       const entry = entries.find((candidate) => candidate.url === `https://solarpathtracker.example${route}`);
-      expect(entry?.lastModified).toEqual(new Date('2026-09-06T00:00:00Z'));
+      expect(entry?.lastModified).toEqual(new Date(`${date}T00:00:00Z`));
     }
 
     const guideIndex = entries.find(

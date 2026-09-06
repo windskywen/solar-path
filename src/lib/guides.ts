@@ -436,24 +436,25 @@ export const GUIDES: readonly GuideDefinition[] = [
     contentTypeLabel: 'Directional shot plan',
     csvDefinition: {
       filenameStem: 'brisbane-golden-hour-shot-plan',
-      description: 'Winter and summer boundaries for the site-defined 0 to 6 degree golden-hour windows.',
+      description: 'Winter and summer SunCalc event boundaries: sunrise to the morning +6° event, and the evening +6° event to sunset.',
       columns: ['season', 'window', 'boundary', 'local_time', 'azimuth_deg', 'altitude_deg', 'field_note'],
     },
     evidenceSources: [{
       label: 'USNO Astronomical Applications API documentation',
       url: 'https://aa.usno.navy.mil/data/api.html',
-      note: 'Independent event-time reference used by the site validation report; the 0 to 6 degree golden-hour definition is this site’s stated convention.',
+      note: 'Independent event-time reference used by the site validation report; the sunrise-to-+6° and +6°-to-sunset golden-hour windows are this site’s stated convention.',
     }],
     title: 'Golden Hour Direction in Brisbane',
     description:
       'Place a camera for front, side, or back light using Brisbane’s reproducible winter and summer golden-hour bearings.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-09-06',
+    modifiedDate: '2026-09-07',
     keywords: ['Brisbane golden hour direction', 'Brisbane photography light', 'golden hour azimuth', 'golden hour calculator Brisbane'],
     introduction: [
       'A golden-hour time without a direction is incomplete planning information. The Sun may be low and warm, yet sit behind the subject, behind the photographer, or behind a blocked horizon. Combining the window with its azimuth explains which side of a scene is geometrically positioned for direct low-angle light.',
       'Solar Path Tracker defines the morning window from sunrise until the Sun reaches +6° altitude, and the evening window from +6° down to sunset. This is an astronomical boundary, not a guarantee of colour. Atmosphere, cloud, smoke, haze, terrain, buildings, trees, and exposure choices shape the visible result.',
+      'These windows use SunCalc event-time estimates. Boundary altitudes are calculated separately with its position formula, so displayed values can differ slightly from the nominal +6° threshold. Standard sunrise and sunset also use a horizon/refraction convention and do not require a displayed altitude of 0°.',
     ],
     sectionsBeforeExample: [
       {

@@ -32,7 +32,6 @@ import {
   useSolarActions,
 } from '@/store/solar-store';
 import { SkipLinks } from '@/components/a11y';
-import { getTodayISO } from '@/lib/utils/timezone';
 import type { HourlySolarPosition, SunEvents } from '@/types/solar';
 
 type Solar3DViewModalModule = typeof import('@/components/solar3d/Solar3DViewModal');
@@ -347,7 +346,7 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
   const timezone = useTimezone();
   const dateISO = useDateISO();
   const selectedHour = useSelectedHour();
-  const { setDateISO, setLocation, setSelectedHour } = useSolarActions();
+  const { setLocation, setSelectedHour } = useSolarActions();
   const automaticLocationAllowedRef = useRef(true);
   const hasAppliedIpLocationRef = useRef(false);
 
@@ -370,16 +369,6 @@ export default function HomePage({ initialDateISO }: HomePageProps) {
     },
     [setSelectedHour, stopAutomaticLocation]
   );
-
-  // Refresh an ISR-provided date only after hydration. The first client render
-  // still matches the server exactly, so cached pages do not create text
-  // hydration errors around midnight or after a long-lived deployment.
-  useEffect(() => {
-    const currentDateISO = getTodayISO('UTC');
-    if (dateISO === initialDateISO && currentDateISO !== initialDateISO) {
-      setDateISO(currentDateISO);
-    }
-  }, [dateISO, initialDateISO, setDateISO]);
 
   // Replace the server-rendered example with the approximate IP location only
   // while the visitor has not begun working with the tool.

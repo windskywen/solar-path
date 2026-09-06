@@ -47,10 +47,10 @@ for (const width of [390, 1440]) {
 
 test('published content and sitemap show matching dates and consistent front-light advice', async ({ page, request }) => {
   const sitemap = await (await request.get('/sitemap.xml')).text();
-  for (const path of ['/about', '/methodology']) {
+  for (const [path, date] of Object.entries({ '/about': '2026-09-06', '/methodology': '2026-09-07', '/privacy': '2026-09-05' })) {
     await page.goto(path);
-    await expect(page.locator('time')).toHaveAttribute('datetime', '2026-09-06');
-    expect(sitemap).toMatch(new RegExp(`${path}</loc>\\s*<lastmod>2026-09-06T00:00:00.000Z</lastmod>`));
+    await expect(page.locator('time')).toHaveAttribute('datetime', date);
+    expect(sitemap).toMatch(new RegExp(`${path}</loc>\\s*<lastmod>${date}T00:00:00.000Z</lastmod>`));
   }
   await page.goto('/guides/golden-hour-direction-brisbane');
   await expect(page.getByText(/For front light, place the photographer on the Sun-facing side/)).toBeVisible();
