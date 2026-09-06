@@ -38,6 +38,11 @@ export interface SeasonalEvidenceSeason {
 export interface SeasonalComparisonEvidence extends GuideEvidenceBase {
   kind: 'seasonal-comparison';
   seasons: readonly [SeasonalEvidenceSeason, SeasonalEvidenceSeason];
+  observations: readonly {
+    localTime: string;
+    winter: HourlySolarPosition;
+    summer: HourlySolarPosition;
+  }[];
   noonAltitudeDeltaDeg: number | null;
   dayLengthDeltaHours: number | null;
 }
@@ -102,6 +107,39 @@ export interface ShadowDirectionEvidence extends GuideEvidenceBase {
   rows: readonly ShadowDirectionRow[];
 }
 
+export type LightingSetup = 'front' | 'side' | 'back';
+
+export function normalizeBearing(bearingDeg: number): number {
+  return ((bearingDeg % 360) + 360) % 360;
+}
+
+export function getCameraBearingForLightingSetup(
+  sunBearingDeg: number,
+  setup: LightingSetup
+): number {
+  const offsetBySetup: Record<LightingSetup, number> = {
+    front: 0,
+    side: 90,
+    back: 180,
+  };
+  return normalizeBearing(sunBearingDeg + offsetBySetup[setup]);
+}
+
+export function calculateShadowGeometry(
+  solarAzimuthDeg: number,
+  solarAltitudeDeg: number,
+  objectHeightM: number
+): { shadowBearingDeg: number | null; shadowLengthM: number | null } {
+  if (solarAltitudeDeg <= 0) {
+    return { shadowBearingDeg: null, shadowLengthM: null };
+  }
+
+  return {
+    shadowBearingDeg: normalizeBearing(solarAzimuthDeg + 180),
+    shadowLengthM: objectHeightM / Math.tan((solarAltitudeDeg * Math.PI) / 180),
+  };
+}
+
 export type GuideEvidenceData =
   | SunPathDiagramEvidence
   | SeasonalComparisonEvidence
@@ -157,9 +195,7 @@ function buildSunPathDiagramEvidence(guide: GuideDefinition): SunPathDiagramEvid
 }
 
 function buildSeasonalComparisonEvidence(guide: GuideDefinition): SeasonalComparisonEvidence {
-  const latitude = -27.4698;
-  const longitude = 153.0251;
-  const timezone = 'Australia/Brisbane';
+  const { latitude, longitude, timezone, locationName } = guide.example;
   const buildSeason = (label: string, dateISO: string): SeasonalEvidenceSeason => {
     const events = computeExtendedSunEvents(latitude, longitude, dateISO, timezone);
     return {
@@ -173,6 +209,14 @@ function buildSeasonalComparisonEvidence(guide: GuideDefinition): SeasonalCompar
   const winter = buildSeason('Winter solstice', '2026-06-21');
   const summer = buildSeason('Summer solstice', '2026-12-21');
   const seasons: readonly [SeasonalEvidenceSeason, SeasonalEvidenceSeason] = [winter, summer];
+  const observations = ['08:00', '12:00', '16:00'].map((localTime) => {
+    const winterPosition = winter.positions.find((position) => position.localTimeLabel === localTime);
+    const summerPosition = summer.positions.find((position) => position.localTimeLabel === localTime);
+    if (!winterPosition || !summerPosition) {
+      throw new Error(`Seasonal comparison is missing the ${localTime} observation.`);
+    }
+    return { localTime, winter: winterPosition, summer: summerPosition };
+  });
   const noonAltitudeDeltaDeg =
     winter.noonAltitudeDeg === null || summer.noonAltitudeDeg === null
       ? null
@@ -185,13 +229,14 @@ function buildSeasonalComparisonEvidence(guide: GuideDefinition): SeasonalCompar
   return {
     kind: 'seasonal-comparison',
     seasons,
+    observations,
     noonAltitudeDeltaDeg,
     dayLengthDeltaHours,
     dataset: {
       filename: guide.csvDefinition.filenameStem,
       metadata: [
         ...baseMetadata(guide),
-        { key: 'location_name', value: 'Brisbane, Queensland, Australia' },
+        { key: 'location_name', value: locationName },
         { key: 'latitude', value: latitude },
         { key: 'longitude', value: longitude },
         { key: 'timezone', value: timezone },
@@ -285,9 +330,7 @@ function buildFacadeOrientationEvidence(guide: GuideDefinition): FacadeOrientati
 }
 
 function buildGoldenHourShotPlanEvidence(guide: GuideDefinition): GoldenHourShotPlanEvidence {
-  const latitude = -27.4698;
-  const longitude = 153.0251;
-  const timezone = 'Australia/Brisbane';
+  const { latitude, longitude, timezone, locationName } = guide.example;
   const seasons = [
     { label: 'Winter solstice', dateISO: '2026-06-21' },
     { label: 'Summer solstice', dateISO: '2026-12-21' },
@@ -329,7 +372,7 @@ function buildGoldenHourShotPlanEvidence(guide: GuideDefinition): GoldenHourShot
       filename: guide.csvDefinition.filenameStem,
       metadata: [
         ...baseMetadata(guide),
-        { key: 'location_name', value: 'Brisbane, Queensland, Australia' },
+        { key: 'location_name', value: locationName },
         { key: 'latitude', value: latitude },
         { key: 'longitude', value: longitude },
         { key: 'timezone', value: timezone },
@@ -403,12 +446,14 @@ function buildNrelSpaEvidence(guide: GuideDefinition): NrelSpaEvidence {
 }
 
 function buildShadowDirectionEvidence(guide: GuideDefinition): ShadowDirectionEvidence {
-  const latitude = -31.9523;
-  const longitude = 115.8613;
-  const timezone = 'Australia/Perth';
-  const dateISO = '2026-03-20';
+  const { latitude, longitude, timezone, locationName } = guide.example;
+  const dateISO = guide.example.dates[0]?.dateISO;
+  if (!dateISO) {
+    throw new Error('Shadow direction example date is unavailable.');
+  }
   const objectHeightM = 2;
-  const rows = ['08:00', '10:00', '12:00', '14:00', '16:00'].map((localTime) => {
+  const localTimes = guide.example.dates[0]?.localTimes ?? [];
+  const rows = localTimes.map((localTime) => {
     const position = computeSolarPositionAtLocalTime(
       latitude,
       longitude,
@@ -416,16 +461,17 @@ function buildShadowDirectionEvidence(guide: GuideDefinition): ShadowDirectionEv
       localTime,
       timezone
     );
-    const isAvailable = position.altitudeDeg > 0;
+    const shadow = calculateShadowGeometry(
+      position.azimuthDeg,
+      position.altitudeDeg,
+      objectHeightM
+    );
     return {
       dateISO,
       localTime,
       objectHeightM,
       position,
-      shadowBearingDeg: isAvailable ? (position.azimuthDeg + 180) % 360 : null,
-      shadowLengthM: isAvailable
-        ? objectHeightM / Math.tan((position.altitudeDeg * Math.PI) / 180)
-        : null,
+      ...shadow,
     };
   });
 
@@ -436,7 +482,7 @@ function buildShadowDirectionEvidence(guide: GuideDefinition): ShadowDirectionEv
       filename: guide.csvDefinition.filenameStem,
       metadata: [
         ...baseMetadata(guide),
-        { key: 'location_name', value: 'Perth, Western Australia, Australia' },
+        { key: 'location_name', value: locationName },
         { key: 'latitude', value: latitude },
         { key: 'longitude', value: longitude },
         { key: 'timezone', value: timezone },

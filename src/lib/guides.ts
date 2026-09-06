@@ -44,6 +44,16 @@ export interface GuideRelatedToolDefinition {
   description: string;
 }
 
+export interface GuideApplicationCaseDefinition {
+  task: string;
+  assumptions: readonly string[];
+  reproduction: {
+    toolHref: string;
+    toolLabel: string;
+    steps: readonly string[];
+  };
+}
+
 export interface GuideDefinition {
   slug: GuideSlug;
   evidenceKey: GuideEvidenceKey;
@@ -74,6 +84,7 @@ export interface GuideDefinition {
     chartView: 'altitude' | 'azimuth' | 'both';
     interpretation: readonly string[];
   };
+  applicationCase?: GuideApplicationCaseDefinition;
   sectionsAfterExample: readonly GuideSectionDefinition[];
   useCases: readonly string[];
   limitations: readonly string[];
@@ -219,10 +230,10 @@ export const GUIDES: readonly GuideDefinition[] = [
     }],
     title: 'Brisbane Winter vs Summer Sun Path',
     description:
-      'Compare Brisbane’s June and December solar paths using fixed, reproducible sunrise, sunset, direction, altitude, and daylight data.',
+      'Plan a three-time winter-versus-summer site observation in Brisbane using reproducible solar bearings, altitudes, and daylight data.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-24',
+    modifiedDate: '2026-09-06',
     keywords: ['Brisbane winter sun path', 'Brisbane summer sun path', 'Brisbane daylight hours', 'seasonal sun angles'],
     introduction: [
       'Brisbane does not experience the extreme seasonal daylight swing of high-latitude cities, but the change is still large enough to alter facade exposure, shade depth, outdoor comfort, and the useful hours for direct sunlight. The difference is not only that summer days are longer: the daily arc also rises much higher in the sky.',
@@ -263,6 +274,24 @@ export const GUIDES: readonly GuideDefinition[] = [
         'The event summary shows the longer summer daylight window. That extra time appears at both ends of the day, which is relevant to east- and west-facing glazing even when midday shading is effective.',
         'The displayed chart is the December curve. Compare its high, broad arc with the June values in the table rather than assuming the same overhang or tree canopy performs identically all year.',
       ],
+    },
+    applicationCase: {
+      task: 'Choose three repeatable observation times for the same Brisbane outdoor space, then compare the astronomical baseline with what is actually visible on site.',
+      assumptions: [
+        'The observation point and camera direction stay fixed between the winter and summer visits.',
+        'The solar engine reports an unobstructed astronomical baseline; it does not simulate indoor daylight, temperature, or shade from buildings, trees, terrain, and weather.',
+        '08:00, 12:00, and 16:00 are local clock-time samples. The calculated solar-noon event is reported separately.',
+      ],
+      reproduction: {
+        toolHref: '/',
+        toolLabel: 'Open the Sun Path Map',
+        steps: [
+          'Enter the coordinates shown in the case inputs and select each listed solstice date.',
+          'Inspect the solar bearing and altitude at 08:00, 12:00, and 16:00 without changing the observation point.',
+          'Use the same viewpoint and camera direction during each field visit.',
+          'Record actual obstructions and visible light beside the calculated baseline instead of treating the model as a shading survey.',
+        ],
+      },
     },
     sectionsAfterExample: [
       {
@@ -417,10 +446,10 @@ export const GUIDES: readonly GuideDefinition[] = [
     }],
     title: 'Golden Hour Direction in Brisbane',
     description:
-      'Plan Brisbane golden-hour light by combining the exact event window with boundary azimuth, altitude, and seasonal direction.',
+      'Place a camera for front, side, or back light using Brisbane’s reproducible winter and summer golden-hour bearings.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-24',
+    modifiedDate: '2026-09-06',
     keywords: ['Brisbane golden hour direction', 'Brisbane photography light', 'golden hour azimuth', 'golden hour calculator Brisbane'],
     introduction: [
       'A golden-hour time without a direction is incomplete planning information. The Sun may be low and warm, yet sit behind the subject, behind the photographer, or behind a blocked horizon. Combining the window with its azimuth explains which side of a scene is geometrically positioned for direct low-angle light.',
@@ -462,6 +491,24 @@ export const GUIDES: readonly GuideDefinition[] = [
         'The fixed clock samples are context points, not replacements for the event boundaries. Use the exact window displayed in the event summary when scheduling arrival and setup.',
       ],
     },
+    applicationCase: {
+      task: 'Use the winter-solstice evening golden-hour bearing to place a camera for front, side, or back light, then compare that setup with the summer direction.',
+      assumptions: [
+        'The diagrams show relative positions around one subject and are not maps of a real location.',
+        'All directions are true-north bearings measured clockwise from north.',
+        'The Sun is treated as an unobstructed direction; skyline, terrain, weather, exposure, and lens choice remain field decisions.',
+      ],
+      reproduction: {
+        toolHref: '/golden-hour-calculator',
+        toolLabel: 'Open the Golden Hour Calculator',
+        steps: [
+          'Enter the coordinates shown in the case inputs and select the winter-solstice date.',
+          'Read the Evening golden hour start and end times, bearings, and altitudes.',
+          'Use the winter start bearing to choose the relative camera setup shown in the diagrams.',
+          'Check the real horizon before the window begins, then repeat with the summer-solstice date rather than reusing the winter direction.',
+        ],
+      },
+    },
     sectionsAfterExample: [
       {
         heading: 'Plan a location check before the shoot',
@@ -483,6 +530,11 @@ export const GUIDES: readonly GuideDefinition[] = [
     ],
     sources: SHARED_SOURCES,
     relatedTools: [
+      {
+        href: '/golden-hour-calculator',
+        label: 'Reproduce the golden-hour window',
+        description: 'Enter the case coordinates and date to verify the exact evening boundary times and bearings.',
+      },
       {
         href: '/',
         label: 'Open the Sun Path Map',
@@ -613,10 +665,10 @@ export const GUIDES: readonly GuideDefinition[] = [
     }],
     title: 'Estimating Shadow Direction from Solar Angles',
     description:
-      'Learn how to reverse solar azimuth for shadow direction and use solar altitude for a simple level-ground shadow-length estimate.',
+      'Calculate a Perth shadow bearing and length step by step from solar azimuth, altitude, and a two-metre object height.',
     author: 'Solar Path Tracker',
     publishedDate: '2026-08-12',
-    modifiedDate: '2026-08-24',
+    modifiedDate: '2026-09-06',
     keywords: ['shadow direction from solar azimuth', 'shadow length solar altitude', 'sun angle shadow calculation', 'estimate building shadow'],
     introduction: [
       'A sun-facing object casts its shadow away from the Sun. On a compass plan, the first estimate is therefore simple: add 180° to solar azimuth and wrap the result back into the 0–360° range. If the Sun is at 70°, the level-plan shadow bearing is approximately 250°.',
@@ -660,6 +712,25 @@ export const GUIDES: readonly GuideDefinition[] = [
         'The shortest calculated two-metre-object shadow occurs near the highest sampled altitude. The 08:00 and 16:00 values are longer because rays meet level ground more obliquely.',
         'A row with altitude at or below zero never receives a shadow length. The data contract uses an unavailable state instead of a negative or fabricated distance.',
       ],
+    },
+    applicationCase: {
+      task: 'Calculate the direction and level-ground length of a two-metre post’s shadow at 10:00 in Perth, then compare it with morning, noon, and afternoon results.',
+      assumptions: [
+        'The object is vertical, two metres high, and meets approximately level ground at a right angle.',
+        'Direct sunlight reaches the object without terrain, buildings, trees, or other obstructions.',
+        'The calculation describes hard geometric direction and length; diffuse light, penumbra, and surface slope are outside the model.',
+        'When solar altitude is 0° or lower, this model returns no shadow bearing or length.',
+      ],
+      reproduction: {
+        toolHref: '/solar-azimuth-altitude',
+        toolLabel: 'Open the Sun Position & Angle Calculator',
+        steps: [
+          'Enter the coordinates and date shown in the case inputs, then set the local time to 10:00.',
+          'Copy the displayed azimuth and altitude into the two formulas shown in the worked calculation.',
+          'Reverse the azimuth for the shadow bearing and divide object height by the tangent of altitude for length.',
+          'Stop if altitude is at or below zero, or if the real site does not satisfy the stated assumptions.',
+        ],
+      },
     },
     sectionsAfterExample: [
       {

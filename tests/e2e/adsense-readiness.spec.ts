@@ -9,6 +9,12 @@ const guideSlugs = [
   'estimating-shadow-direction-from-solar-angles',
 ] as const;
 
+const applicationGuideRoutes = [
+  '/guides/golden-hour-direction-brisbane',
+  '/guides/brisbane-winter-vs-summer-sun-path',
+  '/guides/estimating-shadow-direction-from-solar-angles',
+] as const;
+
 const guideEvidence: Record<(typeof guideSlugs)[number], { key: string; heading: string }> = {
   'how-to-read-a-sun-path-diagram': { key: 'sun-path-diagram', heading: 'Brisbane equinox sun-path diagram dataset' },
   'brisbane-winter-vs-summer-sun-path': { key: 'seasonal-comparison', heading: 'Brisbane solstice 24-hour comparison' },
@@ -363,5 +369,74 @@ test.describe('Publisher content, SEO, and review-mode advertising', () => {
     }
 
     expect(browserErrors).toEqual([]);
+  });
+});
+
+test.describe('Server-rendered guide application cases', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test('golden-hour guide explains three camera placements from calculated bearings', async ({ page }) => {
+    await page.goto('/guides/golden-hour-direction-brisbane');
+    const applicationCase = page.getByTestId('golden-hour-application-case');
+    await expect(applicationCase.getByText('Calculated example — not a field measurement')).toBeVisible();
+    await expect(applicationCase.getByRole('heading', { name: 'Front light' })).toBeVisible();
+    await expect(applicationCase.getByRole('heading', { name: 'Side light' })).toBeVisible();
+    await expect(applicationCase.getByRole('heading', { name: 'Back light' })).toBeVisible();
+    await expect(applicationCase.locator('svg')).toHaveCount(3);
+    await expect(applicationCase.getByRole('link', { name: 'Open the Golden Hour Calculator' })).toHaveAttribute('href', '/golden-hour-calculator');
+  });
+
+  test('seasonal guide exposes a curve and three field-observation times', async ({ page }) => {
+    await page.goto('/guides/brisbane-winter-vs-summer-sun-path');
+    const applicationCase = page.getByTestId('seasonal-application-case');
+    await expect(applicationCase.getByText('Calculated example — not a field measurement')).toBeVisible();
+    await expect(applicationCase.getByRole('heading', { name: '08:00' })).toBeVisible();
+    await expect(applicationCase.getByRole('heading', { name: '12:00' })).toBeVisible();
+    await expect(applicationCase.getByRole('heading', { name: '16:00' })).toBeVisible();
+    await expect(applicationCase.locator('svg')).toHaveCount(1);
+    await expect(applicationCase.getByText(/12:00 is a sample, while calculated solar noon/i)).toBeVisible();
+    await expect(applicationCase.getByText(/does not simulate indoor daylight, temperature/i)).toBeVisible();
+  });
+
+  test('shadow guide shows a worked formula and two text-described diagrams', async ({ page }) => {
+    await page.goto('/guides/estimating-shadow-direction-from-solar-angles');
+    const applicationCase = page.getByTestId('shadow-application-case');
+    await expect(applicationCase.getByText('Calculated example — not a field measurement')).toBeVisible();
+    await expect(applicationCase.getByRole('heading', { name: 'Work the 10:00 result step by step' })).toBeVisible();
+    await expect(applicationCase.locator('svg')).toHaveCount(2);
+    await expect(applicationCase.getByText(/doubling the object height/i)).toBeVisible();
+    await expect(applicationCase.getByRole('heading', { name: 'Assumptions and stop conditions' })).toBeVisible();
+    await expect(applicationCase.getByText(/When solar altitude is 0° or lower/i)).toBeVisible();
+  });
+});
+
+test.describe('Guide application case presentation', () => {
+  test('three cases fit mobile and desktop widths and remain readable after a theme change', async ({
+    page,
+  }) => {
+    for (const viewport of [
+      { width: 390, height: 844 },
+      { width: 1440, height: 1000 },
+    ]) {
+      await page.setViewportSize(viewport);
+
+      for (const route of applicationGuideRoutes) {
+        await page.goto(route, { waitUntil: 'domcontentloaded' });
+        await expect(page.getByText('Calculated example — not a field measurement')).toBeVisible();
+
+        const dimensions = await page.evaluate(() => ({
+          scrollWidth: document.documentElement.scrollWidth,
+          viewportWidth: window.innerWidth,
+        }));
+        expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
+      }
+    }
+
+    await page.goto(applicationGuideRoutes[0]);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await page.getByRole('switch', { name: 'Switch to light mode' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await expect(page.getByTestId('golden-hour-application-case')).toBeVisible();
+    await expect(page.getByRole('switch', { name: 'Switch to dark mode' })).toBeVisible();
   });
 });

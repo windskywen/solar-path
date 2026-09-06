@@ -4,6 +4,7 @@ import { absoluteUrl } from '@/lib/site';
 
 const UPDATED_2026_08_12 = new Date('2026-08-12T00:00:00Z');
 const UPDATED_2026_08_24 = new Date('2026-08-24T00:00:00Z');
+const UPDATED_2026_09_06 = new Date('2026-09-06T00:00:00Z');
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
@@ -33,7 +34,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: absoluteUrl('/guides'),
-      lastModified: UPDATED_2026_08_24,
+      lastModified: UPDATED_2026_09_06,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
