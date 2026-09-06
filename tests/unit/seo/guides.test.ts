@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import sitemap from '@/app/sitemap';
-import { buildGuideEvidenceCsvDataset } from '@/lib/guide-evidence';
+import {
+  buildGuideEvidenceCsvDataset,
+  buildGuideEvidenceData,
+  calculateShadowGeometry,
+  getCameraBearingForLightingSetup,
+} from '@/lib/guide-evidence';
 import { GUIDES, GUIDE_EVIDENCE_KEYS, GUIDE_SLUGS, getGuide } from '@/lib/guides';
 import { computeSolarPositionAtLocalTime } from '@/lib/solar/extended-events';
 import { serializeCsv } from '@/lib/utils/csv';
@@ -42,19 +47,42 @@ describe('guide registry', () => {
       'how-to-read-a-sun-path-diagram': ['/'],
       'brisbane-winter-vs-summer-sun-path': ['/', '/sunrise-sunset-calculator'],
       'east-vs-west-facing-homes-australia': ['/solar-azimuth-altitude'],
-      'golden-hour-direction-brisbane': ['/', '/sunrise-sunset-calculator'],
+      'golden-hour-direction-brisbane': ['/golden-hour-calculator', '/', '/sunrise-sunset-calculator'],
       'solar-azimuth-altitude-worked-example': ['/solar-azimuth-altitude'],
       'estimating-shadow-direction-from-solar-angles': ['/solar-azimuth-altitude'],
     };
+    const expandedCaseStudies = new Set([
+      'brisbane-winter-vs-summer-sun-path',
+      'golden-hour-direction-brisbane',
+      'estimating-shadow-direction-from-solar-angles',
+    ]);
 
     for (const guide of GUIDES) {
-      expect(guide.modifiedDate).toBe('2026-08-24');
+      expect(guide.modifiedDate).toBe(expandedCaseStudies.has(guide.slug) ? '2026-09-06' : '2026-08-24');
       expect(guide.relatedTools?.map((tool) => tool.href)).toEqual(expectedTools[guide.slug]);
       for (const tool of guide.relatedTools ?? []) {
         expect(tool.label.length).toBeGreaterThan(8);
         expect(tool.description.length).toBeGreaterThan(20);
       }
     }
+  });
+
+  it('defines a reproducible user task for the three expanded application cases', () => {
+    const expandedSlugs = [
+      'brisbane-winter-vs-summer-sun-path',
+      'golden-hour-direction-brisbane',
+      'estimating-shadow-direction-from-solar-angles',
+    ] as const;
+
+    for (const slug of expandedSlugs) {
+      const guide = getGuide(slug);
+      expect(guide?.applicationCase?.task.length).toBeGreaterThan(60);
+      expect(guide?.applicationCase?.assumptions.length).toBeGreaterThanOrEqual(3);
+      expect(guide?.applicationCase?.reproduction.steps).toHaveLength(4);
+      expect(guide?.applicationCase?.reproduction.toolHref).toMatch(/^\//);
+    }
+
+    expect(GUIDES.filter((guide) => guide.applicationCase)).toHaveLength(3);
   });
 
   it('provides a unique source-backed CSV contract for every evidence page', () => {
@@ -95,6 +123,73 @@ describe('guide registry', () => {
     }
   });
 });
+
+describe('guide application-case geometry', () => {
+  it('places the camera correctly for front, side, and back light', () => {
+    const sunBearing = 300.2;
+    expect(getCameraBearingForLightingSetup(sunBearing, 'front')).toBeCloseTo(300.2, 5);
+    expect(getCameraBearingForLightingSetup(sunBearing, 'side')).toBeCloseTo(30.2, 5);
+    expect(getCameraBearingForLightingSetup(sunBearing, 'back')).toBeCloseTo(120.2, 5);
+  });
+
+  it('reverses a solar bearing, scales length with height, and stops below the horizon', () => {
+    const twoMetres = calculateShadowGeometry(70, 45, 2);
+    const fourMetres = calculateShadowGeometry(70, 45, 4);
+
+    expect(twoMetres.shadowBearingDeg).toBeCloseTo(250, 5);
+    expect(twoMetres.shadowLengthM).toBeCloseTo(2, 5);
+    expect(fourMetres.shadowLengthM).toBeCloseTo(4, 5);
+    expect(calculateShadowGeometry(70, 0, 2)).toEqual({
+      shadowBearingDeg: null,
+      shadowLengthM: null,
+    });
+    expect(calculateShadowGeometry(70, -1, 2)).toEqual({
+      shadowBearingDeg: null,
+      shadowLengthM: null,
+    });
+  });
+
+  it('uses the same engine-backed rows for case cards, tables, and CSV output', () => {
+    const seasonalGuide = getGuide('brisbane-winter-vs-summer-sun-path');
+    const goldenGuide = getGuide('golden-hour-direction-brisbane');
+    const shadowGuide = getGuide('estimating-shadow-direction-from-solar-angles');
+    expect(seasonalGuide).toBeDefined();
+    expect(goldenGuide).toBeDefined();
+    expect(shadowGuide).toBeDefined();
+
+    const seasonal = buildGuideEvidenceData(seasonalGuide!);
+    const golden = buildGuideEvidenceData(goldenGuide!);
+    const shadow = buildGuideEvidenceData(shadowGuide!);
+    if (seasonal.kind !== 'seasonal-comparison' || golden.kind !== 'golden-hour-shot-plan' || shadow.kind !== 'shadow-direction-model') {
+      throw new Error('Expanded application-case evidence kinds do not match their guides.');
+    }
+
+    expect(seasonal.observations.map((row) => row.localTime)).toEqual(['08:00', '12:00', '16:00']);
+    for (const observation of seasonal.observations) {
+      expect(seasonal.seasons[0].positions).toContain(observation.winter);
+      expect(seasonal.seasons[1].positions).toContain(observation.summer);
+    }
+
+    const winterEveningStart = golden.rows.find(
+      (row) => row.season === 'Winter solstice' && row.window === 'Evening' && row.boundary === 'Start'
+    );
+    expect(winterEveningStart?.value).toBeDefined();
+    expect(golden.dataset.rows).toContainEqual(expect.arrayContaining([
+      'Winter solstice',
+      'Evening',
+      'Start',
+      winterEveningStart?.value?.localTime,
+    ]));
+
+    const tenAm = shadow.rows.find((row) => row.localTime === '10:00');
+    expect(tenAm).toBeDefined();
+    expect(tenAm?.shadowBearingDeg).toBeCloseTo((tenAm!.position.azimuthDeg + 180) % 360, 5);
+    expect(tenAm?.shadowLengthM).toBeCloseTo(
+      tenAm!.objectHeightM / Math.tan((tenAm!.position.altitudeDeg * Math.PI) / 180),
+      5
+    );
+  });
+});
 describe('public sitemap', () => {
   it('contains every tool, trust page, index, and guide exactly once', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://solarpathtracker.example';
@@ -129,5 +224,10 @@ describe('public sitemap', () => {
       const entry = entries.find((candidate) => candidate.url === `https://solarpathtracker.example${route}`);
       expect(entry?.lastModified).toEqual(new Date('2026-08-24T00:00:00Z'));
     }
+
+    const guideIndex = entries.find(
+      (candidate) => candidate.url === 'https://solarpathtracker.example/guides'
+    );
+    expect(guideIndex?.lastModified).toEqual(new Date('2026-09-06T00:00:00Z'));
   });
 });

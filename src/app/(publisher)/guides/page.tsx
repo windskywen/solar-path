@@ -10,7 +10,7 @@ import {
 
 const title = 'Solar Path Guides';
 const description =
-  'Evidence-led guides to solar azimuth, altitude, seasonal sun paths, golden-hour direction, home orientation, and shadow estimates.';
+  'Use reproducible solar data to plan observation times, position a camera for golden-hour light, estimate shadows, and interpret sun paths.';
 const path = '/guides';
 
 export const metadata: Metadata = buildPageMetadata({

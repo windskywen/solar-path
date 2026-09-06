@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react';
 import { CsvDownloadButton } from '@/components/data/CsvDownloadButton';
 import {
+  GoldenHourApplicationCase,
+  SeasonalApplicationCase,
+  ShadowApplicationCase,
+} from '@/components/guides/GuideApplicationCases';
+import {
   buildGuideEvidenceData,
   formatEvidenceDirection,
   type FacadeOrientationEvidence,
@@ -133,6 +138,7 @@ function SeasonalEvidence({ guide, data }: { guide: GuideDefinition; data: Seaso
       intro="The same Brisbane coordinates and timezone are calculated for 21 June and 21 December 2026. The event summary and every whole-hour pair make the seasonal change inspectable instead of reducing it to a generic claim about longer summer days."
       dataset={data.dataset}
     >
+      <SeasonalApplicationCase guide={guide} data={data} />
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
         {data.seasons.map((season) => (
           <div key={season.dateISO} className="rounded-[22px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)] lg:col-span-1 xl:col-span-2">
@@ -261,11 +267,7 @@ function GoldenEvidence({ guide, data }: { guide: GuideDefinition; data: GoldenH
           <figcaption className="mt-3 text-sm leading-6 text-[var(--solar-text)]">Use true-north bearings from the table. Arrive before the first boundary, check the actual horizon, and allow for cloud and setup time.</figcaption>
         </figure>
       </div>
-      <ol className="mt-5 grid gap-3 text-sm leading-6 text-[var(--solar-text)] md:grid-cols-3">
-        <li className="rounded-[20px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]"><strong className="text-[var(--solar-text-strong)]">1. Scout:</strong> confirm the subject and horizon from the listed compass sector.</li>
-        <li className="rounded-[20px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]"><strong className="text-[var(--solar-text-strong)]">2. Arrive:</strong> set up before the start boundary; the window is not setup time.</li>
-        <li className="rounded-[20px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]"><strong className="text-[var(--solar-text-strong)]">3. Recheck:</strong> recalculate for the actual date if it is not a solstice reference.</li>
-      </ol>
+      <GoldenHourApplicationCase guide={guide} data={data} />
     </EvidenceShell>
   );
 }
@@ -312,6 +314,7 @@ function ShadowEvidence({ guide, data }: { guide: GuideDefinition; data: ShadowD
         <div className="rounded-[22px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]"><p className="text-xs uppercase tracking-[0.16em] text-[var(--solar-text-muted)]">Direction</p><p className="mt-2 font-mono text-sm font-semibold text-[var(--solar-text-strong)]">shadow bearing = (azimuth + 180) mod 360</p></div>
         <div className="rounded-[22px] border p-4 [border-color:var(--solar-surface-border)] [background:var(--solar-surface-bg)]"><p className="text-xs uppercase tracking-[0.16em] text-[var(--solar-text-muted)]">Length on level ground</p><p className="mt-2 font-mono text-sm font-semibold text-[var(--solar-text-strong)]">length = 2 m / tan(altitude)</p></div>
       </div>
+      <ShadowApplicationCase guide={guide} data={data} />
       <div className="mt-5 overflow-x-auto rounded-[24px] border [border-color:var(--solar-surface-border)]">
         <table className="w-full min-w-[920px] text-left text-sm">
           <caption className="sr-only">Perth theoretical shadow direction and length table for a two-metre object</caption>
